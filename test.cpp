@@ -30,6 +30,21 @@ class Itemset
 
         explicit Itemset(std::string _string_representation)
         {
+            this->clear();
+            this->set(_string_representation);
+        }
+
+        virtual ~Itemset()
+        {
+        }
+
+        void clear()
+        {
+            this->m_items.clear();
+        }
+
+        void set(std::string _string_representation)
+        {
             cxxtools::Regex seq_regex("^(\\([a-z]+\\))$");
 
             if(! seq_regex.match(_string_representation))
@@ -50,10 +65,6 @@ class Itemset
                 substr = substr.substr(itemsets.offsetEnd(1));
                 this->append(is);
             }
-        }
-
-        virtual ~Itemset()
-        {
         }
 
         bool operator==(const Itemset &other)
@@ -86,7 +97,7 @@ class Itemset
             this->m_items.push_back(_item);
         }
 
-        Item getFirst()
+        Item &getFirst()
         {
             if(this->m_items.size() < 1)
             {
@@ -96,7 +107,7 @@ class Itemset
             return this->m_items[0];
         }
 
-        Item getLast()
+        Item &getLast()
         {
             unsigned int size = this->m_items.size();
 
@@ -162,6 +173,21 @@ class Sequence
 
         explicit Sequence(std::string _string_representation)
         {
+            this->clear();
+            this->set(_string_representation);
+        }
+
+        virtual ~Sequence()
+        {
+        }
+
+        void clear()
+        {
+            this->m_itemsets.clear();
+        }
+
+        void set(std::string _string_representation)
+        {
             cxxtools::Regex seq_regex("^<(\\([a-z]+\\))+>$");
 
             if(! seq_regex.match(_string_representation))
@@ -182,10 +208,6 @@ class Sequence
                 substr = substr.substr(itemsets.offsetEnd(1));
                 this->append(is);
             }
-        }
-
-        virtual ~Sequence()
-        {
         }
 
         bool getAllFirstLevelContigousSubsequences(
@@ -394,6 +416,100 @@ class Sequence
             }
         }
 
+        void getSubsequenceDroppingFirstItem(Sequence &_subseq)
+        {
+            if(
+                // Sequence size must be at least 1
+                this->m_itemsets.size() < 1 ||
+                // If sequence has only 1 itemset, it size must be at least 2
+                this->m_itemsets.size() < 2 && this->m_itemsets[0].size() < 2
+            )
+            {
+                // no subsequences exists at all
+                // TODO [CMP] for all returns to do nothing,
+                // check if an exception is not better
+                return;
+            }
+
+            unsigned int first_itemset_size = this->m_itemsets[0].size();
+
+            // this can not happen
+            if(first_itemset_size == 0)
+            {
+                throw std::runtime_error("Itemset with size 0 detected!");
+            }
+            // if first itemset has only one element
+            // a single sequence without this itemset will be generated
+            else if(first_itemset_size == 1)
+            {
+                // copy skipping the first itemset
+                _subseq.m_itemsets.assign(
+                    ++this->m_itemsets.begin(),
+                    this->m_itemsets.end());
+            }
+            // if first itemset has more then one element
+            // a single sequence dropping the first element will be generated
+            else
+            {
+                Itemset is;
+                // copy all items except the first
+                this->m_itemsets[0].getCopyExceptPos(0, is);
+
+                _subseq.m_itemsets.push_back(is);
+
+                // append skipping the first itemset
+                _subseq.m_itemsets.insert(
+                    _subseq.m_itemsets.begin() + 1,
+                    ++this->m_itemsets.begin(),
+                    this->m_itemsets.end());
+            }
+        }
+
+        void getSubsequenceDroppingLastItem(Sequence &_subseq)
+        {
+            // Sequence size must be at least 2
+            // to getAllContiguosSubsequencesDroppingAnItemFromFirstItemset
+            // be different from getAllContiguosSubsequencesDroppingAnItemFromLastItemset
+            if(this->m_itemsets.size() < 2)
+            {
+                // no last subsequences exists
+                return;
+            }
+
+            unsigned int last = this->m_itemsets.size() - 1;
+            unsigned int last_itemset_size = this->m_itemsets[last].size();
+
+            // this can not happen
+            if(last_itemset_size == 0)
+            {
+                throw std::runtime_error("Itemset with size 0 detected!");
+            }
+            // if last itemset has only one element
+            // a single sequence without this itemset will be generated
+            else if(last_itemset_size == 1)
+            {
+                // copy skipping the last itemset
+                _subseq.m_itemsets.assign(
+                    this->m_itemsets.begin(),
+                    --this->m_itemsets.end());
+            }
+            // if last itemset has more then one element
+            // a single sequence dropping the last element will be generated
+            else
+            {
+                // copy skipping the last itemset
+                _subseq.m_itemsets.assign(
+                    this->m_itemsets.begin(),
+                    --this->m_itemsets.end());
+
+                Itemset is;
+                // copy all items except last_itemset_size - 1
+                this->m_itemsets[last].getCopyExceptPos(
+                    last_itemset_size - 1, is);
+                _subseq.m_itemsets.push_back(is);
+            }
+        }
+
         bool operator==(const Sequence &other)
         {
             if(this->m_itemsets.size() != other.m_itemsets.size())
@@ -424,7 +540,7 @@ class Sequence
             this->m_itemsets.push_back(_itemset);
         }
 
-        Itemset getFirst()
+        Itemset& getFirst()
         {
             if(this->m_itemsets.size() < 1)
             {
@@ -434,7 +550,7 @@ class Sequence
             return this->m_itemsets[0];
         }
 
-        Itemset getLast()
+        Itemset& getLast()
         {
             unsigned int size = this->m_itemsets.size();
 
@@ -476,7 +592,16 @@ class Sequence
 class GSP
 {
     public:
-        explicit GSP(std::string _input_filename)
+        explicit GSP()
+        {
+        }
+
+
+        virtual ~GSP()
+        {
+        }
+
+        void run(std::string _input_filename)
         {
             this->m_max_gap = 0;
 
@@ -540,10 +665,6 @@ class GSP
             // is no needed?
 
             // what's next?
-        }
-
-        virtual ~GSP()
-        {
         }
 
     protected:
@@ -698,12 +819,12 @@ class GSP
                     for(it2 = (it1 + 1); it2 != _candidates.end(); ++it2)
                     {
                         {
-                            std::vector<Sequence> sub_seqs_S1, sub_seqs_S2;
-                            it1->getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(sub_seqs_S1);
-                            it2->getAllContiguosSubsequencesDroppingAnItemFromLastItemset(sub_seqs_S2);
+                            //std::vector<Sequence> sub_seqs_S1, sub_seqs_S2;
+                            //it1->getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(sub_seqs_S1);
+                            //it2->getAllContiguosSubsequencesDroppingAnItemFromLastItemset(sub_seqs_S2);
 
-                            if(sub_seqs_S1.size() > 0 && sub_seqs_S2.size() > 0)
-                            {
+                            //if(sub_seqs_S1.size() > 0 && sub_seqs_S2.size() > 0)
+                            //{
                                 //TODO [CMP] to be honest,
                                 // I think that there is no a 'first item'
                                 // or 'last item' in a sequence
@@ -712,18 +833,22 @@ class GSP
                                 // (or last) item in this itemset, because the
                                 // itemset has no order, so we should consider all
                                 // the combinations... is it correct??
-                                Sequence sub_seq_S1 = sub_seqs_S1[0];
-                                Sequence sub_seq_S2 = sub_seqs_S2[0];
+                            //    Sequence sub_seq_S1 = sub_seqs_S1[0];
+                            //    Sequence sub_seq_S2 = sub_seqs_S2[0];
+
+                            Sequence sub_seq_S1, sub_seq_S2;
+                            it1->getSubsequenceDroppingFirstItem(sub_seq_S1);
+                            it2->getSubsequenceDroppingLastItem(sub_seq_S2);
 
                                 if(sub_seq_S1 == sub_seq_S2)
                                 {
 
-                                    std::stringstream a;
-                                    a << it1->toString();
-                                    a << it2->toString();
-                                    a << sub_seq_S1.toString();
-                                    a << sub_seq_S2.toString();
-                                    throw std::out_of_range(a.str());
+                            //        std::stringstream a;
+                            //        a << it1->toString();
+                            //        a << it2->toString();
+                            //        a << sub_seq_S1.toString();
+                            //        a << sub_seq_S2.toString();
+                            //        throw std::out_of_range(a.str());
                 // The candidate sequence generated by joining S1 with S2 is the sequence
                 // S1 extended with the last item in S2. The added item becomes a separate
                 // element if it was a separate element in S2, and part of the last element of
@@ -739,14 +864,16 @@ class GSP
                                     }
                                     else
                                     {
-                                        TODOOOOOOOO
-
                                         //TODO [CMP] itemset.getFirst() is
                                         // nosense if itemset is
                                         // a unordered set !!!
+                                        Sequence seq_S1_ext(*it1);
+                                        seq_S1_ext.getLast().append(
+                                            it2->getLast().getLast());
+                                        _new_candidates.push_back(seq_S1_ext);
                                     }
                                 }
-                            }
+                            //}
                         }
                         //TODO [CMP] check with Florent if is correct to join
                         // S2 with S1 too
@@ -848,17 +975,21 @@ class GSP
 #include "cxxtools/unit/testsuite.h"
 #include "cxxtools/unit/registertest.h"
 
-class GSPTest : public cxxtools::unit::TestSuite
+class GSPTest : public cxxtools::unit::TestSuite, public GSP
 {
     public:
         GSPTest() : cxxtools::unit::TestSuite("GSPTest")
         {
             std::cout << std::endl << "Test methods:" << std::endl;
+
             registerMethod(
                 "test_sequenceStringRepresentation",
                 *this,
                 &GSPTest::test_sequenceStringRepresentation);
-            registerMethod("test_equality", *this, &GSPTest::test_equality);
+            registerMethod(
+                "test_equality",
+                *this,
+                &GSPTest::test_equality);
             registerMethod(
                 "test_getAllContiguosSubsequencesDroppingAnItemFromFirstItemset",
                 *this,
@@ -875,8 +1006,25 @@ class GSPTest : public cxxtools::unit::TestSuite
                 "test_getAllFirstLevelContigousSubsequences",
                 *this,
                 &GSPTest::test_getAllFirstLevelContigousSubsequences);
+            registerMethod(
+                "test_getSubsequenceDroppingFirstItemFromSingleItemset",
+                *this,
+                &GSPTest::test_getSubsequenceDroppingFirstItemFromSingleItemset);
+            registerMethod(
+                "test_getSubsequenceDroppingFirstItemFromMultipleItemset",
+                *this,
+                &GSPTest::test_getSubsequenceDroppingFirstItemFromMultipleItemset);
+            registerMethod(
+                "test_getSubsequenceDroppingLastItemFromSingleItemset",
+                *this,
+                &GSPTest::test_getSubsequenceDroppingLastItemFromSingleItemset);
+            registerMethod(
+                "test_getSubsequenceDroppingLastItemFromMultipleItemset",
+                *this,
+                &GSPTest::test_getSubsequenceDroppingLastItemFromMultipleItemset);
 
-            registerMethod("test_GSP", *this, &GSPTest::test_GSP);
+            registerMethod("test_GSP_join", *this, &GSPTest::test_GSP_join);
+            registerMethod("test_GSP_run", *this, &GSPTest::test_GSP_run);
         }
 
     private:
@@ -890,6 +1038,10 @@ class GSPTest : public cxxtools::unit::TestSuite
             prepare(seq2);
 
             // Assert
+            std::cout << std::endl;
+            std::cout << seq1.toString();
+            std::cout << seq2.toString();
+            std::cout << std::endl;
             CXXTOOLS_UNIT_ASSERT(seq1 == seq2);
         }
 
@@ -903,6 +1055,10 @@ class GSPTest : public cxxtools::unit::TestSuite
             Sequence seq2("<(abc)(de)(f)(ghi)(lm)>");
 
             // Assert
+            std::cout << std::endl;
+            std::cout << seq1.toString();
+            std::cout << seq2.toString();
+            std::cout << std::endl;
             CXXTOOLS_UNIT_ASSERT(seq1 == seq2);
         }
 
@@ -921,6 +1077,8 @@ class GSPTest : public cxxtools::unit::TestSuite
                 vect_sub_seq_generated);
 
             // Assert
+            std::cout << std::endl;
+            std::cout << seq1.toString();
             CXXTOOLS_UNIT_ASSERT_EQUALS(
                 vect_sub_seq_prepared.size(), vect_sub_seq_generated.size());
 
@@ -953,6 +1111,8 @@ class GSPTest : public cxxtools::unit::TestSuite
                 vect_sub_seq_generated);
 
             // Assert
+            std::cout << std::endl;
+            std::cout << seq1.toString();
             CXXTOOLS_UNIT_ASSERT_EQUALS(
                 vect_sub_seq_prepared.size(), vect_sub_seq_generated.size());
 
@@ -985,6 +1145,8 @@ class GSPTest : public cxxtools::unit::TestSuite
                 vect_sub_seq_generated);
 
             // Assert
+            std::cout << std::endl;
+            std::cout << seq1.toString();
             CXXTOOLS_UNIT_ASSERT_EQUALS(
                 vect_sub_seq_prepared.size(), vect_sub_seq_generated.size());
 
@@ -1016,6 +1178,7 @@ class GSPTest : public cxxtools::unit::TestSuite
             seq.getAllFirstLevelContigousSubsequences(gsp_cont_subseq);
 
             // Assert
+            std::cout << std::endl;
             CXXTOOLS_UNIT_ASSERT_EQUALS(
                 cont_subseq.size(), gsp_cont_subseq.size());
 
@@ -1027,26 +1190,156 @@ class GSPTest : public cxxtools::unit::TestSuite
             }
         }
 
-        void test_GSP()
+        void test_getSubsequenceDroppingFirstItemFromSingleItemset()
         {
-            GSP gsp("reduced_data_sax.csv");
+            // Arrange
+            Sequence seq1("<(a)(bc)(de)(f)(ghi)(lm)>");
+            Sequence sub_seq_prepared("<(bc)(de)(f)(ghi)(lm)>");
+            Sequence sub_seq_generated;
+
+            // Act
+            seq1.getSubsequenceDroppingFirstItem(sub_seq_generated);
+
+            // Assert
+            std::cout << std::endl;
+            std::cout << seq1.toString();
+            std::cout << sub_seq_prepared.toString();
+            std::cout << sub_seq_generated.toString();
+            std::cout << std::endl;
+            CXXTOOLS_UNIT_ASSERT_EQUALS(
+                sub_seq_prepared.size(), sub_seq_generated.size());
+            CXXTOOLS_UNIT_ASSERT(sub_seq_prepared == sub_seq_generated);
+        }
+
+        void test_getSubsequenceDroppingFirstItemFromMultipleItemset()
+        {
+            // Arrange
+            Sequence seq1("<(abc)(de)(f)(ghi)(lm)>");
+            Sequence sub_seq_prepared("<(bc)(de)(f)(ghi)(lm)>");
+            Sequence sub_seq_generated;
+
+            // Act
+            seq1.getSubsequenceDroppingFirstItem(sub_seq_generated);
+
+            // Assert
+            std::cout << std::endl;
+            std::cout << seq1.toString();
+            std::cout << sub_seq_prepared.toString();
+            std::cout << sub_seq_generated.toString();
+            std::cout << std::endl;
+            CXXTOOLS_UNIT_ASSERT_EQUALS(
+                sub_seq_prepared.size(), sub_seq_generated.size());
+            CXXTOOLS_UNIT_ASSERT(sub_seq_prepared == sub_seq_generated);
+        }
+
+        void test_getSubsequenceDroppingLastItemFromSingleItemset()
+        {
+            // Arrange
+            Sequence seq1("<(abc)(de)(f)(ghi)(l)(m)>");
+            Sequence sub_seq_prepared("<(abc)(de)(f)(ghi)(l)>");
+            Sequence sub_seq_generated;
+
+            // Act
+            seq1.getSubsequenceDroppingLastItem(sub_seq_generated);
+
+            // Assert
+            std::cout << std::endl;
+            std::cout << seq1.toString();
+            std::cout << sub_seq_prepared.toString();
+            std::cout << sub_seq_generated.toString();
+            std::cout << std::endl;
+            CXXTOOLS_UNIT_ASSERT_EQUALS(
+                sub_seq_prepared.size(), sub_seq_generated.size());
+            CXXTOOLS_UNIT_ASSERT(sub_seq_prepared == sub_seq_generated);
+        }
+
+        void test_getSubsequenceDroppingLastItemFromMultipleItemset()
+        {
+            // Arrange
+            Sequence seq1("<(abc)(de)(f)(ghi)(lm)>");
+            Sequence sub_seq_prepared("<(abc)(de)(f)(ghi)(l)>");
+            Sequence sub_seq_generated;
+
+            // Act
+            seq1.getSubsequenceDroppingLastItem(sub_seq_generated);
+
+            // Assert
+            std::cout << std::endl;
+            std::cout << seq1.toString();
+            std::cout << sub_seq_prepared.toString();
+            std::cout << sub_seq_generated.toString();
+            std::cout << std::endl;
+            CXXTOOLS_UNIT_ASSERT_EQUALS(
+                sub_seq_prepared.size(), sub_seq_generated.size());
+            CXXTOOLS_UNIT_ASSERT(sub_seq_prepared == sub_seq_generated);
+        }
+
+        void test_GSP_join()
+        {
+            // Arrange
+
+            std::vector<Sequence> candidates;
+            std::vector<Sequence> prepared_candidates;
+            std::vector<Sequence> generated_candidates;
+
+
+            Sequence seq1("<(ab)(c)>");     // <(1, 2) (3)>
+            Sequence seq2("<(ab)(d)>");     // <(1, 2) (4)>
+            Sequence seq3("<(a)(cd)>");     // <(1) (3, 4)>
+            Sequence seq4("<(ac)(e)>");     // <(1, 3) (5)>
+            Sequence seq5("<(b)(cd)>");     // <(2) (3, 4)>
+            Sequence seq6("<(b)(c)(e)>");   // <(2) (3) (5)>
+            candidates.push_back(seq1);
+            candidates.push_back(seq2);
+            candidates.push_back(seq3);
+            candidates.push_back(seq4);
+            candidates.push_back(seq5);
+            candidates.push_back(seq6);
+            Sequence sub_seq_prepared1("<(ab)(cd)>");       // <(1, 2) (3, 4)>
+            Sequence sub_seq_prepared2("<(ab)(c)(e)>");     // <(1, 2) (3) (5)>
+            prepared_candidates.push_back(sub_seq_prepared1);
+            prepared_candidates.push_back(sub_seq_prepared2);
+
+            // Act
+            this->join(candidates, 3, generated_candidates);
+
+            // Assert
+            std::cout << std::endl;
+
+            unsigned int size = candidates.size();
+
+            for(unsigned int i = 0; i < size; ++i)
+            {
+                std::cout << candidates[i].toString() << std::endl;
+            }
+
+            CXXTOOLS_UNIT_ASSERT_EQUALS(
+                prepared_candidates.size(), generated_candidates.size());
+
+            size = prepared_candidates.size();
+
+            for(unsigned int i = 0; i < size; ++i)
+            {
+                std::cout << std::endl << '\t' << i << ' ';
+                std::cout << prepared_candidates[i].toString();
+                std::cout << generated_candidates[i].toString();
+                CXXTOOLS_UNIT_ASSERT(
+                    prepared_candidates[i] == generated_candidates[i]);
+            }
+
+            std::cout << std::endl;
+        }
+
+        void test_GSP_run()
+        {
+            GSP gsp;
+            gsp.run("reduced_data_sax.csv");
         }
 
     private:
         void prepare(Sequence &_seq)
         {
-            // <(abc)(de)(f)(ghi)(lm)>
-            Itemset
-                is1("(abc)"),
-                is2("(de)"),
-                is3("(f)"),
-                is4("(ghi)"),
-                is5("(lm)");
-            _seq.append(is1);
-            _seq.append(is2);
-            _seq.append(is3);
-            _seq.append(is4);
-            _seq.append(is5);
+            _seq.set("<(abc)(de)(f)(ghi)(lm)>");
         }
 
         void prepareContSubseqFirsts(std::vector<Sequence> &_cont_subseq)
