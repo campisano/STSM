@@ -2,13 +2,14 @@
 //
 // compile with -l cxxtools -l cxxtools-unit
 // example:
-// $ reset; rm -f test; g++ test.cpp -o test -l cxxtools -l cxxtools-unit && ./test
+// $ reset; rm -f test; ulimit -c unlimited; g++ -g test.cpp -o test -l cxxtools -l cxxtools-unit && ./test; ulimit -c 0;
 //
 
 #include <cxxtools/csvdeserializer.h>
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -25,12 +26,7 @@ class Itemset
         explicit Itemset()
         {
         }
-        /*
-        explicit Itemset(const Itemset &_copy_itemset):
-            m_items(_copy_itemset.m_items)
-        {
-        }
-        */
+
         virtual ~Itemset()
         {
         }
@@ -76,18 +72,42 @@ class Itemset
             return this->m_items[0];
         }
 
-        void print()
+        void getCopyExceptPos(unsigned int i, Itemset & _copy_itemset)
         {
+            unsigned int size = this->m_items.size();
+
+            if(i > (size - 1))
+            {
+                std::stringstream message;
+                message << "Itemset position cannot be greater then it size - 1\n size: " << size << ", i: " << i << '.';
+                throw std::out_of_range(message.str());
+            }
+
+            for(unsigned int j = 0; j < size; ++j)
+            {
+                if(j != i)
+                {
+                    _copy_itemset.append(this->m_items[j]);
+                }
+            }
+        }
+
+        std::string toString()
+        {
+            std::stringstream output;
+
             std::vector<Item>::iterator it;
 
-            std::cout << '(';
+            output << '(';
 
             for(it = this->m_items.begin(); it != this->m_items.end(); ++it)
             {
-                std::cout << (*it);
+                output << (*it);
             }
 
-            std::cout << ')';
+            output << ')';
+
+            return output.str();
         }
 
     private:
@@ -102,58 +122,202 @@ class Sequence
         explicit Sequence()
         {
         }
-        /*
-        explicit Sequence(const Sequence &_copy_sequence):
-            m_itemsets(_copy_sequence.m_itemsets)
-        {
-        }
-        */
+
         virtual ~Sequence()
         {
         }
 
-        bool generateAllFirstLevelContigousSubsequences(std::vector<Sequence> &_cont_subseq)
+        bool getAllFirstLevelContigousSubsequences(std::vector<Sequence> &_cont_subseq)
         {
             // pag. 8
             // C is a contiguous subsequence of S if any of the following conditions hold:
             //     1. C is derived from S by dropping an item from either S1 or Sn.
             {
-                Sequence seq_dropping_first, seq_dropping_last;
-                this->getCopyDroppingFirstItem(seq_dropping_first);
-                _cont_subseq.push_back(seq_dropping_first);
-                this->getCopyDroppingLastItem(seq_dropping_last);
-                _cont_subseq.push_back(seq_dropping_last);
+                // geting subsequences generated dropping an item from the initial itemset
+                getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(_cont_subseq);
+                // Dropping initial itemsets
+                getAllContiguosSubsequencesDroppingAnItemFromLastItemset(_cont_subseq);
             }
             //     2. C is derived from S by dropping an item from an element Si which has at least 2 items.
+            {
+                getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset(_cont_subseq);
+            }
             //     3. C is a contiguous subsequence of C', and C' is a contiguous subsequence of S.
+            {
+                //TODO [CMP] to implement
+            }
         }
 
-        //bool isContiguousSubsequenceOf(Sequence &_super_sequence)
-        //{
-        //    //TODO [CMP] to implement
-        //    throw std::runtime_error("Not implemented: isContiguousSubsequenceOf");
-        //
-        //    return false;
-        //}
-
-        inline void getCopyDroppingFirstItem(Sequence &_copy_sequence)
+        void getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(
+            std::vector<Sequence> &_cont_subseq)
         {
+            // Sequence size must be at least 1
             if(this->m_itemsets.size() < 1)
             {
-                throw std::out_of_range("Sequence size must be at least 1.");
+                // no subsequences exists at all
+                return;
             }
 
-            _copy_sequence.m_itemsets.assign(++this->m_itemsets.begin(), this->m_itemsets.end());
+            unsigned int first_itemset_size = this->m_itemsets[0].size();
+
+            // this can not happen
+            if(first_itemset_size == 0)
+            {
+                throw std::runtime_error("Itemset with size 0 detected!");
+            }
+            // if first itemset has only one element
+            // a single sequence without this itemset will be generated
+            else if(first_itemset_size == 1)
+            {
+                Sequence seq;
+                // copy skipping the first itemset
+                seq.m_itemsets.assign(
+                    ++this->m_itemsets.begin(),
+                    this->m_itemsets.end());
+                _cont_subseq.push_back(seq);
+            }
+            // if first itemset has more then one element
+            // all combination of size-1 itemsets sequences will be generated
+            else
+            {
+                // NOTE: using signed long to allow a check < 0
+                for(signed long i = first_itemset_size - 1; i >= 0; --i)
+                {
+                    Sequence seq;
+
+                    Itemset is;
+                    // copy all items except i
+                    this->m_itemsets[0].getCopyExceptPos(i, is);
+
+                    seq.m_itemsets.push_back(is);
+
+                    // append skipping the first itemset
+                    seq.m_itemsets.insert(
+                        seq.m_itemsets.begin() + 1,
+                        ++this->m_itemsets.begin(),
+                        this->m_itemsets.end());
+
+                    _cont_subseq.push_back(seq);
+                }
+            }
         }
 
-        inline void getCopyDroppingLastItem(Sequence &_copy_sequence)
+        void getAllContiguosSubsequencesDroppingAnItemFromLastItemset(
+            std::vector<Sequence> &_cont_subseq)
         {
-            if(this->m_itemsets.size() < 1)
+            // Sequence size must be at least 2
+            // to last itemset be different from first itemset
+            if(this->m_itemsets.size() < 2)
             {
-                throw std::out_of_range("Sequence size must be at least 1.");
+                // no last subsequences exists
+                return;
             }
 
-            _copy_sequence.m_itemsets.assign(this->m_itemsets.begin(), --this->m_itemsets.end());
+            unsigned int last = this->m_itemsets.size() - 1;
+            unsigned int last_itemset_size = this->m_itemsets[last].size();
+
+            // this can not happen
+            if(last_itemset_size == 0)
+            {
+                throw std::runtime_error("Itemset with size 0 detected!");
+            }
+            // if last itemset has only one element
+            // a single sequence without this itemset will be generated
+            else if(last_itemset_size == 1)
+            {
+                Sequence seq;
+
+                // copy skipping the last itemset
+                seq.m_itemsets.assign(
+                    this->m_itemsets.begin(),
+                    --this->m_itemsets.end());
+
+                _cont_subseq.push_back(seq);
+            }
+            // if last itemset has more then one element
+            // all combination of size-1 itemsets sequences will be generated
+            else
+            {
+                // NOTE: using signed long to allow a check < 0
+                for(signed long i = last_itemset_size - 1; i >= 0; --i)
+                {
+                    Sequence seq;
+
+                    // copy skipping the last itemset
+                    seq.m_itemsets.assign(
+                        this->m_itemsets.begin(),
+                        --this->m_itemsets.end());
+
+                    Itemset is;
+                    // copy all items except i
+                    this->m_itemsets[last].getCopyExceptPos(i, is);
+                    seq.m_itemsets.push_back(is);
+
+                    _cont_subseq.push_back(seq);
+                }
+            }
+        }
+
+        void getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset(
+            std::vector<Sequence> &_cont_subseq)
+        {
+            // Sequence size must be at least 3 to have middle itemsets
+            if(this->m_itemsets.size() < 3)
+            {
+                // no middle subsequences exists
+                return;
+            }
+
+            unsigned int last_middle_itemset = this->m_itemsets.size() - 1;
+
+            for(unsigned int i = 1; i < last_middle_itemset; ++i)
+            {
+                unsigned int middle_itemset_size = this->m_itemsets[i].size();
+
+                // this can not happen
+                if(middle_itemset_size == 0)
+                {
+                    throw std::runtime_error("Itemset with size 0 detected!");
+                }
+                // if middle itemset has only one element
+                // a single sequence without this itemset will be generated
+                else if(middle_itemset_size == 1)
+                {
+                    // by definition, no middele CONTIGUOS subequence can be
+                    // generated removing an item inside an itemset of size 1
+                    continue;
+                }
+                // if middle itemset has more then one element
+                // all combination of size-1 itemsets sequences
+                // will be generated
+                else
+                {
+                    // NOTE: using signed long to allow a check < 0
+                    for(signed long j = middle_itemset_size - 1; j >= 0; --j)
+                    {
+                        Sequence seq;
+
+                        // copy initial itemsets skipping current middle itemset
+                        seq.m_itemsets.insert(
+                            seq.m_itemsets.end(),
+                            this->m_itemsets.begin(),
+                            this->m_itemsets.begin() + i);
+
+                        Itemset is;
+                        // copy all items except j
+                        this->m_itemsets[i].getCopyExceptPos(j, is);
+                        seq.m_itemsets.push_back(is);
+
+                        // copy final itemsets skipping current middle itemset
+                        seq.m_itemsets.insert(
+                            seq.m_itemsets.end(),
+                            this->m_itemsets.begin() + i +1,
+                            this->m_itemsets.end());
+
+                        _cont_subseq.push_back(seq);
+                    }
+                }
+            }
         }
 
         bool operator==(const Sequence &other)
@@ -197,18 +361,22 @@ class Sequence
             return this->m_itemsets[0];
         }
 
-        void print()
+        std::string toString()
         {
+            std::stringstream output;
+
             std::vector<Itemset>::iterator it;
 
-            std::cout << '<';
+            output << '<';
 
             for(it = this->m_itemsets.begin(); it != this->m_itemsets.end(); ++it)
             {
-                (*it).print();
+                output << it->toString();
             }
 
-            std::cout << '>';
+            output << '>';
+
+            return output.str();
         }
 
     private:
@@ -376,16 +544,16 @@ class GSP
                     {
                         Sequence seq_both;
                         Itemset is_both;
-                        is_both.append((*it1).getFirst().getFirst());
-                        is_both.append((*it2).getFirst().getFirst());
+                        is_both.append(it1->getFirst().getFirst());
+                        is_both.append(it2->getFirst().getFirst());
                         seq_both.append(is_both);
                         _new_candidates.push_back(seq_both);
 
                         Sequence seq_separated;
                         Itemset is_separated1;
-                        is_separated1.append((*it1).getFirst().getFirst());
+                        is_separated1.append(it1->getFirst().getFirst());
                         Itemset is_separated2;
-                        is_separated2.append((*it2).getFirst().getFirst());
+                        is_separated2.append(it2->getFirst().getFirst());
                         seq_separated.append(is_separated1);
                         seq_separated.append(is_separated2);
                         _new_candidates.push_back(seq_separated);
@@ -417,7 +585,7 @@ class GSP
                 for(it = _new_candidates.begin(); it != _new_candidates.end(); ++it)
                 {
                     contiguous_subseq.clear();
-                    it->generateAllFirstLevelContigousSubsequences(contiguous_subseq);
+                    it->getAllFirstLevelContigousSubsequences(contiguous_subseq);
                 }
             }
             else
@@ -432,8 +600,7 @@ class GSP
 
             for(it = _sequences.begin(); it != _sequences.end(); ++it)
             {
-                (*it).print();
-                std::cout << std::endl;
+                std::cout << it->toString() << std::endl;
             }
         }
 
@@ -454,9 +621,10 @@ class GSPTest : public cxxtools::unit::TestSuite
         {
             std::cout << std::endl << "Test methods:" << std::endl;
             registerMethod("test_equality", *this, &GSPTest::test_equality);
-            registerMethod("test_getCopyDroppingFirstItem", *this, &GSPTest::test_getCopyDroppingFirstItem);
-            registerMethod("test_getCopyDroppingLastItem", *this, &GSPTest::test_getCopyDroppingLastItem);
-            registerMethod("test_generateAllFirstLevelContigousSubsequences", *this, &GSPTest::test_generateAllFirstLevelContigousSubsequences);
+            registerMethod("test_getAllContiguosSubsequencesDroppingAnItemFromFirstItemset", *this, &GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromFirstItemset);
+            registerMethod("test_getAllContiguosSubsequencesDroppingAnItemFromLastItemset", *this, &GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromLastItemset);
+            registerMethod("test_getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset", *this, &GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset);
+            registerMethod("test_getAllFirstLevelContigousSubsequences", *this, &GSPTest::test_getAllFirstLevelContigousSubsequences);
 
             registerMethod("test_GSP", *this, &GSPTest::test_GSP);
         }
@@ -475,73 +643,94 @@ class GSPTest : public cxxtools::unit::TestSuite
             CXXTOOLS_UNIT_ASSERT(seq1 == seq2);
         }
 
-        void test_getCopyDroppingFirstItem()
+        void test_getAllContiguosSubsequencesDroppingAnItemFromFirstItemset()
         {
             // Arrange
-            Sequence seq1, seq2, seq1DF, seq2DF;
+            Sequence seq1;
             prepare(seq1);
-            prepare(seq2);
+
+            std::vector<Sequence> vect_sub_seq_prepared;
+            prepareContSubseqFirsts(vect_sub_seq_prepared);
+            std::vector<Sequence> vect_sub_seq_generated;
 
             // Act
-            seq1.getCopyDroppingFirstItem(seq1DF);
-            seq2.getCopyDroppingFirstItem(seq2DF);
+            seq1.getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(vect_sub_seq_generated);
 
             // Assert
-            CXXTOOLS_UNIT_ASSERT(! (seq1 == seq1DF));
-            if(seq1 == seq1DF)
+            CXXTOOLS_UNIT_ASSERT_EQUALS(vect_sub_seq_prepared.size(), vect_sub_seq_generated.size());
+
+            unsigned int size = vect_sub_seq_prepared.size();
+
+            for(unsigned int i = 0; i < size; ++i)
             {
-                std::cout << "seq1 == seq1DF ";
-            }
-            else
-            {
-                std::cout << "seq1 != seq1DF ";
+                std::cout << std::endl << '\t' << i << ' ';
+                std::cout << vect_sub_seq_prepared[i].toString();
+                std::cout << vect_sub_seq_generated[i].toString();
+                CXXTOOLS_UNIT_ASSERT(vect_sub_seq_prepared[i] == vect_sub_seq_generated[i]);
             }
 
-            CXXTOOLS_UNIT_ASSERT(seq1DF == seq2DF);
-            if(seq1DF == seq2DF)
-            {
-                std::cout << "seq1DF == seq2DF ";
-            }
-            else
-            {
-                std::cout << "seq1DF != seq2DF ";
-            }
+            std::cout << std::endl;
         }
 
-        void test_getCopyDroppingLastItem()
+        void test_getAllContiguosSubsequencesDroppingAnItemFromLastItemset()
         {
             // Arrange
-            Sequence seq1, seq2, seq1DL, seq2DL;
+            Sequence seq1;
             prepare(seq1);
-            prepare(seq2);
+
+            std::vector<Sequence> vect_sub_seq_prepared;
+            prepareContSubseqLasts(vect_sub_seq_prepared);
+            std::vector<Sequence> vect_sub_seq_generated;
 
             // Act
-            seq1.getCopyDroppingLastItem(seq1DL);
-            seq2.getCopyDroppingLastItem(seq2DL);
+            seq1.getAllContiguosSubsequencesDroppingAnItemFromLastItemset(vect_sub_seq_generated);
 
             // Assert
-            CXXTOOLS_UNIT_ASSERT(! (seq1 == seq1DL));
-            if(seq1 == seq1DL)
+            CXXTOOLS_UNIT_ASSERT_EQUALS(vect_sub_seq_prepared.size(), vect_sub_seq_generated.size());
+
+            unsigned int size = vect_sub_seq_prepared.size();
+
+            for(unsigned int i = 0; i < size; ++i)
             {
-                std::cout << "seq1 == seq1DL ";
-            }
-            else
-            {
-                std::cout << "seq1 != seq1DL ";
+                std::cout << std::endl << '\t' << i << ' ';
+                std::cout << vect_sub_seq_prepared[i].toString();
+                std::cout << vect_sub_seq_generated[i].toString();
+                CXXTOOLS_UNIT_ASSERT(vect_sub_seq_prepared[i] == vect_sub_seq_generated[i]);
             }
 
-            CXXTOOLS_UNIT_ASSERT(seq1DL == seq2DL);
-            if(seq1DL == seq2DL)
-            {
-                std::cout << "seq1DL == seq2DL ";
-            }
-            else
-            {
-                std::cout << "seq1DL != seq2DL ";
-            }
+            std::cout << std::endl;
         }
 
-        void test_generateAllFirstLevelContigousSubsequences()
+        void test_getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset()
+        {
+            // Arrange
+            Sequence seq1;
+            prepare(seq1);
+
+            std::vector<Sequence> vect_sub_seq_prepared;
+            prepareContSubseqMiddles(vect_sub_seq_prepared);
+            std::vector<Sequence> vect_sub_seq_generated;
+
+            // Act
+            seq1.getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset(vect_sub_seq_generated);
+
+            // Assert
+            CXXTOOLS_UNIT_ASSERT_EQUALS(vect_sub_seq_prepared.size(), vect_sub_seq_generated.size());
+
+            unsigned int size = vect_sub_seq_prepared.size();
+
+            for(unsigned int i = 0; i < size; ++i)
+            {
+                std::cout << std::endl << '\t' << i << ' ';
+                std::cout << vect_sub_seq_prepared[i].toString();
+                std::cout << vect_sub_seq_generated[i].toString();
+                CXXTOOLS_UNIT_ASSERT(vect_sub_seq_prepared[i] == vect_sub_seq_generated[i]);
+            }
+
+            std::cout << std::endl;
+        }
+
+        void test_getAllFirstLevelContigousSubsequences()
         {
             // Arrange
             Sequence seq;
@@ -552,12 +741,13 @@ class GSPTest : public cxxtools::unit::TestSuite
 
             // Act
             std::vector<Sequence> gsp_cont_subseq;
-            seq.generateAllFirstLevelContigousSubsequences(gsp_cont_subseq);
+            seq.getAllFirstLevelContigousSubsequences(gsp_cont_subseq);
 
             // Assert
-            CXXTOOLS_UNIT_ASSERT(cont_subseq.size() == gsp_cont_subseq.size());
+            CXXTOOLS_UNIT_ASSERT_EQUALS(cont_subseq.size(), gsp_cont_subseq.size());
 
             unsigned int size = cont_subseq.size();
+
             for(unsigned int i = 0; i < size; ++i)
             {
                 CXXTOOLS_UNIT_ASSERT(cont_subseq[i] == gsp_cont_subseq[i]);
@@ -572,8 +762,8 @@ class GSPTest : public cxxtools::unit::TestSuite
     private:
         void prepare(Sequence &_seq)
         {
-            // <(abc)(de)(e)(fg)>
-            Itemset is1, is2, is3, is4;
+            // <(abc)(de)(f)(ghi)(lm)>
+            Itemset is1, is2, is3, is4, is5;
 
             is1.append('a');
             is1.append('b');
@@ -589,136 +779,249 @@ class GSPTest : public cxxtools::unit::TestSuite
 
             is4.append('g');
             is4.append('h');
+            is4.append('i');
             _seq.append(is4);
+
+            is5.append('l');
+            is5.append('m');
+            _seq.append(is5);
         }
 
-        void prepareContSubseqMix(std::vector<Sequence> _cont_subseq)
+        void prepareContSubseqFirsts(std::vector<Sequence> &_cont_subseq)
         {
-            // <(abc)(de)(f)(gh)>
+            {
+                Sequence seq;
+                Itemset is1, is2, is3, is4, is5;
+                is1.append('a');
+                is1.append('b');
+                seq.append(is1);
+                is2.append('d');
+                is2.append('e');
+                seq.append(is2);
+                is3.append('f');
+                seq.append(is3);
+                is4.append('g');
+                is4.append('h');
+                is4.append('i');
+                seq.append(is4);
+                is5.append('l');
+                is5.append('m');
+                seq.append(is5);
+                _cont_subseq.push_back(seq);
+            }
+            {
+                Sequence seq;
+                Itemset is1, is2, is3, is4, is5;
+                is1.append('a');
+                is1.append('c');
+                seq.append(is1);
+                is2.append('d');
+                is2.append('e');
+                seq.append(is2);
+                is3.append('f');
+                seq.append(is3);
+                is4.append('g');
+                is4.append('h');
+                is4.append('i');
+                seq.append(is4);
+                is5.append('l');
+                is5.append('m');
+                seq.append(is5);
+                _cont_subseq.push_back(seq);
+            }
+            {
+                Sequence seq;
+                Itemset is1, is2, is3, is4, is5;
+                is1.append('b');
+                is1.append('c');
+                seq.append(is1);
+                is2.append('d');
+                is2.append('e');
+                seq.append(is2);
+                is3.append('f');
+                seq.append(is3);
+                is4.append('g');
+                is4.append('h');
+                is4.append('i');
+                seq.append(is4);
+                is5.append('l');
+                is5.append('m');
+                seq.append(is5);
+                _cont_subseq.push_back(seq);
+            }
+        }
+
+        void prepareContSubseqLasts(std::vector<Sequence> &_cont_subseq)
+        {
+            {
+                Sequence seq;
+                Itemset is1, is2, is3, is4, is5;
+                is1.append('a');
+                is1.append('b');
+                is1.append('c');
+                seq.append(is1);
+                is2.append('d');
+                is2.append('e');
+                seq.append(is2);
+                is3.append('f');
+                seq.append(is3);
+                is4.append('g');
+                is4.append('h');
+                is4.append('i');
+                seq.append(is4);
+                is5.append('l');
+                seq.append(is5);
+                _cont_subseq.push_back(seq);
+            }
+            {
+                Sequence seq;
+                Itemset is1, is2, is3, is4, is5;
+                is1.append('a');
+                is1.append('b');
+                is1.append('c');
+                seq.append(is1);
+                is2.append('d');
+                is2.append('e');
+                seq.append(is2);
+                is3.append('f');
+                seq.append(is3);
+                is4.append('g');
+                is4.append('h');
+                is4.append('i');
+                seq.append(is4);
+                is5.append('m');
+                seq.append(is5);
+                _cont_subseq.push_back(seq);
+            }
+        }
+
+        void prepareContSubseqMiddles(std::vector<Sequence> &_cont_subseq)
+        {
+            {
+                Sequence seq;
+                Itemset is1, is2, is3, is4, is5;
+                is1.append('a');
+                is1.append('b');
+                is1.append('c');
+                seq.append(is1);
+                is2.append('d');
+                seq.append(is2);
+                is3.append('f');
+                seq.append(is3);
+                is4.append('g');
+                is4.append('h');
+                is4.append('i');
+                seq.append(is4);
+                is5.append('l');
+                is5.append('m');
+                seq.append(is5);
+                _cont_subseq.push_back(seq);
+            }
+            {
+                Sequence seq;
+                Itemset is1, is2, is3, is4, is5;
+                is1.append('a');
+                is1.append('b');
+                is1.append('c');
+                seq.append(is1);
+                is2.append('e');
+                seq.append(is2);
+                is3.append('f');
+                seq.append(is3);
+                is4.append('g');
+                is4.append('h');
+                is4.append('i');
+                seq.append(is4);
+                is5.append('l');
+                is5.append('m');
+                seq.append(is5);
+                _cont_subseq.push_back(seq);
+            }
+            {
+                Sequence seq;
+                Itemset is1, is2, is3, is4, is5;
+                is1.append('a');
+                is1.append('b');
+                is1.append('c');
+                seq.append(is1);
+                is2.append('d');
+                is2.append('e');
+                seq.append(is2);
+                is3.append('f');
+                seq.append(is3);
+                is4.append('g');
+                is4.append('h');
+                seq.append(is4);
+                is5.append('l');
+                is5.append('m');
+                seq.append(is5);
+                _cont_subseq.push_back(seq);
+            }
+            {
+                Sequence seq;
+                Itemset is1, is2, is3, is4, is5;
+                is1.append('a');
+                is1.append('b');
+                is1.append('c');
+                seq.append(is1);
+                is2.append('d');
+                is2.append('e');
+                seq.append(is2);
+                is3.append('f');
+                seq.append(is3);
+                is4.append('g');
+                is4.append('i');
+                seq.append(is4);
+                is5.append('l');
+                is5.append('m');
+                seq.append(is5);
+                _cont_subseq.push_back(seq);
+            }
+            {
+                Sequence seq;
+                Itemset is1, is2, is3, is4, is5;
+                is1.append('a');
+                is1.append('b');
+                is1.append('c');
+                seq.append(is1);
+                is2.append('d');
+                is2.append('e');
+                seq.append(is2);
+                is3.append('f');
+                seq.append(is3);
+                is4.append('h');
+                is4.append('i');
+                seq.append(is4);
+                is5.append('l');
+                is5.append('m');
+                seq.append(is5);
+                _cont_subseq.push_back(seq);
+            }
+        }
+
+        void prepareContSubseqMix(std::vector<Sequence> &_cont_subseq)
+        {
+            // <(abc)(de)(f)(ghi)(lm)>
             // became
             // 1. C is derived from S by dropping an item from either S1 or Sn .
-            // <(ab)(de)(f)(gh)>
-            // <(bc)(de)(f)(gh)>
-            // <(ac)(de)(f)(gh)>
-            // <(abc)(de)(f)(g)>
-            // <(abc)(de)(f)(h)>
-            //  2. C is derived from S by dropping an item from an element Si which has at least 2 items.
-            // <(abc)(d)(f)(gh)>
-            // <(abc)(e)(f)(gh)>
-            // 3. out of scope for this test
+            // <(ab)(de)(f)(ghi)(lm)>
+            // <(ac)(de)(f)(ghi)(lm)>
+            // <(bc)(de)(f)(ghi)(lm)>
+            prepareContSubseqFirsts(_cont_subseq);
 
-            {
-                Itemset is1, is2, is3, is4;
-                is1.append('a');
-                is1.append('b');
-                is2.append('d');
-                is2.append('e');
-                is3.append('f');
-                is4.append('g');
-                is4.append('h');
-                Sequence seq;
-                seq.append(is1);
-                seq.append(is2);
-                seq.append(is3);
-                seq.append(is4);
-                _cont_subseq.push_back(seq);
-            }
-            {
-                Itemset is1, is2, is3, is4;
-                is1.append('b');
-                is1.append('c');
-                is2.append('d');
-                is2.append('e');
-                is3.append('f');
-                is4.append('g');
-                is4.append('h');
-                Sequence seq;
-                seq.append(is1);
-                seq.append(is2);
-                seq.append(is3);
-                seq.append(is4);
-                _cont_subseq.push_back(seq);
-            }
-            {
-                Itemset is1, is2, is3, is4;
-                is1.append('a');
-                is1.append('c');
-                is2.append('d');
-                is2.append('e');
-                is3.append('f');
-                is4.append('g');
-                is4.append('h');
-                Sequence seq;
-                seq.append(is1);
-                seq.append(is2);
-                seq.append(is3);
-                seq.append(is4);
-                _cont_subseq.push_back(seq);
-            }
-            {
-                Itemset is1, is2, is3, is4;
-                is1.append('a');
-                is1.append('b');
-                is1.append('c');
-                is2.append('d');
-                is2.append('e');
-                is3.append('f');
-                is4.append('g');
-                Sequence seq;
-                seq.append(is1);
-                seq.append(is2);
-                seq.append(is3);
-                seq.append(is4);
-                _cont_subseq.push_back(seq);
-            }
-            {
-                Itemset is1, is2, is3, is4;
-                is1.append('a');
-                is1.append('b');
-                is1.append('c');
-                is2.append('d');
-                is2.append('e');
-                is3.append('f');
-                is4.append('h');
-                Sequence seq;
-                seq.append(is1);
-                seq.append(is2);
-                seq.append(is3);
-                seq.append(is4);
-                _cont_subseq.push_back(seq);
-            }
-            {
-                Itemset is1, is2, is3, is4;
-                is1.append('a');
-                is1.append('b');
-                is1.append('c');
-                is2.append('d');
-                is3.append('f');
-                is4.append('g');
-                is4.append('h');
-                Sequence seq;
-                seq.append(is1);
-                seq.append(is2);
-                seq.append(is3);
-                seq.append(is4);
-                _cont_subseq.push_back(seq);
-            }
-            {
-                Itemset is1, is2, is3, is4;
-                is1.append('a');
-                is1.append('b');
-                is1.append('c');
-                is2.append('e');
-                is3.append('f');
-                is4.append('g');
-                is4.append('h');
-                Sequence seq;
-                seq.append(is1);
-                seq.append(is2);
-                seq.append(is3);
-                seq.append(is4);
-                _cont_subseq.push_back(seq);
-            }
+            // <(abc)(de)(f)(ghi)(l)>
+            // <(abc)(de)(f)(ghi)(m)>
+            prepareContSubseqLasts(_cont_subseq);
+
+            //  2. C is derived from S by dropping an item from an element Si which has at least 2 items.
+            // <(abc)(d)(f)(lm)>
+            // <(abc)(e)(f)(lm)>
+            // <(abc)(de)(f)(gh)(m)>
+            // <(abc)(de)(f)(gi)(m)>
+            // <(abc)(de)(f)(hi)(m)>
+            prepareContSubseqMiddles(_cont_subseq);
+
+            // 3. out of scope for this test
         }
 };
 
