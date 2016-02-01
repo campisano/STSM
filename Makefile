@@ -1,5 +1,5 @@
 # version of this Makefile
-MAKEFILE_VER=		0.4.0
+MAKEFILE_VER=		0.4.1
 
 
 # make options
@@ -7,12 +7,12 @@ MAKEFLAGS+=			-s
 
 
 
-# OBS: search for 'CUSTOM' text
+# NOTE: search for 'CUSTOM' text
 
 
 
 
-# CUSTOM output
+# CUSTOM output executable file
 OUT_FILE=			gsp
 
 # CUSTOM paths
@@ -163,10 +163,8 @@ clean:
 INFO_VARS:
 	@echo
 	@echo $(YELLOW)"Variables used to build:"$(NORMAL)
-	@echo CC_FLAGS=	$(CC_FLAGS)
-	@echo LD_FLAGS=	$(LD_FLAGS)
-	@echo
-	@echo
+	@echo $(BLUE)CC_FLAGS=	$(CC_FLAGS)$(NORMAL)
+	@echo $(BLUE)LD_FLAGS=	$(LD_FLAGS)$(NORMAL)
 
 INFO_CC:
 	@echo
