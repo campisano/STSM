@@ -96,6 +96,18 @@ class Itemset
             return this->m_items[0];
         }
 
+        Item getLast()
+        {
+            unsigned int size = this->m_items.size();
+
+            if(size < 1)
+            {
+                throw std::out_of_range("Itemset size must be at least 1.");
+            }
+
+            return this->m_items[size - 1];
+        }
+
         void getCopyExceptPos(unsigned int i, Itemset & _copy_itemset)
         {
             unsigned int size = this->m_items.size();
@@ -207,8 +219,12 @@ class Sequence
         void getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(
             std::vector<Sequence> &_cont_subseq)
         {
-            // Sequence size must be at least 1
-            if(this->m_itemsets.size() < 1)
+            if(
+                // Sequence size must be at least 1
+                this->m_itemsets.size() < 1 ||
+                // If sequence has only 1 itemset, it size must be at least 2
+                this->m_itemsets.size() < 2 && this->m_itemsets[0].size() < 2
+            )
             {
                 // no subsequences exists at all
                 return;
@@ -262,7 +278,8 @@ class Sequence
             std::vector<Sequence> &_cont_subseq)
         {
             // Sequence size must be at least 2
-            // to last itemset be different from first itemset
+            // to getAllContiguosSubsequencesDroppingAnItemFromFirstItemset
+            // be different from getAllContiguosSubsequencesDroppingAnItemFromLastItemset
             if(this->m_itemsets.size() < 2)
             {
                 // no last subsequences exists
@@ -417,6 +434,18 @@ class Sequence
             return this->m_itemsets[0];
         }
 
+        Itemset getLast()
+        {
+            unsigned int size = this->m_itemsets.size();
+
+            if(size < 1)
+            {
+                throw std::out_of_range("Sequence size must be at least 1.");
+            }
+
+            return this->m_itemsets[size - 1];
+        }
+
         std::string toString()
         {
             std::stringstream output;
@@ -480,15 +509,15 @@ class GSP
             std::cout << "First candidates:" << std::endl;
             print(candidates);
 
+            std::vector<Sequence> &curr_candidates = candidates;
             std::vector<Sequence> new_candidates;
             unsigned int seq_items = 0;
 
-            do
+            while(curr_candidates.size() > 0)
             {
                 ++seq_items;
-                new_candidates.clear();
 
-                join(candidates, seq_items, new_candidates);
+                join(curr_candidates, seq_items, new_candidates);
                 std::cout << "Joined candidates at pass " << seq_items
                     << std::endl;
                 print(new_candidates);
@@ -497,8 +526,10 @@ class GSP
                 std::cout << "Pruned candidates at pass " << seq_items
                     << std::endl;
                 print(new_candidates);
+
+                curr_candidates = new_candidates;
+                new_candidates.clear();
             }
-            while(new_candidates.size() > 0);
 
             //TODO [CMP]:
 
@@ -617,29 +648,113 @@ class GSP
                 {
                     for(it2 = (it1 + 1); it2 != _candidates.end(); ++it2)
                     {
-                        Sequence seq_both;
-                        Itemset is_both;
-                        is_both.append(it1->getFirst().getFirst());
-                        is_both.append(it2->getFirst().getFirst());
-                        seq_both.append(is_both);
-                        _new_candidates.push_back(seq_both);
-
-                        Sequence seq_separated;
-                        Itemset is_separated1;
-                        is_separated1.append(it1->getFirst().getFirst());
-                        Itemset is_separated2;
-                        is_separated2.append(it2->getFirst().getFirst());
-                        seq_separated.append(is_separated1);
-                        seq_separated.append(is_separated2);
-                        _new_candidates.push_back(seq_separated);
+                        {
+                            Sequence seq_both;
+                            Itemset is_both;
+                            is_both.append(it1->getFirst().getFirst());
+                            is_both.append(it2->getFirst().getFirst());
+                            seq_both.append(is_both);
+                            _new_candidates.push_back(seq_both);
+                        }
+                        {
+                            Sequence seq_separated;
+                            Itemset is_separated_1;
+                            is_separated_1.append(it1->getFirst().getFirst());
+                            Itemset is_separated_2;
+                            is_separated_2.append(it2->getFirst().getFirst());
+                            seq_separated.append(is_separated_1);
+                            seq_separated.append(is_separated_2);
+                            _new_candidates.push_back(seq_separated);
+                        }
+                        {
+                            //TODO [CMP] ask to Florent, I'm not sure to
+                            // understand why the inverted is needed
+                            Sequence seq_separated_inverted;
+                            Itemset is_separated_1_inverted;
+                            is_separated_1_inverted.append(
+                                it2->getFirst().getFirst());
+                            Itemset is_separated_2_inverted;
+                            is_separated_2_inverted.append(
+                                it1->getFirst().getFirst());
+                            seq_separated_inverted.append(
+                                is_separated_1_inverted);
+                            seq_separated_inverted.append(
+                                is_separated_2_inverted);
+                            _new_candidates.push_back(seq_separated_inverted);
+                        }
                     }
                 }
             }
             else
             {
-                //TODO [CMP] to implement
-                throw std::runtime_error(
-                    "Not implemented: join for k-sequence for k > 1.");
+                std::vector<Sequence>::iterator it1;
+                std::vector<Sequence>::iterator it2;
+
+                for(
+                    it1 = _candidates.begin();
+                    it1 != (_candidates.end() - 1);
+                    ++it1)
+                {
+                    for(it2 = (it1 + 1); it2 != _candidates.end(); ++it2)
+                    {
+                        {
+                            std::vector<Sequence> sub_seqs_S1, sub_seqs_S2;
+                            it1->getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(sub_seqs_S1);
+                            it2->getAllContiguosSubsequencesDroppingAnItemFromLastItemset(sub_seqs_S2);
+
+                            if(sub_seqs_S1.size() > 0 && sub_seqs_S2.size() > 0)
+                            {
+                                //TODO [CMP] to be honest,
+                                // I think that there is no a 'first item'
+                                // or 'last item' in a sequence
+                                // if the first (or last) element of a sequence
+                                // is a itemset of size > 1, there is no first
+                                // (or last) item in this itemset, because the
+                                // itemset has no order, so we should consider all
+                                // the combinations... is it correct??
+                                Sequence sub_seq_S1 = sub_seqs_S1[0];
+                                Sequence sub_seq_S2 = sub_seqs_S2[0];
+
+                                if(sub_seq_S1 == sub_seq_S2)
+                                {
+
+                                    std::stringstream a;
+                                    a << it1->toString();
+                                    a << it2->toString();
+                                    a << sub_seq_S1.toString();
+                                    a << sub_seq_S2.toString();
+                                    throw std::out_of_range(a.str());
+                // The candidate sequence generated by joining S1 with S2 is the sequence
+                // S1 extended with the last item in S2. The added item becomes a separate
+                // element if it was a separate element in S2, and part of the last element of
+                // S1 otherwise.
+                                    // if is a separate element
+                                    if(it2->getLast().size() == 1)
+                                    {
+                                        Sequence seq_S1_ext(*it1);
+                                        Itemset is_last;
+                                        is_last.append(it2->getLast().getLast());
+                                        seq_S1_ext.append(is_last);
+                                        _new_candidates.push_back(seq_S1_ext);
+                                    }
+                                    else
+                                    {
+                                        TODOOOOOOOO
+
+                                        //TODO [CMP] itemset.getFirst() is
+                                        // nosense if itemset is
+                                        // a unordered set !!!
+                                    }
+                                }
+                            }
+                        }
+                        //TODO [CMP] check with Florent if is correct to join
+                        // S2 with S1 too
+                        {
+
+                        }
+                    }
+                }
             }
         }
 
