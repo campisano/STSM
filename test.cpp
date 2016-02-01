@@ -301,7 +301,8 @@ class Sequence
         {
             // Sequence size must be at least 2
             // to getAllContiguosSubsequencesDroppingAnItemFromFirstItemset
-            // be different from getAllContiguosSubsequencesDroppingAnItemFromLastItemset
+            // be different from
+            // getAllContiguosSubsequencesDroppingAnItemFromLastItemset
             if(this->m_itemsets.size() < 2)
             {
                 // no last subsequences exists
@@ -469,7 +470,8 @@ class Sequence
         {
             // Sequence size must be at least 2
             // to getAllContiguosSubsequencesDroppingAnItemFromFirstItemset
-            // be different from getAllContiguosSubsequencesDroppingAnItemFromLastItemset
+            // be different from
+            // getAllContiguosSubsequencesDroppingAnItemFromLastItemset
             if(this->m_itemsets.size() < 2)
             {
                 // no last subsequences exists
@@ -603,13 +605,11 @@ class GSP
 
         void run(std::string _input_filename)
         {
-            this->m_max_gap = 0;
-
             load(_input_filename);
             std::vector<Item> frequent_items;
 
             std::cout << "Detecting frequent items:" << std::endl;
-            detectFrequentItems(13, 100, frequent_items);
+            detectFrequentItems(100, frequent_items);
 
             std::vector<Sequence> candidates;
 
@@ -681,28 +681,66 @@ class GSP
         }
 
         void detectFrequentItems(
-            unsigned int _column_num,
             unsigned int _minimum_support,
             std::vector<Item>& _frequent_items)
         {
             std::map<Item,int> map_count;
 
-            // counting
+            // counting. This algorithm expect data-sequences as rows
             {
                 Item item;
-                unsigned int size = this->m_input_dataset.size();
+                unsigned int tot_rows = this->m_input_dataset.size();
+                unsigned int tot_cols;
+                unsigned int row, col;
+                unsigned int sub_tot_cols;
+                unsigned int sub_row, sub_col;
 
-                for(int i = 0; i< size; ++i)
+                for(row = 0; row < tot_rows; ++row)
                 {
-                    item = this->m_input_dataset[i][_column_num];
+                    tot_cols = this->m_input_dataset[row].size();
 
-                    if (map_count.find(item) == map_count.end())
+                    for(col = 0; col < tot_cols; ++col)
                     {
+                        // discovering all items, passing through every item
+                        // of every row
+                        item = this->m_input_dataset[row][col];
+
+                        // if the item was already counted, skip this item
+                        if (map_count.find(item) != map_count.end())
+                        {
+                            continue;
+                        }
+
+                        // so, this is a new item, there is no item like it
+                        // in the previous rows and in the previous items of
+                        // current row. In the current data-sequence (row) the
+                        // current item exists, so the algorithm can count it
                         map_count[item] = 1;
-                    }
-                    else
-                    {
-                        map_count[item] = map_count[item] + 1;
+
+                        // next, the algorithm will go in each sucessive
+                        // data-sequences to find if the item is contained
+
+                        for(sub_row = row + 1; sub_row < tot_rows; ++sub_row)
+                        {
+                            sub_tot_cols = this->m_input_dataset[
+                                sub_row].size();
+
+                            for(sub_col = 0; sub_col < sub_tot_cols; ++sub_col)
+                            {
+                                // if the algorithm find the item in any
+                                // position of current data-sequence (row)
+                                if(item == this->m_input_dataset[sub_row][
+                                    sub_col])
+                                {
+                                    // increment the counter of data-sequences
+                                    // that contains this item
+                                    map_count[item] = map_count[item] + 1;
+
+                                    // skip the entire current row
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -894,65 +932,57 @@ class GSP
             // also delete candidate sequences that have any subsequence
             // without minimum support.
 
-            if(this->m_max_gap == 0)
+            std::vector<Sequence> contiguous_subseq;
+            std::vector<Sequence> filtered_candidates;
+            bool sequence_to_keep;
+            std::vector<Sequence>::iterator it, sub_it;
+
+            // obtaining all continuous subsequences
+            for(
+                it = _new_candidates.begin();
+                it != _new_candidates.end();
+                ++it)
             {
-                std::vector<Sequence> contiguous_subseq;
-                std::vector<Sequence> filtered_candidates;
-                bool sequence_to_keep;
-                std::vector<Sequence>::iterator it, sub_it;
+                contiguous_subseq.clear();
+                it->getAllFirstLevelContigousSubsequences(
+                    contiguous_subseq);
 
-                // obtaining all continuous subsequences
+                sequence_to_keep = true;
+
                 for(
-                    it = _new_candidates.begin();
-                    it != _new_candidates.end();
-                    ++it)
+                    sub_it = contiguous_subseq.begin();
+                    sub_it != contiguous_subseq.end();
+                    ++sub_it)
                 {
-                    contiguous_subseq.clear();
-                    it->getAllFirstLevelContigousSubsequences(
-                        contiguous_subseq);
-
-                    sequence_to_keep = true;
-
-                    for(
-                        sub_it = contiguous_subseq.begin();
-                        sub_it != contiguous_subseq.end();
-                        ++sub_it)
-                    {
-                        // TODO [CMP]
-                        // mark candidate to remove if a subseq is not
-                        // contained
-                        /*
-                        if(
-                            std::find(vector.begin(),
-                            vector.end(),
-                            (*sub_it)) == vector.end()
-                        )
-                        {
-                        * TO TEST:
-                            sequence_to_keep = false;
-                            break;
-                        }
-                        */
-                    }
-
+                    // TODO [CMP]
+                    // mark candidate to remove if a subseq is not
+                    // contained
                     /*
-                     * * TO TEST:
-                    if(sequence_to_keep)
+                    if(
+                        std::find(vector.begin(),
+                        vector.end(),
+                        (*sub_it)) == vector.end()
+                    )
                     {
-                        filtered_candidates.push_back(*it);
+                    * TO TEST:
+                        sequence_to_keep = false;
+                        break;
                     }
-                    * */
+                    */
                 }
 
-                std::cout << "printing all continuous subsequences"
-                    << " for candidates" << std::endl;
-                GSP::print(contiguous_subseq);
+                /*
+                 * * TO TEST:
+                if(sequence_to_keep)
+                {
+                    filtered_candidates.push_back(*it);
+                }
+                * */
             }
-            else
-            {
-                throw std::runtime_error(
-                    "Not implemented: prune for max_gap != 0.");
-            }
+
+            std::cout << "printing all continuous subsequences"
+                << " for candidates" << std::endl;
+            GSP::print(contiguous_subseq);
         }
 
         void print(std::vector<Sequence> &_sequences)
@@ -966,7 +996,6 @@ class GSP
         }
 
     private:
-        unsigned int m_max_gap;
         std::vector< std::vector<Item> > m_input_dataset;
 };
 
