@@ -5,6 +5,7 @@
 // $ reset; rm -f test; ulimit -c unlimited; g++ -g test.cpp -o test -l cxxtools -l cxxtools-unit && ./test; ulimit -c 0;
 //
 
+#include <algorithm>
 #include <cxxtools/csvdeserializer.h>
 #include <cxxtools/regex.h>
 #include <iostream>
@@ -97,7 +98,7 @@ class Itemset
             this->m_items.push_back(_item);
         }
 
-        Item &getFirst()
+        Item & getFirst()
         {
             if(this->m_items.size() < 1)
             {
@@ -107,7 +108,7 @@ class Itemset
             return this->m_items[0];
         }
 
-        Item &getLast()
+        Item & getLast()
         {
             unsigned int size = this->m_items.size();
 
@@ -117,6 +118,16 @@ class Itemset
             }
 
             return this->m_items[size - 1];
+        }
+
+        inline std::vector<Item>::iterator begin()
+        {
+            return this->m_items.begin();
+        }
+
+        inline std::vector<Item>::iterator end()
+        {
+            return this->m_items.end();
         }
 
         void getCopyExceptPos(unsigned int i, Itemset & _copy_itemset)
@@ -542,7 +553,7 @@ class Sequence
             this->m_itemsets.push_back(_itemset);
         }
 
-        Itemset& getFirst()
+        Itemset & getFirst()
         {
             if(this->m_itemsets.size() < 1)
             {
@@ -552,7 +563,7 @@ class Sequence
             return this->m_itemsets[0];
         }
 
-        Itemset& getLast()
+        Itemset & getLast()
         {
             unsigned int size = this->m_itemsets.size();
 
@@ -562,6 +573,16 @@ class Sequence
             }
 
             return this->m_itemsets[size - 1];
+        }
+
+        inline std::vector<Itemset>::iterator begin()
+        {
+            return this->m_itemsets.begin();
+        }
+
+        inline std::vector<Itemset>::iterator end()
+        {
+            return this->m_itemsets.end();
         }
 
         std::string toString()
@@ -596,6 +617,7 @@ class GSP
     public:
         explicit GSP()
         {
+            this->m_minimum_support = 0;
         }
 
 
@@ -603,13 +625,15 @@ class GSP
         {
         }
 
-        void run(std::string _input_filename)
+        void run(std::string _input_filename, unsigned int _minimum_support)
         {
+            this->m_minimum_support = _minimum_support;
+
             load(_input_filename);
             std::vector<Item> frequent_items;
 
             std::cout << "Detecting frequent items:" << std::endl;
-            detectFrequentItems(100, frequent_items);
+            detectFrequentItems(frequent_items);
 
             std::vector<Sequence> candidates;
 
@@ -638,6 +662,10 @@ class GSP
             std::vector<Sequence> new_candidates;
             unsigned int seq_items = 0;
 
+            // pag. 8
+            // The algorithm terminates when there are no frequent sequences
+            // at the end of a pass, or when there are no candidate sequences
+            // generated.
             while(curr_candidates.size() > 0)
             {
                 ++seq_items;
@@ -680,9 +708,7 @@ class GSP
             file_stream.close();
         }
 
-        void detectFrequentItems(
-            unsigned int _minimum_support,
-            std::vector<Item>& _frequent_items)
+        void detectFrequentItems(std::vector<Item>& _frequent_items)
         {
             std::map<Item,int> map_count;
 
@@ -751,7 +777,7 @@ class GSP
 
                 while(it != map_count.end())
                 {
-                    if(it->second < _minimum_support)
+                    if(it->second < this->m_minimum_support)
                     {
                         map_count.erase(it++);
                     }
@@ -925,64 +951,176 @@ class GSP
 
         void prune(std::vector<Sequence> &_new_candidates)
         {
-            // pag. 9
-            // We delete candidate sequences that have a contiguous
-            // (k-1)-subsequence whose support count is less than the
-            // minimum support. If there is no max-gap constraint, we
-            // also delete candidate sequences that have any subsequence
-            // without minimum support.
+            // TODO [CMP] there is a temporary simple support count
+            // to determine if the candidate should be removed. It is no part
+            // of the GSP paper
 
-            std::vector<Sequence> contiguous_subseq;
-            std::vector<Sequence> filtered_candidates;
-            bool sequence_to_keep;
-            std::vector<Sequence>::iterator it, sub_it;
+            unsigned int support;
+            std::vector<Sequence>::iterator it = _new_candidates.begin();
 
-            // obtaining all continuous subsequences
-            for(
-                it = _new_candidates.begin();
-                it != _new_candidates.end();
-                ++it)
+            // for each candidate
+            while(it != _new_candidates.end())
             {
-                contiguous_subseq.clear();
-                it->getAllFirstLevelContigousSubsequences(
-                    contiguous_subseq);
+                support = this->getSupport(*it);
 
-                sequence_to_keep = true;
-
-                for(
-                    sub_it = contiguous_subseq.begin();
-                    sub_it != contiguous_subseq.end();
-                    ++sub_it)
+                if(support < this->m_minimum_support)
                 {
-                    // TODO [CMP]
-                    // mark candidate to remove if a subseq is not
-                    // contained
-                    /*
-                    if(
-                        std::find(vector.begin(),
-                        vector.end(),
-                        (*sub_it)) == vector.end()
-                    )
-                    {
-                    * TO TEST:
-                        sequence_to_keep = false;
-                        break;
-                    }
-                    */
+                    it = _new_candidates.erase(it);
                 }
-
-                /*
-                 * * TO TEST:
-                if(sequence_to_keep)
+                else
                 {
-                    filtered_candidates.push_back(*it);
+                    std::cout <<
+                        it->toString() << '\t' << support << std::endl;
+                    ++it;
                 }
-                * */
             }
 
-            std::cout << "printing all continuous subsequences"
-                << " for candidates" << std::endl;
-            GSP::print(contiguous_subseq);
+            ///////////////////////////////////////////////////////////////
+            if(false)
+            {
+                // pag. 9
+                // We delete candidate sequences that have a contiguous
+                // (k-1)-subsequence whose support count is less than the
+                // minimum support. If there is no max-gap constraint, we
+                // also delete candidate sequences that have any subsequence
+                // without minimum support.
+
+                std::vector<Sequence> contiguous_subseq;
+                std::vector<Sequence> filtered_candidates;
+                bool sequence_to_keep;
+                std::vector<Sequence>::iterator it, sub_it;
+
+                // obtaining all continuous subsequences
+                for(
+                    it = _new_candidates.begin();
+                    it != _new_candidates.end();
+                    ++it)
+                {
+                    contiguous_subseq.clear();
+                    it->getAllFirstLevelContigousSubsequences(
+                        contiguous_subseq);
+
+                    sequence_to_keep = true;
+
+                    for(
+                        sub_it = contiguous_subseq.begin();
+                        sub_it != contiguous_subseq.end();
+                        ++sub_it)
+                    {
+                        // TODO [CMP]
+                        // mark candidate to remove if a subseq is not
+                        // contained
+                        /*
+                        if(
+                            std::find(vector.begin(),
+                            vector.end(),
+                            (*sub_it)) == vector.end()
+                        )
+                        {
+                        * TO TEST:
+                            sequence_to_keep = false;
+                            break;
+                        }
+                        */
+                    }
+
+                    /*
+                     * * TO TEST:
+                    if(sequence_to_keep)
+                    {
+                        filtered_candidates.push_back(*it);
+                    }
+                    * */
+                }
+
+                std::cout << "printing all continuous subsequences"
+                    << " for candidates" << std::endl;
+                GSP::print(contiguous_subseq);
+            }
+        }
+
+        // counting the number of input data-sequences
+        // that contain the sequence
+        unsigned int getSupport(Sequence & _sequence)
+        {
+            // considering the input data-sequences as itemsets of only one
+            // item, e.g. <(a)(c)(a)(d)(n)(z)(x)(f)>
+            // so a sequence with an itemset.size() > 1 cannot exists in any
+            // of the input data-sequences.
+            {
+                std::vector<Itemset>::iterator it;
+                for (it = _sequence.begin(); it != _sequence.end(); ++it)
+                {
+                    if(it->size() > 1)
+                    {
+                        return 0;
+                    }
+                }
+            }
+
+            // obtaining a string representation of the sequence
+            // to easy loop inside it's elements
+            std::string seq = _sequence.toString();
+            {
+                // from http://stackoverflow.com/a/5891643/846686
+
+                std::string chars = "<>()";
+                std::string::iterator it;
+
+                for (it = chars.begin(); it != chars.end(); ++it)
+                {
+                    seq.erase(std::remove(seq.begin(), seq.end(), *it), seq.end());
+                }
+            }
+
+            unsigned int support = 0;
+
+            Item item;
+            unsigned int tot_rows = this->m_input_dataset.size();
+            unsigned int tot_cols;
+            unsigned int row, col;
+            std::string::iterator it;
+
+            // for each input data-seqeunce, check if contain the sequence
+            for(row = 0; row < tot_rows; ++row)
+            {
+                tot_cols = this->m_input_dataset[row].size();
+
+                // passing through every item of every row
+                // and every item of the sequence
+                // the candidate sequence pointer only advance
+                // if the current item of the input data-sequence
+                // match match with the current item
+                // of the candidate sequence
+                col = 0;
+                it = seq.begin();
+
+                // for all items in the sequence
+                // and for all items in the input data-sequence
+                while(it != seq.end() && col < tot_cols)
+                {
+                    item = this->m_input_dataset[row][col];
+
+                    // if match, go to next item of the sequence
+                    if(item == *it)
+                    {
+                        ++it;
+                    }
+
+                    // in any case
+                    // go to the next item of the input data-sequence
+                     ++col;
+                }
+
+                // if the sequence iterator reach the end,
+                // then the input data-sequence contain the sequence
+                if(it == seq.end())
+                {
+                    ++support;
+                }
+            }
+
+            return support;
         }
 
         void print(std::vector<Sequence> &_sequences)
@@ -996,6 +1134,7 @@ class GSP
         }
 
     private:
+        unsigned int m_minimum_support;
         std::vector< std::vector<Item> > m_input_dataset;
 };
 
@@ -1362,7 +1501,8 @@ class GSPTest : public cxxtools::unit::TestSuite, public GSP
         void test_GSP_run()
         {
             GSP gsp;
-            gsp.run("reduced_data_sax.csv");
+            //gsp.run("100_sax.csv", 951);
+            gsp.run("100_sax_sample.csv", 300);
         }
 
     private:
