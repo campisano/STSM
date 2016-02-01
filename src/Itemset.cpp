@@ -54,7 +54,7 @@ bool Itemset::operator==(const Itemset &other)
 
     unsigned int size = this->m_items.size();
 
-    for(int i=0; i < size; ++i)
+    for(unsigned int i=0; i < size; ++i)
     {
         if(this->m_items[i] != other.m_items[i])
         {

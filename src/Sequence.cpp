@@ -45,7 +45,7 @@ void Sequence::set(std::string _string_representation)
     }
 }
 
-bool Sequence::getAllFirstLevelContigousSubsequences(
+void Sequence::getAllFirstLevelContigousSubsequences(
     std::vector<Sequence> &_cont_subseq)
 {
     // pag. 8
@@ -78,9 +78,9 @@ void Sequence::getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(
 {
     if(
         // Sequence size must be at least 1
-        this->m_itemsets.size() < 1 ||
+        (this->m_itemsets.size() < 1) ||
         // If sequence has only 1 itemset, it size must be at least 2
-        this->m_itemsets.size() < 2 && this->m_itemsets[0].size() < 2
+        (this->m_itemsets.size() < 2 && this->m_itemsets[0].size() < 2)
     )
     {
         // no subsequences exists at all
@@ -256,9 +256,9 @@ void Sequence::getSubsequenceDroppingFirstItem(Sequence &_subseq)
 {
     if(
         // Sequence size must be at least 1
-        this->m_itemsets.size() < 1 ||
+        (this->m_itemsets.size() < 1) ||
         // If sequence has only 1 itemset, it size must be at least 2
-        this->m_itemsets.size() < 2 && this->m_itemsets[0].size() < 2
+        (this->m_itemsets.size() < 2 && this->m_itemsets[0].size() < 2)
     )
     {
         // no subsequences exists at all
@@ -356,7 +356,7 @@ bool Sequence::operator==(const Sequence &other)
 
     unsigned int size = this->m_itemsets.size();
 
-    for(int i=0; i < size; ++i)
+    for(unsigned int i=0; i < size; ++i)
     {
         if(! (this->m_itemsets[i] == other.m_itemsets[i]))
         {

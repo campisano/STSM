@@ -14,7 +14,7 @@ class Sequence
         virtual ~Sequence();
 
         void set(std::string _string_representation);
-        bool getAllFirstLevelContigousSubsequences(
+        void getAllFirstLevelContigousSubsequences(
             std::vector<Sequence> &_cont_subseq);
         void getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(
             std::vector<Sequence> &_cont_subseq);

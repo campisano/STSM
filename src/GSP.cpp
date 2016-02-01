@@ -105,7 +105,7 @@ void GSP::load(std::string &_input_filename)
 
 void GSP::detectFrequentItems(std::vector<Item>& _frequent_items)
 {
-    std::map<Item,int> map_count;
+    std::map<Item, unsigned int> map_count;
 
     // counting. This algorithm expect data-sequences as rows
     {
@@ -168,7 +168,7 @@ void GSP::detectFrequentItems(std::vector<Item>& _frequent_items)
 
     // filter
     {
-        std::map<Item,int>::iterator it = map_count.begin();
+        std::map<Item, unsigned int>::iterator it = map_count.begin();
 
         while(it != map_count.end())
         {
@@ -187,7 +187,7 @@ void GSP::detectFrequentItems(std::vector<Item>& _frequent_items)
 
     // return
     {
-        std::map<Item,int>::iterator it;
+        std::map<Item, unsigned int>::iterator it;
 
         for(it = map_count.begin(); it != map_count.end(); ++it)
         {
@@ -382,7 +382,7 @@ void GSP::prune(std::vector<Sequence> &_new_candidates)
 
         std::vector<Sequence> contiguous_subseq;
         std::vector<Sequence> filtered_candidates;
-        bool sequence_to_keep;
+        //bool sequence_to_keep;
         std::vector<Sequence>::iterator it, sub_it;
 
         // obtaining all continuous subsequences
@@ -395,7 +395,7 @@ void GSP::prune(std::vector<Sequence> &_new_candidates)
             it->getAllFirstLevelContigousSubsequences(
                 contiguous_subseq);
 
-            sequence_to_keep = true;
+            //sequence_to_keep = true;
 
             for(
                 sub_it = contiguous_subseq.begin();
