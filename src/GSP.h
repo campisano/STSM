@@ -13,7 +13,10 @@ class GSP
         explicit GSP();
         virtual ~GSP();
 
-        void run(std::string _input_filename, unsigned int _minimum_support);
+        void run(
+            std::string _input_filename,
+            unsigned int _minimum_support,
+            unsigned int _max_gap);
 
     protected:
         void load(std::string &_input_filename);
@@ -28,6 +31,7 @@ class GSP
 
     private:
         unsigned int m_minimum_support;
+        unsigned int m_max_gap;
         std::vector< std::vector<Item> > m_input_dataset;
 };
 

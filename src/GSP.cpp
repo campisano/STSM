@@ -21,9 +21,13 @@ GSP::~GSP()
 {
 }
 
-void GSP::run(std::string _input_filename, unsigned int _minimum_support)
+void GSP::run(
+    std::string _input_filename,
+    unsigned int _minimum_support,
+    unsigned int _max_gap)
 {
     this->m_minimum_support = _minimum_support;
+    this->m_max_gap = _max_gap;
 
     load(_input_filename);
     std::vector<Item> frequent_items;
@@ -474,6 +478,8 @@ unsigned int GSP::getSupport(Sequence & _sequence)
     unsigned int tot_rows = this->m_input_dataset.size();
     unsigned int tot_cols;
     unsigned int row, col;
+    unsigned int start_match_col;
+    unsigned int last_match_col;
     std::string::iterator it;
 
     // for each input data-seqeunce, check if contain the sequence
@@ -489,16 +495,37 @@ unsigned int GSP::getSupport(Sequence & _sequence)
         // of the candidate sequence
         col = 0;
         it = seq.begin();
+        start_match_col = 0;
+        last_match_col = 0;
 
         // for all items in the sequence
         // and for all items in the input data-sequence
         while(it != seq.end() && col < tot_cols)
         {
+            // check the max_gap constrant
+            if(last_match_col != 0 &&
+                (col - last_match_col) > this->m_max_gap)
+            {
+                // rewind to start_match_col + 1
+                col = start_match_col + 1;
+                it = seq.begin();
+                start_match_col = 0;
+                last_match_col = 0;
+                continue;
+            }
+
             item = this->m_input_dataset[row][col];
 
             // if match, go to next item of the sequence
             if(item == *it)
             {
+                // take note for the start of the match
+                if(start_match_col == 0)
+                {
+                    start_match_col = col;
+                }
+
+                last_match_col = col;
                 ++it;
             }
 
