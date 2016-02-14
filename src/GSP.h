@@ -19,6 +19,8 @@ class GSP
             unsigned int _max_gap);
 
     protected:
+        void setMinimumSupport(unsigned int _minimum_support);
+        void setMaxGap(unsigned int _max_gap);
         void load(std::string &_input_filename);
         void detectFrequentItems(std::vector<Item>& _frequent_items);
         void join(

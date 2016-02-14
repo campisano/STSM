@@ -26,8 +26,8 @@ void GSP::run(
     unsigned int _minimum_support,
     unsigned int _max_gap)
 {
-    this->m_minimum_support = _minimum_support;
-    this->m_max_gap = _max_gap;
+    this->setMinimumSupport(_minimum_support);
+    this->setMaxGap(_max_gap);
 
     load(_input_filename);
     std::vector<Item> frequent_items;
@@ -93,6 +93,28 @@ void GSP::run(
     // is no needed?
 
     // what's next?
+}
+
+void GSP::setMinimumSupport(unsigned int _minimum_support)
+{
+    if(_minimum_support < 1)
+    {
+        throw std::runtime_error(
+            "Minumum Support parameter cannot be less then 1.");
+    }
+
+    this->m_minimum_support = _minimum_support;
+}
+
+void GSP::setMaxGap(unsigned int _max_gap)
+{
+    if(_max_gap < 1)
+    {
+        throw std::runtime_error(
+            "Max Gap parameter cannot be less then 1.");
+    }
+
+    this->m_max_gap = _max_gap;
 }
 
 void GSP::load(std::string &_input_filename)
