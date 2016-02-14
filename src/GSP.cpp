@@ -108,10 +108,10 @@ void GSP::setMinimumSupport(unsigned int _minimum_support)
 
 void GSP::setMaxGap(unsigned int _max_gap)
 {
-    if(_max_gap < 1)
+    if(_max_gap < 0)
     {
         throw std::runtime_error(
-            "Max Gap parameter cannot be less then 1.");
+            "Max Gap parameter cannot be less then 0.");
     }
 
     this->m_max_gap = _max_gap;
@@ -549,7 +549,7 @@ unsigned int GSP::getSupport(Sequence & _sequence)
         {
             // check the max_gap constrant
             if(last_match_col != 0 &&
-                (col - last_match_col) > this->m_max_gap)
+                (col - last_match_col) > (this->m_max_gap + 1))
             {
                 // rewind to start_match_col + 1
                 col = start_match_col + 1;

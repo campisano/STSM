@@ -367,8 +367,8 @@ void GSPTest::test_GSP_join()
 void GSPTest::test_GSP_run()
 {
     GSP gsp;
-    //gsp.run("100_sax.csv", 951, 1);
-    gsp.run("data/100_sax_sample.csv", 300, 1);
+    //gsp.run("100_sax.csv", 951, 0);
+    gsp.run("data/100_sax_sample.csv", 300, 0);
 }
 
 void GSPTest::prepare(Sequence &_seq)
