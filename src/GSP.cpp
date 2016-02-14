@@ -71,12 +71,12 @@ void GSP::run(
         ++seq_items;
 
         join(curr_candidates, seq_items, new_candidates);
-        std::cout << "Joined candidates at pass " << seq_items
+        std::cout << "Candidates after Join at pass " << seq_items
             << std::endl;
         print(new_candidates);
 
         prune(new_candidates);
-        std::cout << "Pruned candidates at pass " << seq_items
+        std::cout << "Candidates after Prune at pass " << seq_items
             << std::endl;
         print(new_candidates);
 
@@ -252,6 +252,31 @@ void GSP::join(
             it1 != (_candidates.end() - 1);
             ++it1)
         {
+            // TODO [CMP] added and to be discussed
+            // this block add sequences of repetitive items like
+            // <(aa)>
+            // <(a)(a)>
+            {
+                {
+                    Sequence seq_both;
+                    Itemset is_both;
+                    is_both.append(it1->getFirst().getFirst());
+                    is_both.append(it1->getFirst().getFirst());
+                    seq_both.append(is_both);
+                    _new_candidates.push_back(seq_both);
+                }
+                {
+                    Sequence seq_separated;
+                    Itemset is_separated_1;
+                    is_separated_1.append(it1->getFirst().getFirst());
+                    Itemset is_separated_2;
+                    is_separated_2.append(it1->getFirst().getFirst());
+                    seq_separated.append(is_separated_1);
+                    seq_separated.append(is_separated_2);
+                    _new_candidates.push_back(seq_separated);
+                }
+            }
+
             for(it2 = (it1 + 1); it2 != _candidates.end(); ++it2)
             {
                 {
@@ -273,8 +298,6 @@ void GSP::join(
                     _new_candidates.push_back(seq_separated);
                 }
                 {
-                    //TODO [CMP] ask to Florent, I'm not sure to
-                    // understand why the inverted is needed
                     Sequence seq_separated_inverted;
                     Itemset is_separated_1_inverted;
                     is_separated_1_inverted.append(
