@@ -23,7 +23,7 @@ Itemset::~Itemset()
 
 void Itemset::set(std::string _string_representation)
 {
-    cxxtools::Regex seq_regex("^(\\([a-z]+\\))$");
+    cxxtools::Regex seq_regex("^(\\([a-zA-Z]+\\))$");
 
     if(! seq_regex.match(_string_representation))
     {
@@ -33,7 +33,7 @@ void Itemset::set(std::string _string_representation)
         std::runtime_error(msg.str());
     }
 
-    cxxtools::Regex itemset_regex("([a-z])");
+    cxxtools::Regex itemset_regex("([a-zA-Z])");
     cxxtools::RegexSMatch itemsets;
     std::string substr = _string_representation.substr(1);
 
