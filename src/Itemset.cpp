@@ -43,6 +43,12 @@ void Itemset::set(std::string _string_representation)
         substr = substr.substr(itemsets.offsetEnd(1));
         this->append(is);
     }
+
+    // this can not happen
+    if(this->m_items.size() == 0)
+    {
+        throw std::runtime_error("Itemset with 0 Items detected!");
+    }
 }
 
 bool Itemset::operator==(const Itemset &other)

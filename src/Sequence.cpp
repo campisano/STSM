@@ -43,6 +43,12 @@ void Sequence::set(std::string _string_representation)
         substr = substr.substr(itemsets.offsetEnd(1));
         this->append(is);
     }
+
+    // this can not happen
+    if(this->m_itemsets.size() == 0)
+    {
+        throw std::runtime_error("Sequence with 0 Itemsets detected!");
+    }
 }
 
 void Sequence::getAllFirstLevelContigousSubsequences(
