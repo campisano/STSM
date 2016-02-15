@@ -27,6 +27,7 @@ class GSP
             std::vector<Sequence> &_candidates,
             unsigned int _seq_items,
             std::vector<Sequence> &_new_candidates);
+        Sequence joinSubsequences(Sequence& _seq1, Sequence& _seq2);
         void prune(std::vector<Sequence> &_new_candidates);
         unsigned int getSupport(Sequence & _sequence);
         void print(std::vector<Sequence> &_sequences);

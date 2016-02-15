@@ -249,7 +249,7 @@ void GSP::join(
 
         for(
             it1 = _candidates.begin();
-            it1 != (_candidates.end() - 1);
+            it1 != (_candidates.end());
             ++it1)
         {
             // TODO [CMP] added and to be discussed
@@ -321,10 +321,10 @@ void GSP::join(
 
         for(
             it1 = _candidates.begin();
-            it1 != (_candidates.end() - 1);
+            it1 != (_candidates.end());
             ++it1)
         {
-            for(it2 = (it1 + 1); it2 != _candidates.end(); ++it2)
+            for(it2 = _candidates.begin(); it2 != _candidates.end(); ++it2)
             {
                 {
                     //std::vector<Sequence> sub_seqs_S1, sub_seqs_S2;
@@ -361,25 +361,8 @@ void GSP::join(
         // S1 extended with the last item in S2. The added item becomes a separate
         // element if it was a separate element in S2, and part of the last element of
         // S1 otherwise.
-                            // if is a separate element
-                            if(it2->getLast().size() == 1)
-                            {
-                                Sequence seq_S1_ext(*it1);
-                                Itemset is_last;
-                                is_last.append(it2->getLast().getLast());
-                                seq_S1_ext.append(is_last);
-                                _new_candidates.push_back(seq_S1_ext);
-                            }
-                            else
-                            {
-                                //TODO [CMP] itemset.getFirst() is
-                                // nosense if itemset is
-                                // a unordered set !!!
-                                Sequence seq_S1_ext(*it1);
-                                seq_S1_ext.getLast().append(
-                                    it2->getLast().getLast());
-                                _new_candidates.push_back(seq_S1_ext);
-                            }
+                            _new_candidates.push_back(
+                                this->joinSubsequences(*it1, *it2));
                         }
                     //}
                 }
@@ -391,6 +374,30 @@ void GSP::join(
             }
         }
     }
+}
+
+Sequence GSP::joinSubsequences(
+    Sequence& _seq1,
+    Sequence& _seq2)
+{
+    Sequence seq_S1_ext(_seq1);
+
+    // if is a separate element
+    if(_seq2.getLast().size() == 1)
+    {
+        Itemset is_last;
+        is_last.append(_seq2.getLast().getLast());
+        seq_S1_ext.append(is_last);
+    }
+    else
+    {
+        //TODO [CMP] itemset.getFirst() is
+        // nosense if itemset is
+        // a unordered set !!!
+        seq_S1_ext.getLast().append(_seq2.getLast().getLast());
+    }
+
+    return seq_S1_ext;
 }
 
 void GSP::prune(std::vector<Sequence> &_new_candidates)
