@@ -28,6 +28,8 @@ class Sequence
         Itemset & getFirst();
         Itemset & getLast();
         std::string toString();
+        std::string toStringOfItems();
+        bool hasItemsetWithSizeGreaterThenOne();
 
         inline void clear()
         {

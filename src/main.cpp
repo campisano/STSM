@@ -37,7 +37,7 @@ int main(int argc,char **argv)
     // (using a small dataset with manually defined data and frequent sequences)
 
     // test_3.out: manual test dataset
-    //gsp.run("data/100_sax_sample_synthetic_10.csv", 2, 0);
+    gsp.run("data/100_sax_sample_synthetic_10.csv", 2, 0);
     //<(C)(C)(A)(R)(D)(O)>  10
     //<(I)(C)(C)(A)(R)(D)>  10
     //<(R)(I)(C)(C)(A)(R)>  10
@@ -89,32 +89,32 @@ int main(int argc,char **argv)
     // injected M,I,N,z,G,A,P,z,z,z,A in all 951 lines
     // changed the injected in the last line to M,I,N,z,G,A,P,z,Z,z,A
     // results as espected:
-    //<(M)(I)(N)(z)(G)(A)(P)(z)(z)(z)(A)>   950
     //<(M)(I)(N)(z)(G)(A)(P)(z)(z)(A)>  951
+    //<(M)(I)(N)(z)(G)(A)(P)(z)(z)(z)(A)>   950
 
-    // test_7.out: can find synthetic sequences with gap <= 2
-    //gsp.run("data/100_sax_synthetic_manual_gap_2a.csv", 950, 2);
+    // test_7.out: can find synthetic sequences with gap <= 1
+    //gsp.run("data/100_sax_synthetic_manual_gap_2a.csv", 950, 1);
     // injected M,I,N,z,G,A,P,z,z,z,A in all 951 lines
     // changed the injected in the last line to M,I,N,z,G,A,P,Z,z,Z,A
     // results as espected:
+    //<(M)(I)(N)(z)(G)(A)(P)(z)>    951
     //<(M)(I)(N)(z)(G)(A)(P)(z)(z)(z)(A)>   950
-    //<(M)(I)(N)(z)(G)(A)(P)(z)(A)> 951
 
     // test_8.out: can find synthetic sequences with gap <= 2
     //gsp.run("data/100_sax_synthetic_manual_gap_2b.csv", 950, 2);
     // injected M,I,N,z,G,A,P,z,z,z,A in all 951 lines
     // changed the injected in the last line to M,I,N,z,G,A,P,z,Z,Z,A
     // results as espected:
-    //<(M)(I)(N)(z)(G)(A)(P)(z)(z)(z)(A)>   950
     //<(M)(I)(N)(z)(G)(A)(P)(z)(A)> 951
+    //<(M)(I)(N)(z)(G)(A)(P)(z)(z)(z)(A)>   950
 
     // test_9.out: can find synthetic sequences with gap <= 2
     //gsp.run("data/100_sax_synthetic_manual_gap_2c.csv", 950, 2);
     // injected M,I,N,z,G,A,P,z,z,z,A in all 951 lines
     // changed the injected in the last line to M,I,N,z,G,A,P,z,Z,Z,z,A
     // results as espected:
-    //<(M)(I)(N)(z)(G)(A)(P)(z)(z)(z)(A)>   950
     //<(M)(I)(N)(z)(G)(A)(P)(z)(z)(A)>  951
+    //<(M)(I)(N)(z)(G)(A)(P)(z)(z)(z)(A)>   950
 
 
     return 0;

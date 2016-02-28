@@ -1,5 +1,6 @@
 #include "Sequence.h"
 
+#include <algorithm>
 #include <cxxtools/regex.h>
 #include <iostream>
 #include <sstream>
@@ -414,4 +415,38 @@ std::string Sequence::toString()
     output << '>';
 
     return output.str();
+}
+
+std::string Sequence::toStringOfItems()
+{
+    std::string str_seq = this->toString();
+    // from http://stackoverflow.com/a/5891643/846686
+
+    std::string chars = "<>()";
+    std::string::iterator it;
+
+    for (it = chars.begin(); it != chars.end(); ++it)
+    {
+        str_seq.erase(
+            std::remove(str_seq.begin(), str_seq.end(), *it),
+            str_seq.end()
+        );
+    }
+
+    return str_seq;
+}
+
+bool Sequence::hasItemsetWithSizeGreaterThenOne()
+{
+    std::vector<Itemset>::iterator it;
+
+    for (it = this->begin(); it != this->end(); ++it)
+    {
+        if(it->size() > 1)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }

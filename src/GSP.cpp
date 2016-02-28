@@ -1,6 +1,5 @@
 #include "GSP.h"
 
-#include <algorithm>
 #include <cxxtools/csvdeserializer.h>
 #include <iostream>
 #include <fstream>
@@ -498,31 +497,14 @@ unsigned int GSP::getSupport(Sequence & _sequence)
     // item, e.g. <(a)(c)(a)(d)(n)(z)(x)(f)>
     // so a sequence with an itemset.size() > 1 cannot exists in any
     // of the input data-sequences.
+    if(_sequence.hasItemsetWithSizeGreaterThenOne())
     {
-        std::vector<Itemset>::iterator it;
-        for (it = _sequence.begin(); it != _sequence.end(); ++it)
-        {
-            if(it->size() > 1)
-            {
-                return 0;
-            }
-        }
+        return 0;
     }
 
     // obtaining a string representation of the sequence
     // to easy loop inside it's elements
-    std::string seq = _sequence.toString();
-    {
-        // from http://stackoverflow.com/a/5891643/846686
-
-        std::string chars = "<>()";
-        std::string::iterator it;
-
-        for (it = chars.begin(); it != chars.end(); ++it)
-        {
-            seq.erase(std::remove(seq.begin(), seq.end(), *it), seq.end());
-        }
-    }
+    std::string seq = _sequence.toStringOfItems();
 
     unsigned int support = 0;
 
