@@ -77,6 +77,9 @@ void GSPTest::test_equality()
     std::cout << seq2.toString();
     std::cout << std::endl;
     CXXTOOLS_UNIT_ASSERT(seq1 == seq2);
+
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::test_sequenceStringRepresentation()
@@ -94,6 +97,9 @@ void GSPTest::test_sequenceStringRepresentation()
     std::cout << seq2.toString();
     std::cout << std::endl;
     CXXTOOLS_UNIT_ASSERT(seq1 == seq2);
+
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromFirstItemset()
@@ -127,7 +133,8 @@ void GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromFirstItemset()
             vect_sub_seq_prepared[i] == vect_sub_seq_generated[i]);
     }
 
-    std::cout << std::endl;
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromLastItemset()
@@ -161,7 +168,8 @@ void GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromLastItemset()
             vect_sub_seq_prepared[i] == vect_sub_seq_generated[i]);
     }
 
-    std::cout << std::endl;
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset()
@@ -195,7 +203,8 @@ void GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset
             vect_sub_seq_prepared[i] == vect_sub_seq_generated[i]);
     }
 
-    std::cout << std::endl;
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::test_getAllFirstLevelContigousSubsequences()
@@ -222,6 +231,9 @@ void GSPTest::test_getAllFirstLevelContigousSubsequences()
     {
         CXXTOOLS_UNIT_ASSERT(cont_subseq[i] == gsp_cont_subseq[i]);
     }
+
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::test_getSubsequenceDroppingFirstItemFromSingleItemset()
@@ -243,6 +255,9 @@ void GSPTest::test_getSubsequenceDroppingFirstItemFromSingleItemset()
     CXXTOOLS_UNIT_ASSERT_EQUALS(
         sub_seq_prepared.size(), sub_seq_generated.size());
     CXXTOOLS_UNIT_ASSERT(sub_seq_prepared == sub_seq_generated);
+
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::test_getSubsequenceDroppingFirstItemFromMultipleItemset()
@@ -264,6 +279,9 @@ void GSPTest::test_getSubsequenceDroppingFirstItemFromMultipleItemset()
     CXXTOOLS_UNIT_ASSERT_EQUALS(
         sub_seq_prepared.size(), sub_seq_generated.size());
     CXXTOOLS_UNIT_ASSERT(sub_seq_prepared == sub_seq_generated);
+
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::test_getSubsequenceDroppingLastItemFromSingleItemset()
@@ -285,6 +303,9 @@ void GSPTest::test_getSubsequenceDroppingLastItemFromSingleItemset()
     CXXTOOLS_UNIT_ASSERT_EQUALS(
         sub_seq_prepared.size(), sub_seq_generated.size());
     CXXTOOLS_UNIT_ASSERT(sub_seq_prepared == sub_seq_generated);
+
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::test_getSubsequenceDroppingLastItemFromMultipleItemset()
@@ -306,12 +327,14 @@ void GSPTest::test_getSubsequenceDroppingLastItemFromMultipleItemset()
     CXXTOOLS_UNIT_ASSERT_EQUALS(
         sub_seq_prepared.size(), sub_seq_generated.size());
     CXXTOOLS_UNIT_ASSERT(sub_seq_prepared == sub_seq_generated);
+
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::test_GSP_join()
 {
     // Arrange
-
     std::vector<Sequence> candidates;
     std::vector<Sequence> prepared_candidates;
     std::vector<Sequence> generated_candidates;
@@ -361,7 +384,8 @@ void GSPTest::test_GSP_join()
             prepared_candidates[i] == generated_candidates[i]);
     }
 
-    std::cout << std::endl;
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::test_GSP_run()
@@ -369,6 +393,9 @@ void GSPTest::test_GSP_run()
     GSP gsp;
     //gsp.run("100_sax.csv", 951, 0);
     gsp.run("data/100_sax_sample.csv", 300, 0);
+
+    std::cout << std::endl
+        << "__________________________________________________";
 }
 
 void GSPTest::prepare(Sequence &_seq)
