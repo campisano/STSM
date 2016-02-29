@@ -1,7 +1,10 @@
 #ifndef GSP__H__
 #define GSP__H__
 
+#include <list>
+#include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "Item.h"
@@ -26,16 +29,32 @@ class GSP
         void join(
             std::vector<Sequence> &_candidates,
             unsigned int _seq_items,
-            std::vector<Sequence> &_new_candidates);
+            std::vector<Sequence> &_new_candidates
+        );
         Sequence joinSubsequences(Sequence& _seq1, Sequence& _seq2);
-        void prune(std::vector<Sequence> &_new_candidates);
-        unsigned int getSupport(Sequence & _sequence);
+        void prune(
+            unsigned int _seq_items,
+            std::vector<Sequence> &_new_candidates
+        );
+        void updateSupportCountPositions(
+            std::vector<Sequence> &_new_candidates,
+            unsigned int _seq_items
+        );
         void print(std::vector<Sequence> &_sequences);
 
     private:
         unsigned int m_minimum_support;
         unsigned int m_max_gap;
         std::vector< std::vector<Item> > m_input_dataset;
+        std::map< unsigned int,    // mapping sequences per length (seq items)
+            std::map< std::string, // mapping results per sequence (toString())
+                std::pair < unsigned int,   // support count
+                    std::list <             // list of positions
+                        std::pair< unsigned int, unsigned int > // sensor, time
+                    >
+                >
+            >
+        > m_supported_sequences_positions;
 };
 
 #endif

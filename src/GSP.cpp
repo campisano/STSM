@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -74,7 +75,7 @@ void GSP::run(
             << std::endl;
         print(new_candidates);
 
-        prune(new_candidates);
+        prune(seq_items, new_candidates);
         std::cout << "Candidates after Prune at pass " << seq_items
             << std::endl;
         print(new_candidates);
@@ -92,6 +93,71 @@ void GSP::run(
     // is no needed?
 
     // what's next?
+
+    // print supported sequences
+    {
+        std::cout << std::endl << "Printing supported sequences:" << std::endl;
+        std::map< unsigned int,    // mapping sequences per length (seq items)
+            std::map< std::string, // mapping results per sequence (toString())
+                std::pair < unsigned int,           // support count
+                    std::list <                     // list of positions
+                        std::pair< unsigned int, unsigned int > // sensor, time
+                    >
+                >
+            >
+        >::iterator it_seq_map;
+
+        std::map< std::string, // mapping results per sequence (toString())
+            std::pair < unsigned int,               // support count
+                std::list <                         // list of positions
+                    std::pair< unsigned int, unsigned int > // sensor, time
+                >
+            >
+        >::iterator it_results_map;
+
+        std::list <                                 // list of positions
+            std::pair< unsigned int, unsigned int > // sensor, time
+        >::iterator it_positions_vect;
+
+        for(
+            it_seq_map = this->m_supported_sequences_positions.begin();
+            it_seq_map != this->m_supported_sequences_positions.end();
+            ++it_seq_map
+        )
+        {
+            std::cout << '\t' << "length: " << it_seq_map->first << std::endl;
+
+            for(
+                it_results_map = it_seq_map->second.begin();
+                it_results_map != it_seq_map->second.end();
+                ++it_results_map
+            )
+            {
+                if(it_results_map->second.first > 0)
+                {
+                    std::cout << "\t\t" << "sequence: "
+                        << it_results_map->first << std::endl;
+
+                    std::cout << "\t\t" << "count: "
+                        << it_results_map->second.first << std::endl;
+                    for(
+                        it_positions_vect = (
+                            it_results_map->second.second.begin()
+                        );
+                        it_positions_vect != (
+                            it_results_map->second.second.end()
+                        );
+                        ++it_positions_vect
+                    )
+                    {
+                        std::cout << "\t\t\t" << "position: "
+                            << it_positions_vect->first << " "
+                            << it_positions_vect->second << std::endl;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void GSP::setMinimumSupport(unsigned int _minimum_support)
@@ -399,11 +465,16 @@ Sequence GSP::joinSubsequences(
     return seq_S1_ext;
 }
 
-void GSP::prune(std::vector<Sequence> &_new_candidates)
+void GSP::prune(
+    unsigned int _seq_items,
+    std::vector<Sequence> &_new_candidates
+)
 {
     // TODO [CMP] there is a temporary simple support count
     // to determine if the candidate should be removed. It is no part
     // of the GSP paper
+
+    this->updateSupportCountPositions(_new_candidates, _seq_items);
 
     unsigned int support;
     std::vector<Sequence>::iterator it = _new_candidates.begin();
@@ -411,7 +482,9 @@ void GSP::prune(std::vector<Sequence> &_new_candidates)
     // for each candidate
     while(it != _new_candidates.end())
     {
-        support = this->getSupport(*it);
+        //support = this->getSupport(*it);
+        support = this->m_supported_sequences_positions[
+            _seq_items][it->toString()].first;
 
         if(support < this->m_minimum_support)
         {
@@ -489,94 +562,144 @@ void GSP::prune(std::vector<Sequence> &_new_candidates)
     }
 }
 
-// counting the number of input data-sequences
-// that contain the sequence
-unsigned int GSP::getSupport(Sequence & _sequence)
+void GSP::updateSupportCountPositions(
+    std::vector<Sequence> &_new_candidates,
+    unsigned int _seq_items
+)
 {
-    // considering the input data-sequences as itemsets of only one
-    // item, e.g. <(a)(c)(a)(d)(n)(z)(x)(f)>
-    // so a sequence with an itemset.size() > 1 cannot exists in any
-    // of the input data-sequences.
-    if(_sequence.hasItemsetWithSizeGreaterThenOne())
+    unsigned int tot_rows = this->m_input_dataset.size();
+    std::vector<Sequence>::iterator it_seq;
+    std::string str_seq;
+    std::string::iterator str_it;
+
+    // initialize support vector map
+    // for each sequence candidate
+    for(
+        it_seq = _new_candidates.begin();
+        it_seq != _new_candidates.end();
+        ++it_seq
+    )
     {
-        return 0;
+        std::list< std::pair<unsigned int, unsigned int> > list;
+        std::pair <
+            unsigned int, std::list <
+                std::pair<unsigned int, unsigned int>
+            >
+        > pair(0, list);
+        this->m_supported_sequences_positions[_seq_items][
+            it_seq->toString()] = pair;
     }
 
-    // obtaining a string representation of the sequence
-    // to easy loop inside it's elements
-    std::string seq = _sequence.toStringOfItems();
-
-    unsigned int support = 0;
-
-    Item item;
-    unsigned int tot_rows = this->m_input_dataset.size();
-    unsigned int tot_cols;
-    unsigned int row, col;
-    unsigned int start_match_col;
-    unsigned int last_match_col;
-    std::string::iterator it;
+    // use a temporary way to store support count per sequence
+    std::map<std::string, std::set<unsigned int> > support;
 
     // for each input data-seqeunce, check if contain the sequence
-    for(row = 0; row < tot_rows; ++row)
+    for(unsigned int row = 0; row < tot_rows; ++row)
     {
-        tot_cols = this->m_input_dataset[row].size();
+        unsigned int tot_cols = this->m_input_dataset[row].size();
 
-        // passing through every item of every row
-        // and every item of the sequence
-        // the candidate sequence pointer only advance
-        // if the current item of the input data-sequence
-        // match match with the current item
-        // of the candidate sequence
-        col = 0;
-        it = seq.begin();
-        start_match_col = 0;
-        last_match_col = 0;
-
-        // for all items in the sequence
-        // and for all items in the input data-sequence
-        while(it != seq.end() && col < tot_cols)
+        // for each sequence candidate
+        for(
+            it_seq = _new_candidates.begin();
+            it_seq != _new_candidates.end();
+            ++it_seq
+        )
         {
-            // check the max_gap constrant
-            if(last_match_col != 0 &&
-                (col - last_match_col) > (this->m_max_gap + 1))
+            // considering the input data-sequences as itemsets of only one
+            // item, e.g. <(a)(c)(a)(d)(n)(z)(x)(f)>
+            // so a sequence with an itemset.size() > 1 cannot exists in any
+            // of the input data-sequences.
+            if(it_seq->hasItemsetWithSizeGreaterThenOne())
             {
-                // rewind to start_match_col + 1
-                col = start_match_col + 1;
-                it = seq.begin();
-                start_match_col = 0;
-                last_match_col = 0;
                 continue;
             }
 
-            item = this->m_input_dataset[row][col];
+            // obtaining a string representation of the sequence
+            // to easy loop inside it's elements
+            str_seq = it_seq->toStringOfItems();
+            str_it = str_seq.begin();
 
-            // if match, go to next item of the sequence
-            if(item == *it)
+            if(str_seq.size() < 2)
             {
-                // take note for the start of the match
-                if(start_match_col == 0)
-                {
-                    start_match_col = col;
-                }
-
-                last_match_col = col;
-                ++it;
+                throw std::runtime_error(
+                    "Current support count function doesn't handle"
+                    " sequence with less then two items.");
             }
 
-            // in any case
-            // go to the next item of the input data-sequence
-             ++col;
-        }
+            unsigned int col = 0;
+            unsigned int start_match_col = 0;
+            unsigned int last_match_col = 0;
 
-        // if the sequence iterator reach the end,
-        // then the input data-sequence contain the sequence
-        if(it == seq.end())
-        {
-            ++support;
+            // passing through every item of the row
+            while(col < tot_cols)
+            {
+                // check the max_gap constrant
+                // this check must be an early check
+                if(
+                    last_match_col != 0 &&
+                    (col - last_match_col) > (this->m_max_gap + 1)
+                )
+                {
+                    // rewind to start_match_col + 1
+                    col = start_match_col + 1;
+                    start_match_col = 0;
+                    last_match_col = 0;
+                    str_it = str_seq.begin();
+                    continue;
+                }
+
+                Item &item = this->m_input_dataset[row][col];
+
+                // if match, go to next item of the sequence
+                if(item == *str_it)
+                {
+                    // take note for the start of the match
+                    if(start_match_col == 0)
+                    {
+                        start_match_col = col;
+                    }
+
+                    last_match_col = col;
+                    ++str_it;
+
+                    // if the sequence iterator reach the end,
+                    // then the input data-sequence contain the sequence
+                    if(str_it == str_seq.end())
+                    {
+                        std::pair<unsigned int, unsigned int>
+                            position(row, col - str_seq.size() + 1);
+                        this->m_supported_sequences_positions[_seq_items][
+                            it_seq->toString()].second.push_back(position);
+
+                        support[it_seq->toString()].insert(row);
+
+                        // rewind to start_match_col + 1
+                        col = start_match_col + 1;
+                        start_match_col = 0;
+                        last_match_col = 0;
+                        str_it = str_seq.begin();
+                        continue;
+                    }
+                }
+
+                // in any other case
+                // go to the next item of the input data-sequence
+                 ++col;
+            }
         }
     }
 
-    return support;
+    std::map<std::string, std::set<unsigned int> >::iterator support_it;
+    for(
+        support_it = support.begin();
+        support_it != support.end();
+        ++support_it
+    )
+    {
+        // update support count
+        this->m_supported_sequences_positions[_seq_items][
+            support_it->first].first = support_it->second.size();
+    }
 }
 
 void GSP::print(std::vector<Sequence> &_sequences)
