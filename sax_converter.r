@@ -5,7 +5,7 @@ dep = "TSMining"; if (!require(dep, character.only = TRUE, quietly = TRUE)) {
 
 # reading input data
 input_data = read.table(
-    file = "100.csv",
+    file = "data/100.csv",
     header = TRUE,
     fill = TRUE,
     as.is = TRUE,
@@ -14,9 +14,10 @@ input_data = read.table(
     quote = "");
 
 # sampling columns, for speedup test only
-input_data = t(input_data);
-input_data = input_data[sample(nrow(input_data),replace=F,size=0.1*nrow(input_data)),];
-input_data = t(input_data)
+# input_data = t(input_data);
+# input_data = input_data[
+#     sample(nrow(input_data),replace=F,size=0.1*nrow(input_data)),];
+# input_data = t(input_data)
 
 # merging dataframe rows in a vector
 vector_data = as.vector(t(input_data));
@@ -43,8 +44,9 @@ output_data = data.frame(do.call(rbind, split(
 # writing to disk
 write.table(
     x = output_data,
-    file = "100_sax_sample.csv",
+    file = "100_sax.csv",
     col.names = TRUE,
     row.names = FALSE,
     sep = ",",
     quote = FALSE);
+
