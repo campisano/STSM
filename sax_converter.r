@@ -1,17 +1,45 @@
-dep = "TSMining"; if (!require(dep, character.only = TRUE, quietly = TRUE)) { install.packages(dep); library(dep, character.only = TRUE); }; rm(dep);
+# loading dependences
+dep = "TSMining"; if (!require(dep, character.only = TRUE, quietly = TRUE)) {
+    install.packages(dep); library(dep, character.only = TRUE);
+}; rm(dep);
 
-input_data = read.table(file = "100.csv", header = TRUE, fill = TRUE, as.is = TRUE, stringsAsFactors = FALSE, sep = " ", quote = "");
+# reading input data
+input_data = read.table(
+    file = "100.csv",
+    header = TRUE,
+    fill = TRUE,
+    as.is = TRUE,
+    stringsAsFactors = FALSE,
+    sep = " ",
+    quote = "");
 
-inv_transposed_data = as.data.frame(t(input_data), row.names = FALSE);
+# merging dataframe rows in a vector
+vector_data = as.vector(t(input_data));
 
-data_sax = data.frame(matrix(ncol = ncol(inv_transposed_data), nrow = nrow(inv_transposed_data)));
-colnames(data_sax) = colnames(inv_transposed_data);
+# applying SAX
+sax_data = Func.SAX(
+    x = vector_data,
+    w = length(vector_data),
+    a = 26,
+    eps = .01,
+    norm = TRUE);
 
-for (col in 1 : ncol(inv_transposed_data))
-{
-    data_sax[[col]] = Func.SAX(x = inv_transposed_data[[col]], w = nrow(inv_transposed_data), a = 26, eps = .01, norm = TRUE);
-}
+# test data for debugging
+#input_data = data.frame(
+#    x = 1, y = 1:10, fac = sample(91:93, 10, replace = TRUE))
+#output_data = as.vector(t(input_data));
+#input_data == output_data
 
-transposed_data = as.data.frame(t(data_sax), row.names = FALSE);
+# splitting the vector back in a dataframe
+output_data = data.frame(do.call(rbind, split(
+    sax_data,
+    ceiling(seq_along(sax_data) / ncol(input_data)))))
 
-write.table(x = transposed_data, file = "100_transposed_sax.csv", col.names = TRUE, row.names = FALSE, sep = ",", quote = FALSE);
+# writing to disk
+write.table(
+    x = output_data,
+    file = "100_sax.csv",
+    col.names = TRUE,
+    row.names = FALSE,
+    sep = ",",
+    quote = FALSE);
