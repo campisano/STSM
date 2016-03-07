@@ -1,20 +1,18 @@
 dep = "TSMining"; if (!require(dep, character.only = TRUE, quietly = TRUE)) { install.packages(dep); library(dep, character.only = TRUE); }; rm(dep);
 
-input_data = read.table(file = "reduced_data.csv", header = TRUE, fill = TRUE, as.is = TRUE, stringsAsFactors = FALSE, sep = ",", quote = "");
-input_data = subset(input_data, select = -c(X..));
-input_data = subset(input_data, select = -c(X.V1.));
-input_data = subset(input_data, select = -c(X.V2.));
-input_data = subset(input_data, select = -c(X.V3.));
-input_data = subset(input_data, select = -c(X.V4.));
-input_data = subset(input_data, select = -c(X.V5.));
-input_data = subset(input_data, select = -c(X.V6.));
-input_data = subset(input_data, select = -c(X.V7.));
-input_data = subset(input_data, select = -c(X.V8.));
-input_data = subset(input_data, select = -c(X.V9.));
-input_data = subset(input_data, select = -c(X.V10.));
-input_data = subset(input_data, select = -c(X.V11.));
-input_data = subset(input_data, select = -c(X.V12.));
-input_data = subset(input_data, select = -c(X.V13.));
+input_data = read.table(file = "100.csv", header = TRUE, fill = TRUE, as.is = TRUE, stringsAsFactors = FALSE, sep = " ", quote = "");
+input_data = subset(input_data, select = -c(X1));
+input_data = subset(input_data, select = -c(X2));
+input_data = subset(input_data, select = -c(X3));
+input_data = subset(input_data, select = -c(X4));
+input_data = subset(input_data, select = -c(X5));
+input_data = subset(input_data, select = -c(X6));
+input_data = subset(input_data, select = -c(X7));
+input_data = subset(input_data, select = -c(X8));
+input_data = subset(input_data, select = -c(X9));
+input_data = subset(input_data, select = -c(X10));
+input_data = subset(input_data, select = -c(X11));
+input_data = subset(input_data, select = -c(X12));
 
 data_sax = data.frame(matrix(ncol = ncol(input_data), nrow = nrow(input_data)));
 colnames(data_sax) = colnames(input_data);
@@ -26,4 +24,4 @@ for (col in 1 : ncol(input_data))
 
 transposed_data = as.data.frame(t(data_sax), row.names = FALSE);
 
-write.table(x = transposed_data, file = "reduced_data_transposed_sax.csv", col.names = TRUE, row.names = FALSE, sep = ",", quote = FALSE);
+write.table(x = transposed_data, file = "100_transposed_sax.csv", col.names = TRUE, row.names = FALSE, sep = ",", quote = FALSE);
