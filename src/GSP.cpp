@@ -1,6 +1,7 @@
 #include "GSP.h"
 
 #include <cxxtools/csvdeserializer.h>
+#include <cxxtools/jsonserializer.h>
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -23,17 +24,18 @@ GSP::~GSP()
 
 void GSP::run(
     std::string _input_filename,
+    std::string _output_filename,
     unsigned int _minimum_support,
     unsigned int _max_gap)
 {
     this->setMinimumSupport(_minimum_support);
     this->setMaxGap(_max_gap);
 
-    load(_input_filename);
+    this->load(_input_filename);
     std::vector<Item> frequent_items;
 
     std::cout << "Detecting frequent items:" << std::endl;
-    detectFrequentItems(frequent_items);
+    this->detectFrequentItems(frequent_items);
 
     std::vector<Sequence> candidates;
 
@@ -56,7 +58,7 @@ void GSP::run(
     }
 
     std::cout << "First candidates:" << std::endl;
-    print(candidates);
+    this->print(candidates);
 
     std::vector<Sequence> &curr_candidates = candidates;
     std::vector<Sequence> new_candidates;
@@ -70,12 +72,12 @@ void GSP::run(
     {
         ++seq_items;
 
-        join(curr_candidates, seq_items, new_candidates);
+        this->join(curr_candidates, seq_items, new_candidates);
         std::cout << "Candidates after Join at pass " << seq_items
             << std::endl;
         print(new_candidates);
 
-        prune(seq_items, new_candidates);
+        this->prune(seq_items, new_candidates);
         std::cout << "Candidates after Prune at pass " << seq_items
             << std::endl;
         print(new_candidates);
@@ -158,6 +160,8 @@ void GSP::run(
             }
         }
     }
+
+    this->save(_output_filename);
 }
 
 void GSP::setMinimumSupport(unsigned int _minimum_support)
@@ -184,8 +188,8 @@ void GSP::setMaxGap(unsigned int _max_gap)
 
 void GSP::load(std::string &_input_filename)
 {
-    std::fstream file_stream;
-    file_stream.open(_input_filename.c_str(), std::fstream::in);
+    std::ifstream file_stream;
+    file_stream.open(_input_filename.c_str(), std::ifstream::in);
 
     cxxtools::CsvDeserializer deserializer(file_stream);
     deserializer.delimiter(',');
@@ -710,4 +714,37 @@ void GSP::print(std::vector<Sequence> &_sequences)
     {
         std::cout << it->toString() << std::endl;
     }
+}
+
+void GSP::save(std::string &_output_filename)
+{
+    //cxxtools::SerializationInfo si;
+    //si.addMember("encoding") <<= "UTF-8";
+    //cxxtools::SerializationInfo& psi = si.addMember("plug-ins");
+    //psi.addMember() <<= "python";
+    //psi.addMember() <<= "c++";
+    //psi.addMember() <<= "ruby";
+    //cxxtools::SerializationInfo& isi = si.addMember("indent");
+    //isi.addMember("length") <<= 3;
+    //isi.addMember("use_space") <<= true;
+
+    //std::ofstream output(_output_filename);
+    //output << cxxtools::Json(si);  // this prints unformatted and very compact json without any white space
+    //output << cxxtools::Json(si, true);
+
+
+    // Writing JSON needs a cxxtools::JsonSerializer:
+
+    //std::ofstream output(_output_filename.c_str());
+    //cxxtools::JsonSerializer serializer(output);
+    //serializer.beautify(true);
+    //output.serialize(serializer);
+
+    std::ofstream file;
+    //char buffer[8192];
+    //file.rdbuf()->pubsetbuf(buffer, sizeof buffer);
+    file.open(_output_filename.c_str());
+    cxxtools::JsonSerializer serializer(file);
+    serializer.beautify(true);
+    serializer.serialize(m_supported_sequences_positions).finish();
 }

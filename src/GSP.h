@@ -18,6 +18,7 @@ class GSP
 
         void run(
             std::string _input_filename,
+            std::string _output_filename,
             unsigned int _minimum_support,
             unsigned int _max_gap);
 
@@ -41,6 +42,7 @@ class GSP
             unsigned int _seq_items
         );
         void print(std::vector<Sequence> &_sequences);
+        void save(std::string &_output_filename);
 
     private:
         unsigned int m_minimum_support;
