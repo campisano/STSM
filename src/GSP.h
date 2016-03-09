@@ -1,6 +1,7 @@
 #ifndef GSP__H__
 #define GSP__H__
 
+#include <fstream>
 #include <list>
 #include <map>
 #include <string>
@@ -19,6 +20,7 @@ class GSP
         void run(
             std::string _input_filename,
             std::string _output_filename,
+            std::string _log_filename,
             unsigned int _minimum_support,
             unsigned int _max_gap);
 
@@ -57,6 +59,8 @@ class GSP
                 >
             >
         > m_supported_sequences_positions;
+
+        std::ofstream m_log_stream;
 };
 
 #endif

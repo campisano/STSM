@@ -1,7 +1,6 @@
 #include "Itemset.h"
 
 #include <cxxtools/regex.h>
-#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>

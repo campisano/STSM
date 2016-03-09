@@ -1,8 +1,10 @@
 #include "GSP.h"
 
 #include <cxxtools/csvdeserializer.h>
-#include <cxxtools/jsonserializer.h>
-#include <iostream>
+#include <cxxtools/decomposer.h>
+#include <cxxtools/jsonformatter.h>
+//#include <cxxtools/jsonserializer.h>
+#include <cxxtools/utf8codec.h>
 #include <fstream>
 #include <map>
 #include <set>
@@ -25,16 +27,19 @@ GSP::~GSP()
 void GSP::run(
     std::string _input_filename,
     std::string _output_filename,
+    std::string _log_filename,
     unsigned int _minimum_support,
     unsigned int _max_gap)
 {
+    this->m_log_stream.open(_log_filename.c_str());
+
     this->setMinimumSupport(_minimum_support);
     this->setMaxGap(_max_gap);
 
     this->load(_input_filename);
     std::vector<Item> frequent_items;
 
-    std::cout << "Detecting frequent items:" << std::endl;
+    m_log_stream << "Detecting frequent items:" << std::endl;
     this->detectFrequentItems(frequent_items);
 
     std::vector<Sequence> candidates;
@@ -57,7 +62,7 @@ void GSP::run(
         }
     }
 
-    std::cout << "First candidates:" << std::endl;
+    m_log_stream << "First candidates:" << std::endl;
     this->print(candidates);
 
     std::vector<Sequence> &curr_candidates = candidates;
@@ -73,12 +78,12 @@ void GSP::run(
         ++seq_items;
 
         this->join(curr_candidates, seq_items, new_candidates);
-        std::cout << "Candidates after Join at pass " << seq_items
+        m_log_stream << "Candidates after Join at pass " << seq_items
             << std::endl;
         print(new_candidates);
 
         this->prune(seq_items, new_candidates);
-        std::cout << "Candidates after Prune at pass " << seq_items
+        m_log_stream << "Candidates after Prune at pass " << seq_items
             << std::endl;
         print(new_candidates);
 
@@ -98,7 +103,7 @@ void GSP::run(
 
     // print supported sequences
     {
-        std::cout << std::endl << "Printing supported sequences:" << std::endl;
+        m_log_stream << std::endl << "Printing supported sequences:" << std::endl;
         std::map< unsigned int,    // mapping sequences per length (seq items)
             std::map< std::string, // mapping results per sequence (toString())
                 std::pair < unsigned int,           // support count
@@ -127,7 +132,7 @@ void GSP::run(
             ++it_seq_map
         )
         {
-            std::cout << '\t' << "length: " << it_seq_map->first << std::endl;
+            m_log_stream << '\t' << "length: " << it_seq_map->first << std::endl;
 
             for(
                 it_results_map = it_seq_map->second.begin();
@@ -137,10 +142,10 @@ void GSP::run(
             {
                 if(it_results_map->second.first > 0)
                 {
-                    std::cout << "\t\t" << "sequence: "
+                    m_log_stream << "\t\t" << "sequence: "
                         << it_results_map->first << std::endl;
 
-                    std::cout << "\t\t" << "count: "
+                    m_log_stream << "\t\t" << "count: "
                         << it_results_map->second.first << std::endl;
                     for(
                         it_positions_vect = (
@@ -152,7 +157,7 @@ void GSP::run(
                         ++it_positions_vect
                     )
                     {
-                        std::cout << "\t\t\t" << "position: "
+                        m_log_stream << "\t\t\t" << "position: "
                             << it_positions_vect->first << " "
                             << it_positions_vect->second << std::endl;
                     }
@@ -162,6 +167,8 @@ void GSP::run(
     }
 
     this->save(_output_filename);
+
+    this->m_log_stream.close();
 }
 
 void GSP::setMinimumSupport(unsigned int _minimum_support)
@@ -273,7 +280,7 @@ void GSP::detectFrequentItems(std::vector<Item>& _frequent_items)
             }
             else
             {
-                std::cout << it->first << '\t' << it->second
+                m_log_stream << it->first << '\t' << it->second
                     << std::endl;
                 ++it;
             }
@@ -496,7 +503,7 @@ void GSP::prune(
         }
         else
         {
-            std::cout <<
+            m_log_stream <<
                 it->toString() << '\t' << support << std::endl;
             ++it;
         }
@@ -560,7 +567,7 @@ void GSP::prune(
             * */
         }
 
-        std::cout << "printing all continuous subsequences"
+        m_log_stream << "printing all continuous subsequences"
             << " for candidates" << std::endl;
         GSP::print(contiguous_subseq);
     }
@@ -712,7 +719,7 @@ void GSP::print(std::vector<Sequence> &_sequences)
 
     for(it = _sequences.begin(); it != _sequences.end(); ++it)
     {
-        std::cout << it->toString() << std::endl;
+        m_log_stream << it->toString() << std::endl;
     }
 }
 
@@ -740,11 +747,106 @@ void GSP::save(std::string &_output_filename)
     //serializer.beautify(true);
     //output.serialize(serializer);
 
-    std::ofstream file;
-    //char buffer[8192];
-    //file.rdbuf()->pubsetbuf(buffer, sizeof buffer);
-    file.open(_output_filename.c_str());
-    cxxtools::JsonSerializer serializer(file);
-    serializer.beautify(true);
-    serializer.serialize(m_supported_sequences_positions).finish();
+    //std::ofstream file;
+    ////char buffer[8192];
+    ////file.rdbuf()->pubsetbuf(buffer, sizeof buffer);
+    //file.open(_output_filename.c_str());
+    //cxxtools::JsonSerializer serializer(file);
+    //serializer.beautify(true);
+    //serializer.serialize(m_supported_sequences_positions).finish();
+
+
+
+
+
+    std::ofstream output_file;
+    output_file.open(_output_filename.c_str());
+    cxxtools::TextOStream ts(output_file, new cxxtools::Utf8Codec());
+
+    cxxtools::JsonFormatter formatter(ts);
+    formatter.beautify(true);
+
+
+
+    std::map< unsigned int,    // mapping sequences per length (seq items)
+        std::map< std::string, // mapping results per sequence (toString())
+            std::pair < unsigned int,           // support count
+                std::list <                     // list of positions
+                    std::pair< unsigned int, unsigned int > // sensor, time
+                >
+            >
+        >
+    >::iterator it_seq_map;
+
+    std::map< std::string, // mapping results per sequence (toString())
+        std::pair < unsigned int,               // support count
+            std::list <                         // list of positions
+                std::pair< unsigned int, unsigned int > // sensor, time
+            >
+        >
+    >::iterator it_results_map;
+
+    std::list <                                 // list of positions
+        std::pair< unsigned int, unsigned int > // sensor, time
+    >::iterator it_positions_vect;
+
+    formatter.beginArray("", "");
+
+    for(
+        it_seq_map = this->m_supported_sequences_positions.begin();
+        it_seq_map != this->m_supported_sequences_positions.end();
+        ++it_seq_map
+    )
+    {
+        formatter.beginObject("", "");
+        formatter.addValueInt("first", "", it_seq_map->first);
+        formatter.beginArray("second", "");
+
+        for(
+            it_results_map = it_seq_map->second.begin();
+            it_results_map != it_seq_map->second.end();
+            ++it_results_map
+        )
+        {
+            if(it_results_map->second.first > 0)
+            {
+                formatter.beginObject("", "");
+
+                formatter.addValueStdString(
+                    "first", "", it_results_map->first);
+
+                formatter.beginObject("second", "");
+                formatter.addValueInt(
+                    "first", "", it_results_map->second.first);
+                formatter.beginArray("second", "");
+
+                for(
+                    it_positions_vect = (
+                        it_results_map->second.second.begin()
+                    );
+                    it_positions_vect != (
+                        it_results_map->second.second.end()
+                    );
+                    ++it_positions_vect
+                )
+                {
+                    formatter.beginObject("", "");
+                    formatter.addValueInt(
+                        "first", "", it_positions_vect->first);
+                    formatter.addValueInt(
+                        "second", "", it_positions_vect->second);
+                    formatter.finishObject();
+                }
+
+                formatter.finishArray();
+                formatter.finishObject();
+                formatter.finishObject();
+            }
+        }
+
+        formatter.finishArray();
+        formatter.finishObject();
+    }
+
+    formatter.finishArray();
 }

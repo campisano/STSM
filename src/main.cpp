@@ -37,7 +37,7 @@ int main(int argc,char **argv)
     // (using a small dataset with manually defined data and frequent sequences)
 
     // test_3.out: manual test dataset
-    gsp.run("data/100_sax_sample_synthetic_10.csv", 2, 0);
+    //gsp.run("data/100_sax_sample_synthetic_10.csv", 2, 0);
     //<(C)(C)(A)(R)(D)(O)>  10
     //<(I)(C)(C)(A)(R)(D)>  10
     //<(R)(I)(C)(C)(A)(R)>  10
@@ -116,6 +116,23 @@ int main(int argc,char **argv)
     //<(M)(I)(N)(z)(G)(A)(P)(z)(z)(A)>  951
     //<(M)(I)(N)(z)(G)(A)(P)(z)(z)(z)(A)>   950
 
+    // test 10:
+    //gsp.run("data/100_sax.csv", "results/100g0.json", "results/100g0.log", 951, 0);
+    //gsp.run("data/100_sax.csv", "results/100g1.json", "results/100g1.log", 951, 1);
+    //gsp.run("data/100_sax.csv", "results/100g2.json", "results/100g2.log", 951, 2);
+    //gsp.run("data/100_sax.csv", "results/100g3.json", "results/100g3.log", 951, 3);
+
+    // test_11:
+    //gsp.run("data/100_sax.csv", "results/90g0.json", "results/90g0.log", 951 / 10 * 9, 0);
+    //gsp.run("data/100_sax.csv", "results/90g1.json", "results/90g1.log", 951 / 10 * 9, 1);
+    //gsp.run("data/100_sax.csv", "results/90g2.json", "results/90g2.log", 951 / 10 * 9, 2);
+    //gsp.run("data/100_sax.csv", "results/90g3.json", "results/90g3.log", 951 / 10 * 9, 3);
+
+    // test_12:
+    //gsp.run("data/100_sax.csv", "results/80g0.json", "results/80g0.log", 951 / 10 * 8, 0);
+    //gsp.run("data/100_sax.csv", "results/80g1.json", "results/80g1.log", 951 / 10 * 8, 1);
+    //gsp.run("data/100_sax.csv", "results/80g2.json", "results/80g2.log", 951 / 10 * 8, 2);
+    //gsp.run("data/100_sax.csv", "results/80g3.json", "results/80g3.log", 951 / 10 * 8, 3);
 
     return 0;
 }
