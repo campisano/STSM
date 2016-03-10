@@ -5,7 +5,7 @@ dep = "TSMining"; if (!require(dep, character.only = TRUE, quietly = TRUE)) {
 
 # reading input data
 input_data = read.table(
-    file = "data/100.csv",
+    file = "../data/100.csv",
     header = TRUE,
     fill = TRUE,
     as.is = TRUE,
@@ -20,6 +20,8 @@ input_data = read.table(
 # input_data = t(input_data)
 
 # merging dataframe rows in a vector
+# the translate here is needed to join the matrix as vector
+# and to convert it back with the same orientation, without translation
 vector_data = as.vector(t(input_data));
 
 # applying SAX
@@ -37,6 +39,7 @@ sax_data = Func.SAX(
 #input_data == output_data
 
 # splitting the vector back in a dataframe
+# it need a translated vector, you can test that using the code above
 output_data = data.frame(do.call(rbind, split(
     sax_data,
     ceiling(seq_along(sax_data) / ncol(input_data)))))
@@ -44,7 +47,7 @@ output_data = data.frame(do.call(rbind, split(
 # writing to disk
 write.table(
     x = output_data,
-    file = "100_sax.csv",
+    file = "../data/100_sax.csv",
     col.names = TRUE,
     row.names = FALSE,
     sep = ",",
