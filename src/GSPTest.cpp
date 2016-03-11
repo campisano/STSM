@@ -392,7 +392,7 @@ void GSPTest::test_GSP_run()
 {
     GSP gsp;
     //gsp.run("100_sax.csv", 951, 0);
-    gsp.run("data/100_sax_sample.csv", 300, 0);
+    gsp.run("data/100_sax_sample.csv", "test.json", "test.log", 300, 0);
 
     std::cout << std::endl
         << "__________________________________________________";
