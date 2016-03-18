@@ -391,8 +391,9 @@ void GSPTest::test_GSP_join()
 void GSPTest::test_GSP_run()
 {
     GSP gsp;
-    //gsp.run("100_sax.csv", 951, 0);
-    gsp.run("data/100_sax_sample.csv", "test.json", "test.log", 300, 0);
+    gsp.run(
+        "data/100_sax-26_sample-46x951.csv",
+        "out/test_GSP_run.json", "out/test_GSP_run.log", 300, 0);
 
     std::cout << std::endl
         << "__________________________________________________";

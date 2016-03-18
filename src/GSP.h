@@ -21,13 +21,13 @@ class GSP
             std::string _input_filename,
             std::string _output_filename,
             std::string _log_filename,
-            unsigned int _minimum_support,
+            unsigned int _min_support,
             unsigned int _max_gap);
 
     protected:
-        void setMinimumSupport(unsigned int _minimum_support);
+        void setMinimumSupport(unsigned int _min_support);
         void setMaxGap(unsigned int _max_gap);
-        void load(std::string &_input_filename);
+        unsigned int load(std::string &_input_filename);
         void detectFrequentItems(std::vector<Item>& _frequent_items);
         void join(
             std::vector<Sequence> &_candidates,
@@ -47,7 +47,7 @@ class GSP
         void save(std::string &_output_filename);
 
     private:
-        unsigned int m_minimum_support;
+        unsigned int m_min_support;
         unsigned int m_max_gap;
         std::vector< std::vector<Item> > m_input_dataset;
         std::map< unsigned int,    // mapping sequences per length (seq items)

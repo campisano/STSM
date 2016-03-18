@@ -17,7 +17,7 @@
 
 GSP::GSP()
 {
-    this->m_minimum_support = 0;
+    this->m_min_support = 0;
 }
 
 GSP::~GSP()
@@ -28,18 +28,30 @@ void GSP::run(
     std::string _input_filename,
     std::string _output_filename,
     std::string _log_filename,
-    unsigned int _minimum_support,
+    unsigned int _min_support,
     unsigned int _max_gap)
 {
+    this->m_input_dataset.clear();
+    this->m_supported_sequences_positions.clear();
     this->m_log_stream.open(_log_filename.c_str());
 
-    this->setMinimumSupport(_minimum_support);
+    unsigned int num_datasets = this->load(_input_filename);
+
+    this->setMinimumSupport(_min_support * num_datasets / 100);
     this->setMaxGap(_max_gap);
 
-    this->load(_input_filename);
+    this->m_log_stream << "Input: " << _input_filename << std::endl;
+    this->m_log_stream << "Output: " << _output_filename << std::endl;
+    this->m_log_stream << "Log: " << _log_filename << std::endl;
+    this->m_log_stream << "Num of datasets: " << num_datasets << std::endl;
+    this->m_log_stream << "Min support: " << _min_support
+        << "% = " << this->m_min_support << std::endl;
+    this->m_log_stream << "Max gap: " << _max_gap << std::endl;
+    this->m_log_stream << std::endl;
+
     std::vector<Item> frequent_items;
 
-    m_log_stream << "Detecting frequent items:" << std::endl;
+    this->m_log_stream << "Detecting frequent items:" << std::endl;
     this->detectFrequentItems(frequent_items);
 
     std::vector<Sequence> candidates;
@@ -62,7 +74,7 @@ void GSP::run(
         }
     }
 
-    m_log_stream << "First candidates:" << std::endl;
+    this->m_log_stream << "First candidates:" << std::endl;
     this->print(candidates);
 
     std::vector<Sequence> &curr_candidates = candidates;
@@ -78,12 +90,12 @@ void GSP::run(
         ++seq_items;
 
         this->join(curr_candidates, seq_items, new_candidates);
-        m_log_stream << "Candidates after Join at pass " << seq_items
+        this->m_log_stream << "Candidates after Join at pass " << seq_items
             << std::endl;
         print(new_candidates);
 
         this->prune(seq_items, new_candidates);
-        m_log_stream << "Candidates after Prune at pass " << seq_items
+        this->m_log_stream << "Candidates after Prune at pass " << seq_items
             << std::endl;
         print(new_candidates);
 
@@ -103,7 +115,8 @@ void GSP::run(
 
     // print supported sequences
     {
-        m_log_stream << std::endl << "Printing supported sequences:" << std::endl;
+        this->m_log_stream
+            << std::endl << "Printing supported sequences:" << std::endl;
         std::map< unsigned int,    // mapping sequences per length (seq items)
             std::map< std::string, // mapping results per sequence (toString())
                 std::pair < unsigned int,           // support count
@@ -132,7 +145,8 @@ void GSP::run(
             ++it_seq_map
         )
         {
-            m_log_stream << '\t' << "length: " << it_seq_map->first << std::endl;
+            this->m_log_stream <<
+                '\t' << "length: " << it_seq_map->first << std::endl;
 
             for(
                 it_results_map = it_seq_map->second.begin();
@@ -142,10 +156,10 @@ void GSP::run(
             {
                 if(it_results_map->second.first > 0)
                 {
-                    m_log_stream << "\t\t" << "sequence: "
+                    this->m_log_stream << "\t\t" << "sequence: "
                         << it_results_map->first << std::endl;
 
-                    m_log_stream << "\t\t" << "count: "
+                    this->m_log_stream << "\t\t" << "count: "
                         << it_results_map->second.first << std::endl;
                     for(
                         it_positions_vect = (
@@ -157,7 +171,7 @@ void GSP::run(
                         ++it_positions_vect
                     )
                     {
-                        m_log_stream << "\t\t\t" << "position: "
+                        this->m_log_stream << "\t\t\t" << "position: "
                             << it_positions_vect->first << " "
                             << it_positions_vect->second << std::endl;
                     }
@@ -171,15 +185,15 @@ void GSP::run(
     this->m_log_stream.close();
 }
 
-void GSP::setMinimumSupport(unsigned int _minimum_support)
+void GSP::setMinimumSupport(unsigned int _min_support)
 {
-    if(_minimum_support < 1)
+    if(_min_support < 1)
     {
         throw std::runtime_error(
-            "Minumum Support parameter cannot be less then 1.");
+            "Minumum Support parameter cannot be less then 1%.");
     }
 
-    this->m_minimum_support = _minimum_support;
+    this->m_min_support = _min_support;
 }
 
 void GSP::setMaxGap(unsigned int _max_gap)
@@ -193,7 +207,7 @@ void GSP::setMaxGap(unsigned int _max_gap)
     this->m_max_gap = _max_gap;
 }
 
-void GSP::load(std::string &_input_filename)
+unsigned int GSP::load(std::string &_input_filename)
 {
     std::ifstream file_stream;
     file_stream.open(_input_filename.c_str(), std::ifstream::in);
@@ -203,6 +217,8 @@ void GSP::load(std::string &_input_filename)
     deserializer.deserialize(this->m_input_dataset);
 
     file_stream.close();
+
+    return this->m_input_dataset.size();
 }
 
 void GSP::detectFrequentItems(std::vector<Item>& _frequent_items)
@@ -274,13 +290,13 @@ void GSP::detectFrequentItems(std::vector<Item>& _frequent_items)
 
         while(it != map_count.end())
         {
-            if(it->second < this->m_minimum_support)
+            if(it->second < this->m_min_support)
             {
                 map_count.erase(it++);
             }
             else
             {
-                m_log_stream << it->first << '\t' << it->second
+                this->m_log_stream << it->first << '\t' << it->second
                     << std::endl;
                 ++it;
             }
@@ -497,13 +513,13 @@ void GSP::prune(
         support = this->m_supported_sequences_positions[
             _seq_items][it->toString()].first;
 
-        if(support < this->m_minimum_support)
+        if(support < this->m_min_support)
         {
             it = _new_candidates.erase(it);
         }
         else
         {
-            m_log_stream <<
+            this->m_log_stream <<
                 it->toString() << '\t' << support << std::endl;
             ++it;
         }
@@ -567,7 +583,7 @@ void GSP::prune(
             * */
         }
 
-        m_log_stream << "printing all continuous subsequences"
+        this->m_log_stream << "printing all continuous subsequences"
             << " for candidates" << std::endl;
         GSP::print(contiguous_subseq);
     }
@@ -719,7 +735,7 @@ void GSP::print(std::vector<Sequence> &_sequences)
 
     for(it = _sequences.begin(); it != _sequences.end(); ++it)
     {
-        m_log_stream << it->toString() << std::endl;
+        this->m_log_stream << it->toString() << std::endl;
     }
 }
 
