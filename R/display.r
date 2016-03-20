@@ -44,7 +44,9 @@ if(is.null(nrow(json_data)))
 
         if(length(sequence_data_length$second) < 1)
         {
-            print("Empty sequence data data", len , ":", sequence_data_length);
+            print(paste("Empty sequence data of len", len));
+            #print("Data:");
+            #dput(sequence_data_length);
             next;
         }
 
