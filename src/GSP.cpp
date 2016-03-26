@@ -94,7 +94,7 @@ void GSP::run(
             << std::endl;
         print(new_candidates);
 
-        this->prune(seq_items, new_candidates);
+        this->prune(seq_items + 1, new_candidates);
         this->m_log_stream << "Candidates after Prune at pass " << seq_items
             << std::endl;
         print(new_candidates);
