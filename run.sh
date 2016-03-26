@@ -1,6 +1,7 @@
 #!/bin/bash
 
-MEM_LIMIT=7340032;      # 7GB
+MEM_LIMIT=5248000;      # 5GB
+#MEM_LIMIT=7340032;      # 7GB
 #MEM_LIMIT=15728640;     # 15GB
 ulimit -v $MEM_LIMIT;
 
@@ -9,9 +10,13 @@ OUTPUT_FOLDER="results";
 FILE_NAME="100_sax";
 
 ALPHABETS=("5" "10" "15" "20" "25");
+#ALPHABETS=("25");
 TYPES=("original" "transposed");
+#TYPES=("original");
 SUPPORTS=("100" "95" "90" "85" "80");
+#SUPPORTS=("90");
 GAPS=("0" "1" "2" "3");
+#GAPS=("2");
 
 PATH=./BUILD/release:$PATH;
 
@@ -42,7 +47,7 @@ do
                     if test ! -f $OUTPUT_FILE
                     then
                         echo " * Running GSP $TYPE $ALPHABET $SUPPORT $GAP [...]";
-                        gsp $INPUT_FILE $OUTPUT_FILE $LOG_FILE $SUPPORT $GAP;
+                        time gsp $INPUT_FILE $OUTPUT_FILE $LOG_FILE $SUPPORT $GAP;
                     fi;
                 fi;
 
@@ -57,7 +62,7 @@ do
                     if test -f $OUTPUT_FILE
                     then
                         echo " * Plotting data $TYPE $ALPHABET $SUPPORT $GAP [...]";
-                        R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE;
+                        time R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE;
                     fi;
                 fi;
 
