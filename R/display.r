@@ -2,25 +2,33 @@
 options(warn=2, keep.source=TRUE);
 
 # loading dependences
-dep = "jsonlite"; if (!require(dep, character.only = TRUE, quietly = TRUE)) {
-    install.packages(dep); library(dep, character.only = TRUE);
+repos = "http://cran.r-project.org";
+lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
+dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="0777");
+.libPaths(c(lib, .libPaths()));
+
+dep = "rjson"; if (!require(dep, character.only = TRUE, quietly = TRUE)) {
+    install.packages(dep, repos=repos, lib=lib); library(dep, character.only = TRUE);
 }; rm(dep);
 
 dep = "TSMining"; if (!require(dep, character.only = TRUE, quietly = TRUE)) {
-    install.packages(dep); library(dep, character.only = TRUE);
+    install.packages(dep, repos=repos, lib=lib); library(dep, character.only = TRUE);
 }; rm(dep);
 
-source(file.path("R", "motif_lib.R"));
-load_lib();
 
 
-
+# evaluating arguments
 args = commandArgs(TRUE);
 print("Arguments:");
 print(args);
+# examples:
+#args = c();
+#args[1] = "data/100_sax-25_original.csv";
+#args[2] = "results/25_original/json/100_sax-25_original_s90_g2.json";
 
 
 
+# configuring variables
 csv_dataset = args[1];
 input_file_json = args[2];
 base_json_path_dir = dirname(input_file_json);
@@ -30,37 +38,78 @@ base_filename =  sub("[.][^.]*$", "", base_filename, perl=TRUE);
 
 
 
-json_data = fromJSON(file(input_file_json));
+# needed by plot
+source(file.path("R", "motif_lib.R"));
+load_lib();
+dataset = read.table(
+    file = csv_dataset,
+    header = TRUE,
+    fill = TRUE,
+    as.is = TRUE,
+    stringsAsFactors = FALSE,
+    sep = " ",
+    quote = "");
 
-if(is.null(nrow(json_data)))
+
+
+# loading json data
+print(paste("Loading json data", input_file_json, "..."));
+json_data = fromJSON(file=input_file_json, method='C');
+
+# save a fast readable Rdata file
+#filename_json_rdata = file.path(
+#            base_path_dir, "rdata",
+#            paste(base_filename, "_json.rdata", sep="")
+#        );
+#save(json_data, file=filename_json_rdata);
+#load(filename_json_rdata);
+
+
+
+if(is.null(json_data) || length(json_data) < 1)
 {
     print("Empty json data");
 } else {
-    # WARNING! getting only the 3 last sequences, of the bigger length!
-    for(len in c(0, 1, 2))
-    {
-        sequence_data_length = json_data[nrow(json_data) - len,];
-        sequence_length = sequence_data_length$first;
 
-        if(length(sequence_data_length$second) < 1)
+    # WARNING! getting only the 2 last sequences, of the bigger length!
+    for(len in c(0, 1))
+    {
+        print(paste("Generating png for -len", len, "..."));
+
+        sequence_data_by_length = json_data[[length(json_data) - len]];
+
+        if(
+            is.null(sequence_data_by_length$first) ||
+            is.null(sequence_data_by_length$second) ||
+            length(sequence_data_by_length$second) < 1
+        )
         {
-            print(paste("Empty sequence data of len", len));
+            print(paste("Empty sequence data of -len", len));
             #print("Data:");
-            #dput(sequence_data_length);
+            #dput(sequence_data_by_length);
             next;
         }
 
-        sequence_data = sequence_data_length$second[[1]];  # c++ pair
+        sequence_length = sequence_data_by_length$first;
+        sequence_data = sequence_data_by_length$second;  # c++ pair
 
         my_stmotifs = list();
 
-        for(j in 1:nrow(sequence_data))
+        for(j in 1:length(sequence_data))
         {
-            sequence_data_item = sequence_data[j,];
+            sequence_data_item = sequence_data[[j]];
             sequence = sequence_data_item$first;
             sequence = gsub("[()<>]", "", sequence);
-            support = sequence_data_item$second[1,]$first;
-            match_data = sequence_data_item$second[1,]$second[[1]]; # c++ pair
+            support = sequence_data_item$second$first;
+            match_data = sequence_data_item$second$second; # c++ pair
+            times = c();
+            spaces = c();
+
+            for(k in 1:length(match_data))
+            {
+                times = c(times, match_data[[k]]$first);
+                spaces = c(spaces, match_data[[k]]$second);
+            }
 
             my_item = list();
             #my_item[['saxcod']] = data.frame(
@@ -71,52 +120,65 @@ if(is.null(nrow(json_data)))
             my_item[['isaxcod']] = sequence;
             my_item[['recmatrix']] = '';
             my_item[['vecst']] = data.frame(
-                's'=match_data$second, 't'=match_data$first);
+                's'=spaces, 't'=times);
 
+            # multiple sequences png
             my_stmotifs[[sequence]] = my_item;
         }
 
         # cleanup
         rm(
-            my_item, match_data, support, sequence, sequence_data_item,
-            sequence_data, j, sequence_length, sequence_data_length
-        );
-
-        filename_rdata = file.path(
-            base_path_dir, "rdata",
-            paste(paste(base_filename, len, sep="_-"), "rdata", sep=".")
+            my_item, k, spaces, times,
+            match_data, support, sequence, sequence_data_item,
+            sequence_data, j, sequence_data_by_length
         );
 
         # save a fast readable Rdata file
-        save(my_stmotifs, file=filename_rdata);
-        load(filename_rdata);
-
+        #filename_rdata = file.path(
+        #    base_path_dir, "rdata",
+        #    paste(base_filename, "_", sequence_length, ".rdata", sep="")
+        #);
+        #save(my_stmotifs, file=filename_rdata);
+        #load(filename_rdata);
 
 
 
         #setwd("/home/t1t0/Desktop/mestrado/GSP")
         #load("20_10_4_5_C.RData") # candidates
         #load("t100.RData") # dataset 40x100
-
-        dataset = read.table(
-            file = csv_dataset,
-            header = TRUE,
-            fill = TRUE,
-            as.is = TRUE,
-            stringsAsFactors = FALSE,
-            sep = " ",
-            quote = "");
         #stmotifs = STSIdentifySTMotifs(candidates, 5, 5)
         #sttightmotifs = STSIdentifyTightSTMotifs(stmotifs, candidates$rectangles)
         #ranksttightmotifs = STSRankTightSTMotifs(sttightmotifs)
 
-        filename_png = file.path(
+        filename_by_len_png = file.path(
             base_path_dir, "png",
-            paste(paste(base_filename, len, sep="_-"), "png", sep=".")
+            paste(base_filename, "_-", len, ".png", sep="")
         );
 
-        png(filename_png, bg="transparent");
+        png(filename_by_len_png, bg="transparent");
         ds = PlotSTMotifs(my_stmotifs);
         dev.off();
+
+        # print for each sequence
+
+        for(w in 1:length(my_stmotifs))
+        {
+            # single sequence png
+            sequence = names(my_stmotifs)[w];
+            my_stmotifs_tmp = list();
+            my_stmotifs_tmp[[sequence]] = my_stmotifs[[w]];
+
+            dir.create(
+                file.path(base_path_dir, "png", base_filename, sequence_length),
+                showWarnings=FALSE, recursive=TRUE, mode="0777");
+            filename_by_seq_png = file.path(
+                base_path_dir, "png", base_filename, sequence_length,
+                paste(sequence, ".png", sep="")
+            );
+
+            png(filename_by_seq_png, bg="transparent");
+            PlotSTMotifs(my_stmotifs_tmp);
+            dev.off();
+        }
     }
 }
