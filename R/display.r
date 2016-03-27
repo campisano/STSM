@@ -54,7 +54,7 @@ dataset = read.table(
 
 # loading json data
 print(paste("Loading json data", input_file_json, "..."));
-json_data = fromJSON(file=input_file_json, method='C');
+json_data = fromJSON(file=input_file_json, method="C");
 
 # save a fast readable Rdata file
 #filename_json_rdata = file.path(
@@ -71,8 +71,9 @@ if(is.null(json_data) || length(json_data) < 1)
     print("Empty json data");
 } else {
 
-    # WARNING! getting only the 2 last sequences, of the bigger length!
-    for(len in c(0, 1))
+    # WARNING! getting only the last sequences, of the bigger length!
+    #for(len in c(0, 1))
+    for(len in c(0))
     {
         print(paste("Generating png for -len", len, "..."));
 
@@ -91,36 +92,27 @@ if(is.null(json_data) || length(json_data) < 1)
         }
 
         sequence_length = sequence_data_by_length$first;
-        sequence_data = sequence_data_by_length$second;  # c++ pair
+        sequence_data = sequence_data_by_length$second;         # c++ pair
 
         my_stmotifs = list();
 
         for(j in 1:length(sequence_data))
         {
             sequence_data_item = sequence_data[[j]];
-            sequence = sequence_data_item$first;
-            sequence = gsub("[()<>]", "", sequence);
-            support = sequence_data_item$second$first;
-            match_data = sequence_data_item$second$second; # c++ pair
-            times = c();
-            spaces = c();
+            sequence = gsub("[()<>]", "", sequence_data_item$first);
+            #support = sequence_data_item$second$first;
+            match_data = sequence_data_item$second$second;      # c++ pair
 
-            for(k in 1:length(match_data))
-            {
-                times = c(times, match_data[[k]]$first);
-                spaces = c(spaces, match_data[[k]]$second);
-            }
+            times = unlist(lapply(match_data, function(item){item$first}));
+            spaces = unlist(lapply(match_data, function(item){item$second}));
 
             my_item = list();
-            #my_item[['saxcod']] = data.frame(
-            #    t(strsplit(sequence, split="")), check.names = FALSE);
-            my_item[['saxcod']] = data.frame(
+            my_item[["saxcod"]] = data.frame(
                 t(data.frame(strsplit(sequence, split=""), row.names = NULL)),
                 row.names = NULL);
-            my_item[['isaxcod']] = sequence;
-            my_item[['recmatrix']] = '';
-            my_item[['vecst']] = data.frame(
-                's'=spaces, 't'=times);
+            my_item[["isaxcod"]] = sequence;
+            my_item[["recmatrix"]] = "";
+            my_item[["vecst"]] = data.frame("s"=spaces, "t"=times);
 
             # multiple sequences png
             my_stmotifs[[sequence]] = my_item;
@@ -128,8 +120,7 @@ if(is.null(json_data) || length(json_data) < 1)
 
         # cleanup
         rm(
-            my_item, k, spaces, times,
-            match_data, support, sequence, sequence_data_item,
+            my_item, spaces, times, match_data, sequence, sequence_data_item,
             sequence_data, j, sequence_data_by_length
         );
 
