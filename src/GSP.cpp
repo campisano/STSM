@@ -6,17 +6,16 @@
 //#include <cxxtools/jsonserializer.h>
 #include <cxxtools/utf8codec.h>
 #include <fstream>
-#include <map>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include "Itemset.h"
 
 GSP::GSP()
 {
+    //TODO [CMP] the load can be performed there
     this->m_min_support = 0;
 }
 
@@ -24,7 +23,7 @@ GSP::~GSP()
 {
 }
 
-void GSP::run(
+void GSP::run( //TODO [CMP] rename to findFrequentSequences
     std::string _input_filename,
     std::string _output_filename,
     std::string _log_filename,
@@ -37,9 +36,11 @@ void GSP::run(
 
     unsigned int num_datasets = this->load(_input_filename);
 
-    this->setMinimumSupport(_min_support * num_datasets / 100);
+    //TODO [CMP] should m_min_support be float?
+    this->setMinimumSupport(_min_support * num_datasets / 100.0);
     this->setMaxGap(_max_gap);
 
+    // logging info
     this->m_log_stream << "Input: " << _input_filename << std::endl;
     this->m_log_stream << "Output: " << _output_filename << std::endl;
     this->m_log_stream << "Log: " << _log_filename << std::endl;
@@ -49,17 +50,21 @@ void GSP::run(
     this->m_log_stream << "Max gap: " << _max_gap << std::endl;
     this->m_log_stream << std::endl;
 
-    std::vector<Item> frequent_items;
+    std::list<Item> frequent_items;
 
     this->m_log_stream << "Detecting frequent items:" << std::endl;
     this->detectFrequentItems(frequent_items);
 
-    std::vector<Sequence> candidates;
+    std::list<Sequence> candidates;
+
+    //TODO [CMP]
+    // frequent_items = detectFrequentItems(database, min_support)
+    // frequent_1sequences = convertToSequences(frequent_items))
 
     // temporary code, probably detectFrequentItems can return
-    // directly a vector of Sequences
+    // directly a list of Sequences
     {
-        std::vector<Item>::iterator it;
+        std::list<Item>::iterator it;
 
         for(
             it = frequent_items.begin();
@@ -74,11 +79,12 @@ void GSP::run(
         }
     }
 
+    //TODO [CMP] tehy aren't candidades, they are frequent 1-sequences
     this->m_log_stream << "First candidates:" << std::endl;
     this->print(candidates);
 
-    std::vector<Sequence> &curr_candidates = candidates;
-    std::vector<Sequence> new_candidates;
+    std::list<Sequence> &curr_candidates = candidates;
+    std::list<Sequence> new_candidates;
     unsigned int seq_items = 0;
 
     // pag. 8
@@ -89,11 +95,13 @@ void GSP::run(
     {
         ++seq_items;
 
+        // TODO[CMP] rename to joinSequences
         this->join(curr_candidates, seq_items, new_candidates);
         this->m_log_stream << "Candidates after Join at pass " << seq_items
             << std::endl;
         print(new_candidates);
 
+        // TODO[CMP] rename to pruneCandidates
         this->prune(seq_items + 1, new_candidates);
         this->m_log_stream << "Candidates after Prune at pass " << seq_items
             << std::endl;
@@ -221,7 +229,7 @@ unsigned int GSP::load(std::string &_input_filename)
     return this->m_input_dataset.size();
 }
 
-void GSP::detectFrequentItems(std::vector<Item>& _frequent_items)
+void GSP::detectFrequentItems(std::list<Item>& _frequent_items)
 {
     std::map<Item, unsigned int> map_count;
 
@@ -316,9 +324,9 @@ void GSP::detectFrequentItems(std::vector<Item>& _frequent_items)
 }
 
 void GSP::join(
-    std::vector<Sequence> &_candidates,
+    std::list<Sequence> &_candidates,
     unsigned int _seq_items,
-    std::vector<Sequence> &_new_candidates)
+    std::list<Sequence> &_new_candidates)
 {
     // pag. 9
     // A sequence S1 joins with S2 if the subsequence obtained by dropping the first
@@ -336,8 +344,9 @@ void GSP::join(
 
     if(_seq_items == 1)
     {
-        std::vector<Sequence>::iterator it1;
-        std::vector<Sequence>::iterator it2;
+        std::list<Sequence>::iterator it1;
+        std::list<Sequence>::iterator it1_next;
+        std::list<Sequence>::iterator it2;
 
         for(
             it1 = _candidates.begin();
@@ -369,7 +378,12 @@ void GSP::join(
                 }
             }
 
-            for(it2 = (it1 + 1); it2 != _candidates.end(); ++it2)
+            // [CMP] a strange way to get next element
+            // without increment the original iterator
+            it1_next = it1;
+            ++it1_next;
+
+            for(it2 = it1_next; it2 != _candidates.end(); ++it2)
             {
                 {
                     Sequence seq_both;
@@ -408,8 +422,8 @@ void GSP::join(
     }
     else
     {
-        std::vector<Sequence>::iterator it1;
-        std::vector<Sequence>::iterator it2;
+        std::list<Sequence>::iterator it1;
+        std::list<Sequence>::iterator it2;
 
         for(
             it1 = _candidates.begin();
@@ -419,7 +433,7 @@ void GSP::join(
             for(it2 = _candidates.begin(); it2 != _candidates.end(); ++it2)
             {
                 {
-                    //std::vector<Sequence> sub_seqs_S1, sub_seqs_S2;
+                    //std::list<Sequence> sub_seqs_S1, sub_seqs_S2;
                     //it1->getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(sub_seqs_S1);
                     //it2->getAllContiguosSubsequencesDroppingAnItemFromLastItemset(sub_seqs_S2);
 
@@ -494,7 +508,7 @@ Sequence GSP::joinSubsequences(
 
 void GSP::prune(
     unsigned int _seq_items,
-    std::vector<Sequence> &_new_candidates
+    std::list<Sequence> &_new_candidates
 )
 {
     // TODO [CMP] there is a temporary simple support count
@@ -504,7 +518,7 @@ void GSP::prune(
     this->updateSupportCountPositions(_new_candidates, _seq_items);
 
     unsigned int support;
-    std::vector<Sequence>::iterator it = _new_candidates.begin();
+    std::list<Sequence>::iterator it = _new_candidates.begin();
 
     // for each candidate
     while(it != _new_candidates.end())
@@ -535,10 +549,10 @@ void GSP::prune(
         // also delete candidate sequences that have any subsequence
         // without minimum support.
 
-        std::vector<Sequence> contiguous_subseq;
-        std::vector<Sequence> filtered_candidates;
+        std::list<Sequence> contiguous_subseq;
+        std::list<Sequence> filtered_candidates;
         //bool sequence_to_keep;
-        std::vector<Sequence>::iterator it, sub_it;
+        std::list<Sequence>::iterator it, sub_it;
 
         // obtaining all continuous subsequences
         for(
@@ -590,16 +604,16 @@ void GSP::prune(
 }
 
 void GSP::updateSupportCountPositions(
-    std::vector<Sequence> &_new_candidates,
+    std::list<Sequence> &_new_candidates,
     unsigned int _seq_items
 )
 {
     unsigned int tot_rows = this->m_input_dataset.size();
-    std::vector<Sequence>::iterator it_seq;
+    std::list<Sequence>::iterator it_seq;
     std::string str_seq;
     std::string::iterator str_it;
 
-    // initialize support vector map
+    // initialize support map
     // for each sequence candidate
     for(
         it_seq = _new_candidates.begin();
@@ -729,9 +743,9 @@ void GSP::updateSupportCountPositions(
     }
 }
 
-void GSP::print(std::vector<Sequence> &_sequences)
+void GSP::print(std::list<Sequence> &_sequences)
 {
-    std::vector<Sequence>::iterator it;
+    std::list<Sequence>::iterator it;
 
     for(it = _sequences.begin(); it != _sequences.end(); ++it)
     {

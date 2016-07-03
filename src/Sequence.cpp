@@ -5,7 +5,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 Sequence::Sequence()
 {
@@ -52,7 +51,7 @@ void Sequence::set(std::string _string_representation)
 }
 
 void Sequence::getAllFirstLevelContigousSubsequences(
-    std::vector<Sequence> &_cont_subseq)
+    std::list<Sequence> &_cont_subseq)
 {
     // pag. 8
     // C is a contiguous subsequence of S if any of the following
@@ -80,7 +79,7 @@ void Sequence::getAllFirstLevelContigousSubsequences(
 }
 
 void Sequence::getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(
-    std::vector<Sequence> &_cont_subseq)
+    std::list<Sequence> &_cont_subseq)
 {
     if(
         // Sequence size must be at least 1
@@ -138,7 +137,7 @@ void Sequence::getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(
 }
 
 void Sequence::getAllContiguosSubsequencesDroppingAnItemFromLastItemset(
-    std::vector<Sequence> &_cont_subseq)
+    std::list<Sequence> &_cont_subseq)
 {
     // Sequence size must be at least 2
     // to getAllContiguosSubsequencesDroppingAnItemFromFirstItemset
@@ -196,7 +195,7 @@ void Sequence::getAllContiguosSubsequencesDroppingAnItemFromLastItemset(
 }
 
 void Sequence::getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset(
-    std::vector<Sequence> &_cont_subseq)
+    std::list<Sequence> &_cont_subseq)
 {
     // Sequence size must be at least 3 to have middle itemsets
     if(this->m_itemsets.size() < 3)

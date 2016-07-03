@@ -7,7 +7,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 GSPTest::GSPTest() : cxxtools::unit::TestSuite("GSPTest")
 {
@@ -108,29 +107,34 @@ void GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromFirstItemset()
     Sequence seq1;
     prepare(seq1);
 
-    std::vector<Sequence> vect_sub_seq_prepared;
-    prepareContSubseqFirsts(vect_sub_seq_prepared);
-    std::vector<Sequence> vect_sub_seq_generated;
+    std::list<Sequence> sub_seq_prepared;
+    prepareContSubseqFirsts(sub_seq_prepared);
+    std::list<Sequence> sub_seq_generated;
 
     // Act
     seq1.getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(
-        vect_sub_seq_generated);
+        sub_seq_generated);
 
     // Assert
     std::cout << std::endl;
     std::cout << seq1.toString();
     CXXTOOLS_UNIT_ASSERT_EQUALS(
-        vect_sub_seq_prepared.size(), vect_sub_seq_generated.size());
+        sub_seq_prepared.size(), sub_seq_generated.size());
 
-    unsigned int size = vect_sub_seq_prepared.size();
+    std::list<Sequence>::iterator it1 = sub_seq_prepared.begin();
+    std::list<Sequence>::iterator it2 = sub_seq_generated.begin();
+    unsigned int i = 0;
 
-    for(unsigned int i = 0; i < size; ++i)
+    while(it1 != sub_seq_prepared.end())
     {
         std::cout << std::endl << '\t' << i << ' ';
-        std::cout << vect_sub_seq_prepared[i].toString();
-        std::cout << vect_sub_seq_generated[i].toString();
-        CXXTOOLS_UNIT_ASSERT(
-            vect_sub_seq_prepared[i] == vect_sub_seq_generated[i]);
+        std::cout << it1->toString();
+        std::cout << it2->toString();
+        CXXTOOLS_UNIT_ASSERT((*it1) == (*it2));
+
+        ++it1;
+        ++it2;
+        ++i;
     }
 
     std::cout << std::endl
@@ -143,29 +147,34 @@ void GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromLastItemset()
     Sequence seq1;
     prepare(seq1);
 
-    std::vector<Sequence> vect_sub_seq_prepared;
-    prepareContSubseqLasts(vect_sub_seq_prepared);
-    std::vector<Sequence> vect_sub_seq_generated;
+    std::list<Sequence> sub_seq_prepared;
+    prepareContSubseqLasts(sub_seq_prepared);
+    std::list<Sequence> sub_seq_generated;
 
     // Act
     seq1.getAllContiguosSubsequencesDroppingAnItemFromLastItemset(
-        vect_sub_seq_generated);
+        sub_seq_generated);
 
     // Assert
     std::cout << std::endl;
     std::cout << seq1.toString();
     CXXTOOLS_UNIT_ASSERT_EQUALS(
-        vect_sub_seq_prepared.size(), vect_sub_seq_generated.size());
+        sub_seq_prepared.size(), sub_seq_generated.size());
 
-    unsigned int size = vect_sub_seq_prepared.size();
+    std::list<Sequence>::iterator it1 = sub_seq_prepared.begin();
+    std::list<Sequence>::iterator it2 = sub_seq_generated.begin();
+    unsigned int i = 0;
 
-    for(unsigned int i = 0; i < size; ++i)
+    while(it1 != sub_seq_prepared.end())
     {
         std::cout << std::endl << '\t' << i << ' ';
-        std::cout << vect_sub_seq_prepared[i].toString();
-        std::cout << vect_sub_seq_generated[i].toString();
-        CXXTOOLS_UNIT_ASSERT(
-            vect_sub_seq_prepared[i] == vect_sub_seq_generated[i]);
+        std::cout << it1->toString();
+        std::cout << it2->toString();
+        CXXTOOLS_UNIT_ASSERT((*it1) == (*it2));
+
+        ++it1;
+        ++it2;
+        ++i;
     }
 
     std::cout << std::endl
@@ -178,29 +187,34 @@ void GSPTest::test_getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset
     Sequence seq1;
     prepare(seq1);
 
-    std::vector<Sequence> vect_sub_seq_prepared;
-    prepareContSubseqMiddles(vect_sub_seq_prepared);
-    std::vector<Sequence> vect_sub_seq_generated;
+    std::list<Sequence> sub_seq_prepared;
+    prepareContSubseqMiddles(sub_seq_prepared);
+    std::list<Sequence> sub_seq_generated;
 
     // Act
     seq1.getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset(
-        vect_sub_seq_generated);
+        sub_seq_generated);
 
     // Assert
     std::cout << std::endl;
     std::cout << seq1.toString();
     CXXTOOLS_UNIT_ASSERT_EQUALS(
-        vect_sub_seq_prepared.size(), vect_sub_seq_generated.size());
+        sub_seq_prepared.size(), sub_seq_generated.size());
 
-    unsigned int size = vect_sub_seq_prepared.size();
+    std::list<Sequence>::iterator it1 = sub_seq_prepared.begin();
+    std::list<Sequence>::iterator it2 = sub_seq_generated.begin();
+    unsigned int i = 0;
 
-    for(unsigned int i = 0; i < size; ++i)
+    while(it1 != sub_seq_prepared.end())
     {
         std::cout << std::endl << '\t' << i << ' ';
-        std::cout << vect_sub_seq_prepared[i].toString();
-        std::cout << vect_sub_seq_generated[i].toString();
-        CXXTOOLS_UNIT_ASSERT(
-            vect_sub_seq_prepared[i] == vect_sub_seq_generated[i]);
+        std::cout << it1->toString();
+        std::cout << it2->toString();
+        CXXTOOLS_UNIT_ASSERT((*it1) == (*it2));
+
+        ++it1;
+        ++it2;
+        ++i;
     }
 
     std::cout << std::endl
@@ -213,23 +227,26 @@ void GSPTest::test_getAllFirstLevelContigousSubsequences()
     Sequence seq;
     prepare(seq);
 
-    std::vector<Sequence> cont_subseq;
+    std::list<Sequence> cont_subseq;
     prepareContSubseqMix(cont_subseq);
 
     // Act
-    std::vector<Sequence> gsp_cont_subseq;
+    std::list<Sequence> gsp_cont_subseq;
     seq.getAllFirstLevelContigousSubsequences(gsp_cont_subseq);
 
     // Assert
     std::cout << std::endl;
-    CXXTOOLS_UNIT_ASSERT_EQUALS(
-        cont_subseq.size(), gsp_cont_subseq.size());
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cont_subseq.size(), gsp_cont_subseq.size());
 
-    unsigned int size = cont_subseq.size();
+    std::list<Sequence>::iterator it1 = cont_subseq.begin();
+    std::list<Sequence>::iterator it2 = gsp_cont_subseq.begin();
 
-    for(unsigned int i = 0; i < size; ++i)
+    while(it1 != cont_subseq.end())
     {
-        CXXTOOLS_UNIT_ASSERT(cont_subseq[i] == gsp_cont_subseq[i]);
+        CXXTOOLS_UNIT_ASSERT((*it1) == (*it2));
+
+        ++it1;
+        ++it2;
     }
 
     std::cout << std::endl
@@ -335,9 +352,9 @@ void GSPTest::test_getSubsequenceDroppingLastItemFromMultipleItemset()
 void GSPTest::test_GSP_join()
 {
     // Arrange
-    std::vector<Sequence> candidates;
-    std::vector<Sequence> prepared_candidates;
-    std::vector<Sequence> generated_candidates;
+    std::list<Sequence> candidates;
+    std::list<Sequence> prepared_candidates;
+    std::list<Sequence> generated_candidates;
 
 
     Sequence seq1("<(ab)(c)>");     // <(1, 2) (3)>
@@ -363,25 +380,30 @@ void GSPTest::test_GSP_join()
     // Assert
     std::cout << std::endl;
 
-    unsigned int size = candidates.size();
+    std::list<Sequence>::iterator it_cand;
 
-    for(unsigned int i = 0; i < size; ++i)
+    for(it_cand  = candidates.begin(); it_cand != candidates.end(); ++it_cand)
     {
-        std::cout << candidates[i].toString() << std::endl;
+        std::cout << it_cand->toString() << std::endl;
     }
 
     CXXTOOLS_UNIT_ASSERT_EQUALS(
         prepared_candidates.size(), generated_candidates.size());
 
-    size = prepared_candidates.size();
+    std::list<Sequence>::iterator it1 = prepared_candidates.begin();
+    std::list<Sequence>::iterator it2 = generated_candidates.begin();
+    unsigned int i = 0;
 
-    for(unsigned int i = 0; i < size; ++i)
+    while(it1 != prepared_candidates.end())
     {
         std::cout << std::endl << '\t' << i << ' ';
-        std::cout << prepared_candidates[i].toString();
-        std::cout << generated_candidates[i].toString();
-        CXXTOOLS_UNIT_ASSERT(
-            prepared_candidates[i] == generated_candidates[i]);
+        std::cout << it1->toString();
+        std::cout << it2->toString();
+        CXXTOOLS_UNIT_ASSERT((*it1) == (*it2));
+
+        ++it1;
+        ++it2;
+        ++i;
     }
 
     std::cout << std::endl
@@ -404,7 +426,7 @@ void GSPTest::prepare(Sequence &_seq)
     _seq.set("<(abc)(de)(f)(ghi)(lm)>");
 }
 
-void GSPTest::prepareContSubseqFirsts(std::vector<Sequence> &_cont_subseq)
+void GSPTest::prepareContSubseqFirsts(std::list<Sequence> &_cont_subseq)
 {
     {
         Sequence seq("<(ab)(de)(f)(ghi)(lm)>");
@@ -420,7 +442,7 @@ void GSPTest::prepareContSubseqFirsts(std::vector<Sequence> &_cont_subseq)
     }
 }
 
-void GSPTest::prepareContSubseqLasts(std::vector<Sequence> &_cont_subseq)
+void GSPTest::prepareContSubseqLasts(std::list<Sequence> &_cont_subseq)
 {
     {
         Sequence seq("<(abc)(de)(f)(ghi)(l)>");
@@ -432,7 +454,7 @@ void GSPTest::prepareContSubseqLasts(std::vector<Sequence> &_cont_subseq)
     }
 }
 
-void GSPTest::prepareContSubseqMiddles(std::vector<Sequence> &_cont_subseq)
+void GSPTest::prepareContSubseqMiddles(std::list<Sequence> &_cont_subseq)
 {
     {
         Sequence seq("<(abc)(d)(f)(ghi)(lm)>");
@@ -456,7 +478,7 @@ void GSPTest::prepareContSubseqMiddles(std::vector<Sequence> &_cont_subseq)
     }
 }
 
-void GSPTest::prepareContSubseqMix(std::vector<Sequence> &_cont_subseq)
+void GSPTest::prepareContSubseqMix(std::list<Sequence> &_cont_subseq)
 {
     // <(abc)(de)(f)(ghi)(lm)>
     // became

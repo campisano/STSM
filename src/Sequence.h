@@ -2,6 +2,7 @@
 #define SEQUENCE__H__
 
 #include <string>
+#include <list>
 #include <vector>
 
 #include "Itemset.h"
@@ -14,14 +15,23 @@ class Sequence
         virtual ~Sequence();
 
         void set(std::string _string_representation);
+
         void getAllFirstLevelContigousSubsequences(
-            std::vector<Sequence> &_cont_subseq);
+            std::list<Sequence> &_cont_subseq
+        );
+
         void getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(
-            std::vector<Sequence> &_cont_subseq);
+            std::list<Sequence> &_cont_subseq
+        );
+
         void getAllContiguosSubsequencesDroppingAnItemFromLastItemset(
-            std::vector<Sequence> &_cont_subseq);
+            std::list<Sequence> &_cont_subseq
+        );
+
         void getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset(
-            std::vector<Sequence> &_cont_subseq);
+            std::list<Sequence> &_cont_subseq
+        );
+
         void getSubsequenceDroppingFirstItem(Sequence &_subseq);
         void getSubsequenceDroppingLastItem(Sequence &_subseq);
         bool operator==(const Sequence &other);

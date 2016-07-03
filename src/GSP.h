@@ -28,22 +28,26 @@ class GSP
         void setMinimumSupport(unsigned int _min_support);
         void setMaxGap(unsigned int _max_gap);
         unsigned int load(std::string &_input_filename);
-        void detectFrequentItems(std::vector<Item>& _frequent_items);
+        void detectFrequentItems(std::list<Item>& _frequent_items);
+
         void join(
-            std::vector<Sequence> &_candidates,
+            std::list<Sequence> &_candidates,
             unsigned int _seq_items,
-            std::vector<Sequence> &_new_candidates
+            std::list<Sequence> &_new_candidates
         );
         Sequence joinSubsequences(Sequence& _seq1, Sequence& _seq2);
+
         void prune(
             unsigned int _seq_items,
-            std::vector<Sequence> &_new_candidates
+            std::list<Sequence> &_new_candidates
         );
+
         void updateSupportCountPositions(
-            std::vector<Sequence> &_new_candidates,
+            std::list<Sequence> &_new_candidates,
             unsigned int _seq_items
         );
-        void print(std::vector<Sequence> &_sequences);
+
+        void print(std::list<Sequence> &_sequences);
         void save(std::string &_output_filename);
 
     private:

@@ -2,7 +2,7 @@
 #define GSP_TEST__H__
 
 #include <cxxtools/unit/testsuite.h>
-#include <vector>
+#include <list>
 
 #include "GSP.h"
 #include "Sequence.h"
@@ -28,10 +28,10 @@ class GSPTest : public cxxtools::unit::TestSuite, public GSP
         void test_GSP_run();
 
         void prepare(Sequence &_seq);
-        void prepareContSubseqFirsts(std::vector<Sequence> &_cont_subseq);
-        void prepareContSubseqLasts(std::vector<Sequence> &_cont_subseq);
-        void prepareContSubseqMiddles(std::vector<Sequence> &_cont_subseq);
-        void prepareContSubseqMix(std::vector<Sequence> &_cont_subseq);
+        void prepareContSubseqFirsts(std::list<Sequence> &_cont_subseq);
+        void prepareContSubseqLasts(std::list<Sequence> &_cont_subseq);
+        void prepareContSubseqMiddles(std::list<Sequence> &_cont_subseq);
+        void prepareContSubseqMix(std::list<Sequence> &_cont_subseq);
 };
 
 #endif
