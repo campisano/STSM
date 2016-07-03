@@ -7,12 +7,14 @@ lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
 dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="0777");
 .libPaths(c(lib, .libPaths()));
 
-dep = "rjson"; if (!require(dep, character.only = TRUE, quietly = TRUE)) {
-    install.packages(dep, repos=repos, lib=lib); library(dep, character.only = TRUE);
+dep = "rjson"; if (!require(dep, character.only=TRUE, quietly=TRUE)) {
+    install.packages(dep, repos=repos, lib=lib);
+    library(dep, character.only=TRUE);
 }; rm(dep);
 
-dep = "TSMining"; if (!require(dep, character.only = TRUE, quietly = TRUE)) {
-    install.packages(dep, repos=repos, lib=lib); library(dep, character.only = TRUE);
+dep = "TSMining"; if (!require(dep, character.only=TRUE, quietly=TRUE)) {
+    install.packages(dep, repos=repos, lib=lib);
+    library(dep, character.only=TRUE);
 }; rm(dep);
 
 
@@ -42,27 +44,15 @@ base_filename =  sub("[.][^.]*$", "", base_filename, perl=TRUE);
 source(file.path("R", "motif_lib.R"));
 load_lib();
 dataset = read.table(
-    file = csv_dataset,
-    header = TRUE,
-    fill = TRUE,
-    as.is = TRUE,
-    stringsAsFactors = FALSE,
-    sep = " ",
-    quote = "");
+    file=csv_dataset, header=TRUE, fill=TRUE, as.is=TRUE,
+    stringsAsFactors=FALSE, sep=" ", quote=""
+);
 
 
 
 # loading json data
 print(paste("Loading json data", input_file_json, "..."));
 json_data = fromJSON(file=input_file_json, method="C");
-
-# save a fast readable Rdata file
-#filename_json_rdata = file.path(
-#            base_path_dir, "rdata",
-#            paste(base_filename, "_json.rdata", sep="")
-#        );
-#save(json_data, file=filename_json_rdata);
-#load(filename_json_rdata);
 
 
 
@@ -108,8 +98,9 @@ if(is.null(json_data) || length(json_data) < 1)
 
             my_item = list();
             my_item[["saxcod"]] = data.frame(
-                t(data.frame(strsplit(sequence, split=""), row.names = NULL)),
-                row.names = NULL);
+                t(data.frame(strsplit(sequence, split=""), row.names=NULL)),
+                row.names=NULL
+            );
             my_item[["isaxcod"]] = sequence;
             my_item[["recmatrix"]] = "";
             my_item[["vecst"]] = data.frame("s"=spaces, "t"=times);
@@ -123,16 +114,6 @@ if(is.null(json_data) || length(json_data) < 1)
             my_item, spaces, times, match_data, sequence, sequence_data_item,
             sequence_data, j, sequence_data_by_length
         );
-
-        # save a fast readable Rdata file
-        #filename_rdata = file.path(
-        #    base_path_dir, "rdata",
-        #    paste(base_filename, "_", sequence_length, ".rdata", sep="")
-        #);
-        #save(my_stmotifs, file=filename_rdata);
-        #load(filename_rdata);
-
-
 
         #setwd("/home/t1t0/Desktop/mestrado/GSP")
         #load("20_10_4_5_C.RData") # candidates
@@ -160,8 +141,11 @@ if(is.null(json_data) || length(json_data) < 1)
             my_stmotifs_tmp[[sequence]] = my_stmotifs[[w]];
 
             dir.create(
-                file.path(base_path_dir, "png", base_filename, sequence_length),
-                showWarnings=FALSE, recursive=TRUE, mode="0777");
+                file.path(
+                    base_path_dir, "png", base_filename, sequence_length
+                ),
+                showWarnings=FALSE, recursive=TRUE, mode="0777"
+            );
             filename_by_seq_png = file.path(
                 base_path_dir, "png", base_filename, sequence_length,
                 paste(sequence, ".png", sep="")
