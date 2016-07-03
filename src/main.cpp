@@ -1,4 +1,6 @@
 #include "GSP.h"
+#include <cmath>
+#include <ctime>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -26,7 +28,7 @@ int main(int argc, char *argv[])
     unsigned int max_gap;
     std::stringstream(argv[5]) >> max_gap;
 
-    std::cout << "running: "
+    std::cout << "    running: "
         << input_data_csv
         << " " << result_json
         << " " << output_log
@@ -36,7 +38,20 @@ int main(int argc, char *argv[])
 
     GSP gsp;
 
-    gsp.run(input_data_csv, result_json, output_log, min_support, max_gap);
+    clock_t begin;
+    int elapsed_s;
+
+    begin = clock();
+    gsp.run(input_data_csv, output_log, min_support, max_gap);
+    elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
+    std::cout << "        run clock time: " << elapsed_s << "s" << std::endl;
+
+    std::cout << "    saving to " << result_json << std::endl;
+
+    begin = clock();
+    gsp.saveJSON(result_json);
+    elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
+    std::cout << "        save clock time: " << elapsed_s << "s" << std::endl;
 
     return 0;
 

@@ -19,10 +19,11 @@ class GSP
 
         void run(
             std::string _input_filename,
-            std::string _output_filename,
             std::string _log_filename,
             unsigned int _min_support,
             unsigned int _max_gap);
+
+        void saveJSON(std::string &_output_filename);
 
     protected:
         void setMinimumSupport(unsigned int _min_support);
@@ -48,7 +49,6 @@ class GSP
         );
 
         void print(std::list<Sequence> &_sequences);
-        void save(std::string &_output_filename);
 
     private:
         unsigned int m_min_support;

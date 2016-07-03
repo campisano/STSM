@@ -25,7 +25,6 @@ GSP::~GSP()
 
 void GSP::run( //TODO [CMP] rename to findFrequentSequences
     std::string _input_filename,
-    std::string _output_filename,
     std::string _log_filename,
     unsigned int _min_support,
     unsigned int _max_gap)
@@ -42,7 +41,6 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
 
     // logging info
     this->m_log_stream << "Input: " << _input_filename << std::endl;
-    this->m_log_stream << "Output: " << _output_filename << std::endl;
     this->m_log_stream << "Log: " << _log_filename << std::endl;
     this->m_log_stream << "Num of datasets: " << num_datasets << std::endl;
     this->m_log_stream << "Min support: " << _min_support
@@ -194,8 +192,6 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
             }
         }
     }
-
-    this->save(_output_filename);
 
     this->m_log_stream.close();
 }
@@ -760,7 +756,7 @@ void GSP::print(std::list<Sequence> &_sequences)
     }
 }
 
-void GSP::save(std::string &_output_filename)
+void GSP::saveJSON(std::string &_output_filename)
 {
     std::ofstream output_file;
     output_file.open(_output_filename.c_str());
