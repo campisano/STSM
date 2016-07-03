@@ -169,6 +169,10 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
 
                     this->m_log_stream << "\t\t" << "count: "
                         << it_results_map->second.first << std::endl;
+
+                    /*
+                    this->m_log_stream << "\t\t" << "position: ";
+
                     for(
                         it_positions_vect = (
                             it_results_map->second.second.begin()
@@ -179,10 +183,13 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
                         ++it_positions_vect
                     )
                     {
-                        this->m_log_stream << "\t\t\t" << "position: "
-                            << it_positions_vect->first << " "
-                            << it_positions_vect->second << std::endl;
+                        this->m_log_stream << '('
+                            << it_positions_vect->first << ','
+                            << it_positions_vect->second << ')';
                     }
+
+                    this->m_log_stream << std::endl;
+                    */
                 }
             }
         }
