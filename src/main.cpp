@@ -200,6 +200,16 @@ int main(int argc, char *argv[])
 
 /* TODOs
 
+- fix
+
+ * Running GSP original 5 95 3 [...]
+running: data/100_sax-5_original.csv results/5_original/json/100_sax-5_original_s95_g3.json results/5_original/log/100_sax-5_original_s95_g3.log 95 3
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  Current support count function doesn't handle sequence with less then two items.
+./run.sh: line 33: 24198 Aborted                 gsp $INPUT_FILE $OUTPUT_FILE $LOG_FILE $SUPPORT $GAP
+
+
+
 - better performance
 
 1) use prefix tree
