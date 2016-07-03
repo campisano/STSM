@@ -70,9 +70,9 @@ if(is.null(json_data) || length(json_data) < 1)
         sequence_data_by_length = json_data[[length(json_data) - len]];
 
         if(
-            is.null(sequence_data_by_length$first) ||
-            is.null(sequence_data_by_length$second) ||
-            length(sequence_data_by_length$second) < 1
+            is.null(sequence_data_by_length$length) ||
+            is.null(sequence_data_by_length$sequences) ||
+            length(sequence_data_by_length$sequences) < 1
         )
         {
             print(paste("Empty sequence data of -len", len));
@@ -81,20 +81,22 @@ if(is.null(json_data) || length(json_data) < 1)
             next;
         }
 
-        sequence_length = sequence_data_by_length$first;
-        sequence_data = sequence_data_by_length$second;         # c++ pair
+        sequence_length = sequence_data_by_length$length;
+        sequence_data = sequence_data_by_length$sequences;          # c++ pair
 
         my_stmotifs = list();
 
         for(j in 1:length(sequence_data))
         {
             sequence_data_item = sequence_data[[j]];
-            sequence = gsub("[()<>]", "", sequence_data_item$first);
-            #support = sequence_data_item$second$first;
-            match_data = sequence_data_item$second$second;      # c++ pair
+            sequence = gsub("[()<>]", "", sequence_data_item$sequence);
+            #support = sequence_data_item$support;
+            #match_data = sequence_data_item$positions;              # c++ pair
 
-            times = unlist(lapply(match_data, function(item){item$first}));
-            spaces = unlist(lapply(match_data, function(item){item$second}));
+            #times = unlist(lapply(match_data, function(item){item$x}));
+            #spaces = unlist(lapply(match_data, function(item){item$y}));
+            times = sequence_data_item$times;
+            spaces = sequence_data_item$spaces;
 
             my_item = list();
             my_item[["saxcod"]] = data.frame(
@@ -111,7 +113,7 @@ if(is.null(json_data) || length(json_data) < 1)
 
         # cleanup
         rm(
-            my_item, spaces, times, match_data, sequence, sequence_data_item,
+            my_item, spaces, times, sequence, sequence_data_item,
             sequence_data, j, sequence_data_by_length
         );
 

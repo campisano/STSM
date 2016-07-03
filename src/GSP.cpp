@@ -762,48 +762,12 @@ void GSP::print(std::list<Sequence> &_sequences)
 
 void GSP::save(std::string &_output_filename)
 {
-    //cxxtools::SerializationInfo si;
-    //si.addMember("encoding") <<= "UTF-8";
-    //cxxtools::SerializationInfo& psi = si.addMember("plug-ins");
-    //psi.addMember() <<= "python";
-    //psi.addMember() <<= "c++";
-    //psi.addMember() <<= "ruby";
-    //cxxtools::SerializationInfo& isi = si.addMember("indent");
-    //isi.addMember("length") <<= 3;
-    //isi.addMember("use_space") <<= true;
-
-    //std::ofstream output(_output_filename);
-    //output << cxxtools::Json(si);  // this prints unformatted and very compact json without any white space
-    //output << cxxtools::Json(si, true);
-
-
-    // Writing JSON needs a cxxtools::JsonSerializer:
-
-    //std::ofstream output(_output_filename.c_str());
-    //cxxtools::JsonSerializer serializer(output);
-    //serializer.beautify(true);
-    //output.serialize(serializer);
-
-    //std::ofstream file;
-    ////char buffer[8192];
-    ////file.rdbuf()->pubsetbuf(buffer, sizeof buffer);
-    //file.open(_output_filename.c_str());
-    //cxxtools::JsonSerializer serializer(file);
-    //serializer.beautify(true);
-    //serializer.serialize(m_supported_sequences_positions).finish();
-
-
-
-
-
     std::ofstream output_file;
     output_file.open(_output_filename.c_str());
     cxxtools::TextOStream ts(output_file, new cxxtools::Utf8Codec());
 
     cxxtools::JsonFormatter formatter(ts);
-    formatter.beautify(true);
-
-
+    formatter.beautify(false);
 
     std::map< unsigned int,    // mapping sequences per length (seq items)
         std::map< std::string, // mapping results per sequence (toString())
@@ -829,6 +793,7 @@ void GSP::save(std::string &_output_filename)
 
     formatter.beginArray("", "");
 
+    // for each length group of detected sequence
     for(
         it_seq_map = this->m_supported_sequences_positions.begin();
         it_seq_map != this->m_supported_sequences_positions.end();
@@ -836,9 +801,10 @@ void GSP::save(std::string &_output_filename)
     )
     {
         formatter.beginObject("", "");
-        formatter.addValueInt("first", "", it_seq_map->first);
-        formatter.beginArray("second", "");
+        formatter.addValueInt("length", "", it_seq_map->first);
+        formatter.beginArray("sequences", "");
 
+        // for each sequence of that length
         for(
             it_results_map = it_seq_map->second.begin();
             it_results_map != it_seq_map->second.end();
@@ -850,12 +816,11 @@ void GSP::save(std::string &_output_filename)
                 formatter.beginObject("", "");
 
                 formatter.addValueStdString(
-                    "first", "", it_results_map->first);
-
-                formatter.beginObject("second", "");
+                    "sequence", "", it_results_map->first);
                 formatter.addValueInt(
-                    "first", "", it_results_map->second.first);
-                formatter.beginArray("second", "");
+                    "support", "", it_results_map->second.first);
+
+                formatter.beginArray("times", "");
 
                 for(
                     it_positions_vect = (
@@ -867,16 +832,28 @@ void GSP::save(std::string &_output_filename)
                     ++it_positions_vect
                 )
                 {
-                    formatter.beginObject("", "");
                     formatter.addValueInt(
-                        "first", "", it_positions_vect->first);
-                    formatter.addValueInt(
-                        "second", "", it_positions_vect->second);
-                    formatter.finishObject();
+                        "", "", it_positions_vect->first);
                 }
 
                 formatter.finishArray();
-                formatter.finishObject();
+                formatter.beginArray("spaces", "");
+
+                for(
+                    it_positions_vect = (
+                        it_results_map->second.second.begin()
+                    );
+                    it_positions_vect != (
+                        it_results_map->second.second.end()
+                    );
+                    ++it_positions_vect
+                )
+                {
+                    formatter.addValueInt(
+                        "", "", it_positions_vect->second);
+                }
+
+                formatter.finishArray();
                 formatter.finishObject();
             }
         }
