@@ -9,13 +9,14 @@
 
 int main(int argc, char *argv[])
 {
-    if(argc != 6)
+    if(argc != 7)
     {
         std::cerr << "Bad number of arguments." << std::endl;
         std::cerr << "Usage: "
             << argv[0]
             << " <input_data.csv> <result.json>"
-            << " <output.log> <min_support> <max_gap>" << std::endl;
+            << " <output.log> <min_support> <max_support>"
+            << " <max_gap>" << std::endl;
 
         return 1;
     }
@@ -25,14 +26,17 @@ int main(int argc, char *argv[])
     std::string output_log = argv[3];
     unsigned int min_support;
     std::stringstream(argv[4]) >> min_support;
+    unsigned int max_support;
+    std::stringstream(argv[5]) >> max_support;
     unsigned int max_gap;
-    std::stringstream(argv[5]) >> max_gap;
+    std::stringstream(argv[6]) >> max_gap;
 
     std::cout << "    running: "
         << input_data_csv
         << " " << result_json
         << " " << output_log
         << " " << min_support
+        << " " << max_support
         << " " << max_gap
         << std::endl;
 
@@ -42,7 +46,7 @@ int main(int argc, char *argv[])
     int elapsed_s;
 
     begin = clock();
-    gsp.run(input_data_csv, output_log, min_support, max_gap);
+    gsp.run(input_data_csv, output_log, min_support, max_support, max_gap);
     elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
     std::cout << "        run clock time: " << elapsed_s << "s" << std::endl;
 

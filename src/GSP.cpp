@@ -6,6 +6,7 @@
 //#include <cxxtools/jsonserializer.h>
 #include <cxxtools/utf8codec.h>
 #include <fstream>
+#include <limits>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -17,6 +18,7 @@ GSP::GSP()
 {
     //TODO [CMP] the load can be performed there
     this->m_min_support = 0;
+    this->m_max_support = std::numeric_limits<double>::max();
 }
 
 GSP::~GSP()
@@ -27,24 +29,28 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
     std::string _input_filename,
     std::string _log_filename,
     unsigned int _min_support,
+    unsigned int _max_support,
     unsigned int _max_gap)
 {
     this->m_input_dataset.clear();
     this->m_supported_sequences_positions.clear();
     this->m_log_stream.open(_log_filename.c_str());
 
-    unsigned int num_datasets = this->load(_input_filename);
+    this->load(_input_filename);
 
-    //TODO [CMP] should m_min_support be float?
-    this->setMinimumSupport(_min_support * num_datasets / 100.0);
+    this->setMinimumSupportPerc(_min_support);
+    this->setMaximumSupportPerc(_max_support);
     this->setMaxGap(_max_gap);
 
     // logging info
     this->m_log_stream << "Input: " << _input_filename << std::endl;
     this->m_log_stream << "Log: " << _log_filename << std::endl;
-    this->m_log_stream << "Num of datasets: " << num_datasets << std::endl;
+    this->m_log_stream << "Num of datasources: " << this->getNumDatasources()
+        << std::endl;
     this->m_log_stream << "Min support: " << _min_support
         << "% = " << this->m_min_support << std::endl;
+    this->m_log_stream << "Max support: " << _max_support
+        << "% = " << this->m_max_support << std::endl;
     this->m_log_stream << "Max gap: " << _max_gap << std::endl;
     this->m_log_stream << std::endl;
 
@@ -196,7 +202,7 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
     this->m_log_stream.close();
 }
 
-void GSP::setMinimumSupport(unsigned int _min_support)
+void GSP::setMinimumSupportPerc(unsigned int _min_support)
 {
     if(_min_support < 1)
     {
@@ -204,7 +210,40 @@ void GSP::setMinimumSupport(unsigned int _min_support)
             "Minumum Support parameter cannot be less then 1%.");
     }
 
-    this->m_min_support = _min_support;
+    double min_support = _min_support * this->getNumDatasources() / 100.0;
+
+    if(min_support > this->m_max_support)
+    {
+        std::stringstream text;
+        text << "Minimum Support (" << min_support
+            << ") cannot be greater than then Maximum Support ("
+            << this->m_max_support << ").";
+        throw std::runtime_error(text.str());
+    }
+
+    this->m_min_support = min_support;
+}
+
+void GSP::setMaximumSupportPerc(unsigned int _max_support)
+{
+    if(_max_support < 1)
+    {
+        throw std::runtime_error(
+            "Maximum Support parameter cannot be less then 1%.");
+    }
+
+    double max_support = _max_support * this->getNumDatasources() / 100.0;
+
+    if(max_support < this->m_min_support)
+    {
+        std::stringstream text;
+        text << "Maximum Support (" << max_support
+            << ") cannot be greater than then Minimum Support ("
+            << this->m_min_support << ").";
+        throw std::runtime_error(text.str());
+    }
+
+    this->m_max_support = max_support;
 }
 
 void GSP::setMaxGap(unsigned int _max_gap)
@@ -218,7 +257,7 @@ void GSP::setMaxGap(unsigned int _max_gap)
     this->m_max_gap = _max_gap;
 }
 
-unsigned int GSP::load(std::string &_input_filename)
+void GSP::load(std::string &_input_filename)
 {
     std::ifstream file_stream;
     file_stream.open(_input_filename.c_str(), std::ifstream::in);
@@ -228,8 +267,6 @@ unsigned int GSP::load(std::string &_input_filename)
     deserializer.deserialize(this->m_input_dataset);
 
     file_stream.close();
-
-    return this->m_input_dataset.size();
 }
 
 void GSP::detectFrequentItems(std::list<Item>& _frequent_items)
@@ -301,7 +338,8 @@ void GSP::detectFrequentItems(std::list<Item>& _frequent_items)
 
         while(it != map_count.end())
         {
-            if(it->second < this->m_min_support)
+            if(it->second < this->m_min_support ||
+                it->second > this->m_max_support)
             {
                 map_count.erase(it++);
             }
@@ -530,7 +568,8 @@ void GSP::prune(
         support = this->m_supported_sequences_positions[
             _seq_items][it->toString()].first;
 
-        if(support < this->m_min_support)
+        if(support < this->m_min_support ||
+            support > this->m_max_support)
         {
             it = _new_candidates.erase(it);
         }
