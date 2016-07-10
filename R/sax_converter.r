@@ -14,9 +14,18 @@ dep = "TSMining"; if (!require(dep, character.only=TRUE, quietly=TRUE)) {
 
 
 
+# variables
+#filepath = "data/100.csv";
+filepath = "data/401.csv";
+base_path_dir = dirname(filepath);
+filename = sub(file.path(base_path_dir, ""), "", filepath);
+base_filename =  sub("[.][^.]*$", "", filename, perl=TRUE);
+
+
+
 # reading input data
 input_data = read.table(
-    file="data/100.csv", header=TRUE, fill=TRUE, as.is=TRUE,
+    file=filepath, header=TRUE, fill=TRUE, as.is=TRUE,
     stringsAsFactors=FALSE, sep=" ", quote=""
 );
 
@@ -31,8 +40,9 @@ input_data = read.table(
 # and to convert it back with the same orientation, without translation
 vector_data = as.vector(t(input_data));
 
-for(alphabet in c(5, 10, 15, 20, 25))
+for(alphabet in c(25, 20, 15, 10, 5))
 {
+    print(alphabet);
     # applying SAX
     sax_data = Func.SAX(
         x=vector_data, w=length(vector_data), a=alphabet, eps=.01, norm=TRUE
@@ -71,8 +81,9 @@ for(alphabet in c(5, 10, 15, 20, 25))
         # writing to disk
         write.table(
             x=typed_output_data, file=paste(
-                "data/100_sax-", alphabet, "_", type, ".csv", sep=""),
-            col.names=TRUE, row.names=FALSE, sep=",", quote=FALSE
+                base_path_dir, "/", base_filename, "_sax-", alphabet,
+                "_", type, ".csv", sep=""),
+                col.names=TRUE, row.names=FALSE, sep=",", quote=FALSE
         );
 
         # filtred_output_data = typed_output_data[13:ncol(typed_output_data)];
@@ -81,8 +92,8 @@ for(alphabet in c(5, 10, 15, 20, 25))
         # write.table(
         #     x=filtred_output_data,
         #     file=paste(
-        #         "data/100_sax-", alphabet, "_", type, "_filtred", ".csv",
-        #         sep=""),
+        #         base_path_dir, "/", base_filename, "_sax-", alphabet,
+        #         "_", type, "_filtred", ".csv", sep=""),
         #     col.names=TRUE, row.names=FALSE, sep=",", quote=FALSE
         # );
     }
