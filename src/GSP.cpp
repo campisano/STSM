@@ -115,20 +115,55 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
         new_candidates.clear();
     }
 
-    //TODO [CMP]:
+    // filter following max-support constraint
+    {
+        std::map< unsigned int,    // mapping sequences per length (seq items)
+            std::map< std::string, // mapping results per sequence (toString())
+                std::pair < unsigned int,           // support count
+                    std::list <                     // list of positions
+                        std::pair< unsigned int, unsigned int > // sensor, time
+                    >
+                >
+            >
+        >::iterator it_seq_map;
 
-    // merge of all candidates in the same list ?
+        std::map< std::string, // mapping results per sequence (toString())
+            std::pair < unsigned int,               // support count
+                std::list <                         // list of positions
+                    std::pair< unsigned int, unsigned int > // sensor, time
+                >
+            >
+        >::iterator it_results_map;
 
-    // support count and filter or prune already do this job?
-    // Filter dependecies between k-candidates and k+1-candidades
-    // is no needed?
+        it_seq_map = this->m_supported_sequences_positions.begin();
 
-    // what's next?
+        // for each length group
+        while(it_seq_map != this->m_supported_sequences_positions.end())
+        {
+            it_results_map = it_seq_map->second.begin();
+
+            // for each sequence
+            while(it_results_map != it_seq_map->second.end())
+            {
+                if(it_results_map->second.first > this->m_max_support)
+                {
+                    it_seq_map->second.erase(it_results_map++);
+                }
+                else
+                {
+                    ++it_results_map;
+                }
+            }
+
+            ++it_seq_map;
+        }
+    }
 
     // print supported sequences
     {
         this->m_log_stream
             << std::endl << "Printing supported sequences:" << std::endl;
+
         std::map< unsigned int,    // mapping sequences per length (seq items)
             std::map< std::string, // mapping results per sequence (toString())
                 std::pair < unsigned int,           // support count
@@ -338,8 +373,7 @@ void GSP::detectFrequentItems(std::list<Item>& _frequent_items)
 
         while(it != map_count.end())
         {
-            if(it->second < this->m_min_support ||
-                it->second > this->m_max_support)
+            if(it->second < this->m_min_support)
             {
                 map_count.erase(it++);
             }
@@ -568,8 +602,7 @@ void GSP::prune(
         support = this->m_supported_sequences_positions[
             _seq_items][it->toString()].first;
 
-        if(support < this->m_min_support ||
-            support > this->m_max_support)
+        if(support < this->m_min_support)
         {
             it = _new_candidates.erase(it);
         }
