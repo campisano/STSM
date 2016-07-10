@@ -30,7 +30,7 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
     std::string _log_filename,
     unsigned int _min_support,
     unsigned int _max_support,
-    unsigned int _max_gap)
+    unsigned int _max_time_window)
 {
     this->m_input_dataset.clear();
     this->m_supported_sequences_positions.clear();
@@ -40,7 +40,7 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
 
     this->setMinimumSupportPerc(_min_support);
     this->setMaximumSupportPerc(_max_support);
-    this->setMaxGap(_max_gap);
+    this->setMaxTimeWindow(_max_time_window);
 
     // logging info
     this->m_log_stream << "Input: " << _input_filename << std::endl;
@@ -51,7 +51,7 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
         << "% = " << this->m_min_support << std::endl;
     this->m_log_stream << "Max support: " << _max_support
         << "% = " << this->m_max_support << std::endl;
-    this->m_log_stream << "Max gap: " << _max_gap << std::endl;
+    this->m_log_stream << "Max time window: " << _max_time_window << std::endl;
     this->m_log_stream << std::endl;
 
     std::list<Item> frequent_items;
@@ -281,15 +281,15 @@ void GSP::setMaximumSupportPerc(unsigned int _max_support)
     this->m_max_support = max_support;
 }
 
-void GSP::setMaxGap(unsigned int _max_gap)
+void GSP::setMaxTimeWindow(unsigned int _max_time_window)
 {
-    if(_max_gap < 0)
+    if(_max_time_window < 0)
     {
         throw std::runtime_error(
-            "Max Gap parameter cannot be less then 0.");
+            "Max Time Window parameter cannot be less then 0.");
     }
 
-    this->m_max_gap = _max_gap;
+    this->m_max_time_window = _max_time_window;
 }
 
 void GSP::load(std::string &_input_filename)
@@ -683,10 +683,7 @@ void GSP::updateSupportCountPositions(
     unsigned int _seq_items
 )
 {
-    unsigned int tot_rows = this->m_input_dataset.size();
     std::list<Sequence>::iterator it_seq;
-    std::string str_seq;
-    std::string::iterator str_it;
 
     // initialize support map
     // for each sequence candidate
@@ -709,10 +706,19 @@ void GSP::updateSupportCountPositions(
     // use a temporary way to store support count per sequence
     std::map<std::string, std::set<unsigned int> > support;
 
+    std::string str_seq;
+    unsigned int str_seq_size;
+    std::string::iterator str_it;
+    unsigned int tot_rows = this->m_input_dataset.size();
+    unsigned int tot_cols;
+    unsigned int col;
+    unsigned int start_match_col;
+    //unsigned int last_match_col;                  // [CMP] this is useful only for max-gap
+
     // for each input data-seqeunce, check if contain the sequence
     for(unsigned int row = 0; row < tot_rows; ++row)
     {
-        unsigned int tot_cols = this->m_input_dataset[row].size();
+        tot_cols = this->m_input_dataset[row].size();
 
         // for each sequence candidate
         for(
@@ -733,33 +739,41 @@ void GSP::updateSupportCountPositions(
             // obtaining a string representation of the sequence
             // to easy loop inside it's elements
             str_seq = it_seq->toStringOfItems();
+            str_seq_size = str_seq.size();
             str_it = str_seq.begin();
 
-            if(str_seq.size() < 2)
+            if(str_seq_size < 2)
             {
                 throw std::runtime_error(
                     "Current support count function doesn't handle"
                     " sequence with less then two items.");
             }
 
-            unsigned int col = 0;
-            unsigned int start_match_col = 0;
-            unsigned int last_match_col = 0;
+            col = 0;
+            start_match_col = 0;
+            //last_match_col = 0;                   // [CMP] this is useful only for max-gap
 
             // passing through every item of the row
             while(col < tot_cols)
             {
-                // check the max_gap constrant
+                // check the max_time window constrant
                 // this check must be an early check
                 if(
-                    last_match_col != 0 &&
-                    (col - last_match_col) > (this->m_max_gap + 1)
+                    // [CMP] this is useful only for max-gap
+                    //last_match_col != 0 &&
+                    //(col - last_match_col) > (this->m_max_gap + 1)
+
+                    // [CMP] imagine a sequence of length 5
+                    // max_time_window < 5 make no sense
+                    start_match_col != 0 &&
+                    (col - start_match_col) >= (
+                        this->m_max_time_window + str_seq_size)
                 )
                 {
                     // rewind to start_match_col + 1
                     col = start_match_col + 1;
                     start_match_col = 0;
-                    last_match_col = 0;
+                    //last_match_col = 0;           // [CMP] this is useful only for max-gap
                     str_it = str_seq.begin();
                     continue;
                 }
@@ -775,7 +789,7 @@ void GSP::updateSupportCountPositions(
                         start_match_col = col;
                     }
 
-                    last_match_col = col;
+                    //last_match_col = col;         // [CMP] this is useful only for max-gap
                     ++str_it;
 
                     // if the sequence iterator reach the end,
@@ -783,7 +797,7 @@ void GSP::updateSupportCountPositions(
                     if(str_it == str_seq.end())
                     {
                         std::pair<unsigned int, unsigned int>
-                            position(row, col - str_seq.size() + 1);
+                            position(row, col - str_seq_size + 1);
                         this->m_supported_sequences_positions[_seq_items][
                             it_seq->toString()].second.push_back(position);
 
@@ -792,7 +806,7 @@ void GSP::updateSupportCountPositions(
                         // rewind to start_match_col + 1
                         col = start_match_col + 1;
                         start_match_col = 0;
-                        last_match_col = 0;
+                        //last_match_col = 0;       // [CMP] this is useful only for max-gap
                         str_it = str_seq.begin();
                         continue;
                     }

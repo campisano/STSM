@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
             << argv[0]
             << " <input_data.csv> <result.json>"
             << " <output.log> <min_support> <max_support>"
-            << " <max_gap>" << std::endl;
+            << " <max_time_window>" << std::endl;
 
         return 1;
     }
@@ -28,8 +28,8 @@ int main(int argc, char *argv[])
     std::stringstream(argv[4]) >> min_support;
     unsigned int max_support;
     std::stringstream(argv[5]) >> max_support;
-    unsigned int max_gap;
-    std::stringstream(argv[6]) >> max_gap;
+    unsigned int max_time_window;
+    std::stringstream(argv[6]) >> max_time_window;
 
     std::cout << "    running: "
         << input_data_csv
@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
         << " " << output_log
         << " " << min_support
         << " " << max_support
-        << " " << max_gap
+        << " " << max_time_window
         << std::endl;
 
     GSP gsp;
@@ -46,7 +46,8 @@ int main(int argc, char *argv[])
     int elapsed_s;
 
     begin = clock();
-    gsp.run(input_data_csv, output_log, min_support, max_support, max_gap);
+    gsp.run(
+        input_data_csv, output_log, min_support, max_support, max_time_window);
     elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
     std::cout << "        run clock time: " << elapsed_s << "s" << std::endl;
 
@@ -59,108 +60,90 @@ int main(int argc, char *argv[])
 
     return 0;
 
-    //////////////////////////////////////////////////////////////////////////////
-    //// Generic tests
-
-    //// test 1:
-    //{
-        //GSP gsp;
-        //gsp.run(
-            //"data/100_sax-26_original.csv",
-            //"out/test_1.json", "out/test_1.log", 951 / 4 * 3, 5);
-        ////<(a)(a)(z)(a)>    721
-        ////<(a)(a)(z)(z)>    808
-        ////<(a)(z)(a)(a)>    714
-        ////<(a)(z)(z)(a)>    804
-        ////<(z)(a)(a)(z)>    785
-        ////<(m)(m)(m)(m)>    951
-        ////<(z)(z)(a)(a)>    829
-        ////<(m)(m)(m)(m)(m)> 951
-    //}
-
-    //// test 2: find 25 candidates all with support of 498
-    //{
-        //GSP gsp;
-        //gsp.run(
-            //"data/100_sax-26_original.csv",
-            //"out/test_2.json", "out/test_2.log", 951 / 10 * 9, 5);
-        ////<(a)(a)(a)>   857
-        ////<(a)(a)(z)>   918
-        ////<(a)(z)(a)>   897
-        ////<(a)(z)(z)>   927
-        ////<(z)(a)(a)>   925
-        ////<(z)(a)(z)>   890
-        ////<(m)(m)(m)>   951
-        ////<(z)(z)(a)>   930
-        ////<(m)(m)(m)(m)>    951
-    //}
-
-    //////////////////////////////////////////////////////////////////////////////
-    //// If algorith find a frequent pattern, it's really frequent
-    //// (using a small dataset with manually defined data and frequent sequences)
-
-    //// test 3: manual test dataset
+    ////////////////////////////////////////////////////////////////////////////
+    // Test 1:
+    // If algorith find a frequent pattern, it's really frequent
+    // (using a small dataset with manually defined data and frequent sequences)
+    //
+    // can find synthetic sequences without gap
     //{
         //GSP gsp;
         //gsp.run(
             //"data/100_sax-26_sample-26x10_synthetic",
-            //"out/test_3.json", "out/test_3.log", 2, 0);
-        ////<(C)(C)(A)(R)(D)(O)>  10
-        ////<(I)(C)(C)(A)(R)(D)>  10
-        ////<(R)(I)(C)(C)(A)(R)>  10
-        ////<(I)(C)(C)(A)(R)(D)(O)>   10
-        ////<(R)(I)(C)(C)(A)(R)(D)>   10
-        ////<(R)(I)(C)(C)(A)(R)(D)(O)>    10
+            //"results/test_1.json", "results/test_1.log",
+            //100, 100, 0);
+
+        //length: 6
+                //sequence: <(C)(C)(A)(R)(D)(O)>
+                //count: 10
+                //sequence: <(I)(C)(C)(A)(R)(D)>
+                //count: 10
+                //sequence: <(R)(I)(C)(C)(A)(R)>
+                //count: 10
+        //length: 7
+                //sequence: <(I)(C)(C)(A)(R)(D)(O)>
+                //count: 10
+                //sequence: <(R)(I)(C)(C)(A)(R)(D)>
+                //count: 10
+        //length: 8
+                //sequence: <(R)(I)(C)(C)(A)(R)(D)(O)>
+                //count: 10
     //}
 
-    //////////////////////////////////////////////////////////////////////////////
-    //// If there is a frequent pattern, the algorithm will find it
-    //// (using a modified dataset with injected frequent sequences)
-
-    //// test 4: can find synthetic sequences without gap
+    ////////////////////////////////////////////////////////////////////////////
+    // Test 2:
+    // If there is a frequent pattern, the algorithm will find it
+    // (using a modified dataset with injected frequent sequences)
+    //
+    // can find synthetic sequences without gap
     //{
         //GSP gsp;
         //gsp.run(
             //"data/100_sax-26_synthetic.csv",
-            //"out/test_4.json", "out/test_4.log", 951, 0);
-        ////<(C)(A)(M)(P)(I)> 951
-        ////<(C)(A)(R)(D)(O)> 951
-        ////<(A)(M)(P)(I)(S)> 951
-        ////<(C)(C)(A)(R)(D)> 951
-        ////<(C)(E)(F)(E)(T)> 951
-        ////<(I)(C)(C)(A)(R)> 951
-        ////<(P)(I)(S)(A)(N)> 951
-        ////<(R)(I)(C)(C)(A)> 951
-        ////<(I)(S)(A)(N)(O)> 951
-        ////<(M)(P)(I)(S)(A)> 951
-        ////<(C)(A)(M)(P)(I)(S)>  951
-        ////<(A)(M)(P)(I)(S)(A)>  951
-        ////<(C)(C)(A)(R)(D)(O)>  951
-        ////<(I)(C)(C)(A)(R)(D)>  951
-        ////<(P)(I)(S)(A)(N)(O)>  951
-        ////<(R)(I)(C)(C)(A)(R)>  951
-        ////<(M)(P)(I)(S)(A)(N)>  951
-        ////<(C)(A)(M)(P)(I)(S)(A)>   951
-        ////<(A)(M)(P)(I)(S)(A)(N)>   951
-        ////<(I)(C)(C)(A)(R)(D)(O)>   951
-        ////<(R)(I)(C)(C)(A)(R)(D)>   951
-        ////<(M)(P)(I)(S)(A)(N)(O)>   951
-        ////<(C)(A)(M)(P)(I)(S)(A)(N)>    951
-        ////<(A)(M)(P)(I)(S)(A)(N)(O)>    951
-        ////<(R)(I)(C)(C)(A)(R)(D)(O)>    951
-        ////<(C)(A)(M)(P)(I)(S)(A)(N)(O)> 951
+            //"results/test_2.json", "results/test_2.log",
+            //100, 100, 0);
+
+        //length: 7
+                //sequence: <(A)(M)(P)(I)(S)(A)(N)>
+                //count: 951
+                //sequence: <(C)(A)(M)(P)(I)(S)(A)>
+                //count: 951
+                //sequence: <(I)(C)(C)(A)(R)(D)(O)>
+                //count: 951
+                //sequence: <(M)(P)(I)(S)(A)(N)(O)>
+                //count: 951
+                //sequence: <(R)(I)(C)(C)(A)(R)(D)>
+                //count: 951
+        //length: 8
+                //sequence: <(A)(M)(P)(I)(S)(A)(N)(O)>
+                //count: 951
+                //sequence: <(C)(A)(M)(P)(I)(S)(A)(N)>
+                //count: 951
+                //sequence: <(R)(I)(C)(C)(A)(R)(D)(O)>
+                //count: 951
+        //length: 9
+                //sequence: <(C)(A)(M)(P)(I)(S)(A)(N)(O)>
+                //count: 951
     //}
 
-    //// test 5: can find synthetic sequences with gap <= 0
+    ////////////////////////////////////////////////////////////////////////////
+    // Test 3:
+    // can find synthetic sequences with gap <= 0
     //{
         //GSP gsp;
         //gsp.run(
             //"data/100_sax-26_synthetic_manual_gap_0.csv",
-            //"out/test_5.json", "out/test_5.log", 950, 0);
-        //// injected M,I,N,z,G,A,P,z,z,z,A in all 951 lines
-        //// results as espected:
-        ////<(M)(I)(N)(z)(G)(A)(P)(z)(z)(z)(A)>   951
+            //"results/test_3.json", "results/test_3.log",
+            //100, 100, 0);
+        // injected M,I,N,z,G,A,P,z,z,z,A in all 951 lines
+        //
+        // results as espected:
+        //length: 11
+                //sequence: <(M)(I)(N)(z)(G)(A)(P)(z)(z)(z)(A)>
+                //count: 951
     //}
+
+
 
     //// test 6: can find synthetic sequences with gap <= 1
     //{

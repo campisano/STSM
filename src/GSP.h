@@ -22,14 +22,14 @@ class GSP
             std::string _log_filename,
             unsigned int _min_support,
             unsigned int _max_support,
-            unsigned int _max_gap);
+            unsigned int _max_time_window);
 
         void saveJSON(std::string &_output_filename);
 
     protected:
         void setMinimumSupportPerc(unsigned int _min_support);
         void setMaximumSupportPerc(unsigned int _max_support);
-        void setMaxGap(unsigned int _max_gap);
+        void setMaxTimeWindow(unsigned int _max_time_window);
         void load(std::string &_input_filename);
         void detectFrequentItems(std::list<Item>& _frequent_items);
 
@@ -60,7 +60,7 @@ class GSP
     private:
         double m_min_support;
         double m_max_support;
-        unsigned int m_max_gap;
+        unsigned int m_max_time_window;
         std::vector< std::vector<Item> > m_input_dataset;
         std::map< unsigned int,    // mapping sequences per length (seq items)
             std::map< std::string, // mapping results per sequence (toString())
