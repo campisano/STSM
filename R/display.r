@@ -61,14 +61,9 @@ if(is.null(json_data) || length(json_data) < 1)
 {
     print("Empty json data");
 } else {
-
-    # WARNING! getting only the last sequences, of the bigger length!
-    #for(len in c(0, 1))
-    for(len in c(0))
+    for(len in 1:length(json_data))
     {
-        #print(paste("Generating png for -len", len, "..."));
-
-        sequence_data_by_length = json_data[[length(json_data) - len]];
+        sequence_data_by_length = json_data[[len]];
 
         if(
             is.null(sequence_data_by_length$length) ||
@@ -76,9 +71,15 @@ if(is.null(json_data) || length(json_data) < 1)
             length(sequence_data_by_length$sequences) < 1
         )
         {
-            print(paste("Empty sequence data of -len", len));
+            print(paste("Empty sequence data of len", len));
             #print("Data:");
             #dput(sequence_data_by_length);
+            next;
+        }
+
+        if(length(sequence_data_by_length$sequences) > 100)
+        {
+            print(paste("Too much sequence data to plot for len", len));
             next;
         }
 
@@ -127,7 +128,7 @@ if(is.null(json_data) || length(json_data) < 1)
 
         filename_by_len_png = file.path(
             base_path_dir, "png",
-            paste(base_filename, "_-", len, ".png", sep="")
+            paste(base_filename, "_", len, ".png", sep="")
         );
 
         png(filename_by_len_png, bg="transparent");
