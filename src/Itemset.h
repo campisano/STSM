@@ -19,6 +19,7 @@ class Itemset
         Item & getLast();
         void getCopyExceptPos(unsigned int i, Itemset & _copy_itemset);
         std::string toString();
+        std::string toStringOfItems();
 
         inline void clear()
         {

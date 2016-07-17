@@ -116,17 +116,12 @@ void Itemset::getCopyExceptPos(unsigned int i, Itemset & _copy_itemset)
 std::string Itemset::toString()
 {
     std::stringstream output;
-
-    std::vector<Item>::iterator it;
-
-    output << '(';
-
-    for(it = this->m_items.begin(); it != this->m_items.end(); ++it)
-    {
-        output << (*it);
-    }
-
-    output << ')';
+    output << '(' << this->toStringOfItems() << ')';
 
     return output.str();
+}
+
+std::string Itemset::toStringOfItems()
+{
+    return std::string(this->m_items.begin(), this->m_items.end());
 }

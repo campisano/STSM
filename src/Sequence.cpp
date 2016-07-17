@@ -397,10 +397,9 @@ Itemset & Sequence::getLast()
 std::string Sequence::toString()
 {
     std::stringstream output;
+    output << '<';
 
     std::vector<Itemset>::iterator it;
-
-    output << '<';
 
     for(
         it = this->m_itemsets.begin();
@@ -417,21 +416,18 @@ std::string Sequence::toString()
 
 std::string Sequence::toStringOfItems()
 {
-    std::string str_seq = this->toString();
-    // from http://stackoverflow.com/a/5891643/846686
+    std::stringstream output;
+    std::vector<Itemset>::iterator it;
 
-    std::string chars = "<>()";
-    std::string::iterator it;
-
-    for (it = chars.begin(); it != chars.end(); ++it)
+    for(
+        it = this->m_itemsets.begin();
+        it != this->m_itemsets.end();
+        ++it)
     {
-        str_seq.erase(
-            std::remove(str_seq.begin(), str_seq.end(), *it),
-            str_seq.end()
-        );
+        output << it->toStringOfItems();
     }
 
-    return str_seq;
+    return output.str();
 }
 
 bool Sequence::hasItemsetWithSizeGreaterThenOne()

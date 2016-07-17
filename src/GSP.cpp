@@ -283,12 +283,6 @@ void GSP::setMaximumSupportPerc(unsigned int _max_support)
 
 void GSP::setMaxTimeWindow(unsigned int _max_time_window)
 {
-    if(_max_time_window < 0)
-    {
-        throw std::runtime_error(
-            "Max Time Window parameter cannot be less then 0.");
-    }
-
     this->m_max_time_window = _max_time_window;
 }
 
@@ -744,9 +738,11 @@ void GSP::updateSupportCountPositions(
 
             if(str_seq_size < 2)
             {
-                throw std::runtime_error(
-                    "Current support count function doesn't handle"
-                    " sequence with less then two items.");
+                std::stringstream msg;
+                msg << "Current support count function doesn't handle"
+                    << " sequence with less then two items." << std::endl
+                    << "Current sequence: '" << str_seq << "'.";
+                throw std::runtime_error(msg.str());
             }
 
             col = 0;
