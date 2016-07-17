@@ -155,7 +155,14 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
                 }
             }
 
-            ++it_seq_map;
+            if(it_seq_map->second.size() == 0)
+            {
+                this->m_supported_sequences_positions.erase(it_seq_map++);
+            }
+            else
+            {
+                ++it_seq_map;
+            }
         }
     }
 
@@ -598,6 +605,7 @@ void GSP::prune(
 
         if(support < this->m_min_support)
         {
+            //this->pruneSequence(_seq_items, *it);
             it = _new_candidates.erase(it);
         }
         else
@@ -672,34 +680,33 @@ void GSP::prune(
     }
 }
 
+void GSP::pruneSequence(unsigned int _seq_items, Sequence& _sequence)
+{
+    this->m_supported_sequences_positions[_seq_items].erase(
+        _sequence.toString());
+    if(this->m_supported_sequences_positions[_seq_items].size()==0)
+    {
+        this->m_supported_sequences_positions.erase(_seq_items);
+    }
+}
+
 void GSP::updateSupportCountPositions(
     std::list<Sequence> &_new_candidates,
     unsigned int _seq_items
 )
 {
-    std::list<Sequence>::iterator it_seq;
-
-    // initialize support map
-    // for each sequence candidate
-    for(
-        it_seq = _new_candidates.begin();
-        it_seq != _new_candidates.end();
-        ++it_seq
-    )
-    {
-        std::list< std::pair<unsigned int, unsigned int> > list;
-        std::pair <
-            unsigned int, std::list <
-                std::pair<unsigned int, unsigned int>
-            >
-        > pair(0, list);
-        this->m_supported_sequences_positions[_seq_items][
-            it_seq->toString()] = pair;
-    }
-
     // use a temporary way to store support count per sequence
-    std::map<std::string, std::set<unsigned int> > support;
+    // for each sequence, map the data-sequences that support it
+    //       sequence              data-sequences
+    std::map<std::string, std::set<unsigned int> > supports;
 
+    // use a tempory way to store positions
+    //       sequence
+    std::map<std::string,
+    //  positions           x             y
+        std::list<std::pair<unsigned int, unsigned int> > > positions;
+
+    std::list<Sequence>::iterator it_seq;
     std::string str_seq;
     unsigned int str_seq_size;
     std::string::iterator str_it;
@@ -792,12 +799,11 @@ void GSP::updateSupportCountPositions(
                     // then the input data-sequence contain the sequence
                     if(str_it == str_seq.end())
                     {
-                        std::pair<unsigned int, unsigned int>
-                            position(row, col - str_seq_size + 1);
-                        this->m_supported_sequences_positions[_seq_items][
-                            it_seq->toString()].second.push_back(position);
+                        std::pair<unsigned int, unsigned int>position(
+                            row, col - str_seq_size + 1);
 
-                        support[it_seq->toString()].insert(row);
+                        supports[it_seq->toString()].insert(row);
+                        positions[it_seq->toString()].push_back(position);
 
                         // rewind to start_match_col + 1
                         col = start_match_col + 1;
@@ -815,16 +821,24 @@ void GSP::updateSupportCountPositions(
         }
     }
 
-    std::map<std::string, std::set<unsigned int> >::iterator support_it;
+    // update support count and position list
+    std::map<std::string, std::set<unsigned int> >::iterator supports_it;
     for(
-        support_it = support.begin();
-        support_it != support.end();
-        ++support_it
+        supports_it = supports.begin();
+        supports_it != supports.end();
+        ++supports_it
     )
     {
-        // update support count
+        std::pair <unsigned int,
+            std::list <std::pair<unsigned int, unsigned int> >
+        > pair(
+            supports_it->second.size(),     // set support count
+            positions[supports_it->first]   // set position list
+        );
+
+        // update support count and position list
         this->m_supported_sequences_positions[_seq_items][
-            support_it->first].first = support_it->second.size();
+            supports_it->first] = pair;
     }
 }
 

@@ -45,6 +45,8 @@ class GSP
             std::list<Sequence> &_new_candidates
         );
 
+        void pruneSequence(unsigned int _seq_items, Sequence& _sequence);
+
         void updateSupportCountPositions(
             std::list<Sequence> &_new_candidates,
             unsigned int _seq_items
