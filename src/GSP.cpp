@@ -605,7 +605,7 @@ void GSP::prune(
 
         if(support < this->m_min_support)
         {
-            //this->pruneSequence(_seq_items, *it);
+            this->pruneSequence(_seq_items, *it);
             it = _new_candidates.erase(it);
         }
         else
