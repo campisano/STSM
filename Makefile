@@ -46,11 +46,11 @@ RM=					rm -f
 
 
 # flags
-RELEASE_FLAGS=		-O2
-DEBUG_FLAGS=		-O0 -ggdb
+RELEASE_FLAGS=		-O3
+DEBUG_FLAGS=		-O0 -ggdb -g3
 TEST_FLAGS=			$(RELEASE_FLAGS)
 
-CFLAGS=				-Wall -pipe
+CFLAGS=				-pipe -ansi -pedantic -Wall -Wextra -Werror
 CC_FLAGS=			$(CFLAGS) -I$(INC_DIR)
 LD_FLAGS=			-L$(LIB_DIR)
 
