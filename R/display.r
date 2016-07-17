@@ -21,8 +21,8 @@ dep = "TSMining"; if (!require(dep, character.only=TRUE, quietly=TRUE)) {
 
 # evaluating arguments
 args = commandArgs(TRUE);
-print("Arguments:");
-print(args);
+#print("Arguments:");
+#print(args);
 # examples:
 #args = c();
 #args[1] = "data/100_sax-25_original.csv";
@@ -51,8 +51,9 @@ dataset = read.table(
 
 
 # loading json data
-print(paste("Loading json data", input_file_json, "..."));
+#print(paste("Loading json data", input_file_json, "..."));
 json_data = fromJSON(file=input_file_json, method="C");
+#print("Load complete")
 
 
 
@@ -65,7 +66,7 @@ if(is.null(json_data) || length(json_data) < 1)
     #for(len in c(0, 1))
     for(len in c(0))
     {
-        print(paste("Generating png for -len", len, "..."));
+        #print(paste("Generating png for -len", len, "..."));
 
         sequence_data_by_length = json_data[[length(json_data) - len]];
 
