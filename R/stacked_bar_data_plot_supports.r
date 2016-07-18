@@ -17,6 +17,11 @@ dep = "plyr"; if (!require(dep, character.only=TRUE, quietly=TRUE)) {
     library(dep, character.only=TRUE);
 }; rm(dep);
 
+dep = "scales"; if (!require(dep, character.only=TRUE, quietly=TRUE)) {
+    install.packages(dep, repos=repos, lib=lib);
+    library(dep, character.only=TRUE);
+}; rm(dep);
+
 rm(lib, repos);
 
 
@@ -102,7 +107,7 @@ ggplot() +
         ),
     ) +
     scale_x_discrete(breaks=bins, limits=bins) +
-    scale_y_log10() +
+    scale_y_log10(labels=trans_format('log10',math_format(10^.x))) +
     scale_fill_discrete(
         breaks = legend, limits = legend, guide = guide_legend()) +
     labs(
