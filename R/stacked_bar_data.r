@@ -11,6 +11,7 @@ dep = "rjson"; if (!require(dep, character.only=TRUE, quietly=TRUE)) {
     install.packages(dep, repos=repos, lib=lib);
     library(dep, character.only=TRUE);
 }; rm(dep);
+rm(lib);
 
 
 
@@ -20,7 +21,7 @@ args = commandArgs(TRUE);
 #print(args);
 # examples:
 #args = c();
-#args[1] = "results/25_original/json/100_sax-25_original_s90_g2.json";
+#args[1] = "results/25_original/json/401_sax-25_original_s80-100_g10.json";
 #$MIN_SUPPORT
 #$MAX_SUPPORT
 #$MAX_TIME_WINDOW
@@ -37,16 +38,29 @@ support_range = paste(args[2], args[3], sep="-");
 time_window = args[4];
 
 dir.create(
-    file.path(base_path_dir, "stackedbar", time_window),
+    file.path(base_path_dir, "stackedbar", "time_window", time_window),
     showWarnings=FALSE, recursive=TRUE, mode="0777");
 
-output_file = file.path(
-    base_path_dir, "stackedbar", time_window,
+dir.create(
+    file.path(base_path_dir, "stackedbar", "support_range", support_range),
+    showWarnings=FALSE, recursive=TRUE, mode="0777");
+
+output_file_time = file.path(
+    base_path_dir, "stackedbar", "time_window", time_window,
     paste(base_filename, ".csv", sep=""))
 
-if(file.exists(output_file))
+output_file_support = file.path(
+    base_path_dir, "stackedbar", "support_range", support_range,
+    paste(base_filename, ".csv", sep=""))
+
+if(file.exists(output_file_time))
 {
-    file.remove(output_file)
+    file.remove(output_file_time)
+}
+
+if(file.exists(output_file_support))
+{
+    file.remove(output_file_support)
 }
 
 
@@ -78,12 +92,24 @@ if(is.null(json_data) || length(json_data) < 1)
         sequence_length = sequence_data_by_length$length;
         sequence_data = sequence_data_by_length$sequences;          # c++ pair
 
-        # Stacked Bar plot:
+        # Stacked Bar plot per time_window:
         # support_range, num_sequences, seq_length
         write.table(
             as.matrix(t(c(
                 support_range, length(sequence_data), sequence_length))),
-            file=output_file,
+            file=output_file_time,
+            append=TRUE,
+            row.names=FALSE,
+            col.names=FALSE,
+            quote=FALSE,
+            sep=",")
+
+        # Stacked Bar plot per support_range:
+        # time_window, num_sequences, seq_length
+        write.table(
+            as.matrix(t(c(
+                time_window, length(sequence_data), sequence_length))),
+            file=output_file_support,
             append=TRUE,
             row.names=FALSE,
             col.names=FALSE,
