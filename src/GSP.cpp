@@ -714,6 +714,7 @@ void GSP::updateSupportCountPositions(
     unsigned int tot_cols;
     unsigned int col;
     unsigned int start_match_col;
+    bool match_started;
     //unsigned int last_match_col;                  // [CMP] this is useful only for max-gap
 
     // for each input data-seqeunce, check if contain the sequence
@@ -753,7 +754,7 @@ void GSP::updateSupportCountPositions(
             }
 
             col = 0;
-            start_match_col = 0;
+            match_started = false;
             //last_match_col = 0;                   // [CMP] this is useful only for max-gap
 
             // passing through every item of the row
@@ -768,14 +769,14 @@ void GSP::updateSupportCountPositions(
 
                     // [CMP] imagine a sequence of length 5
                     // max_time_window < 5 make no sense
-                    start_match_col != 0 &&
+                    match_started &&
                     (col - start_match_col) >= (
                         this->m_max_time_window + str_seq_size)
                 )
                 {
                     // rewind to start_match_col + 1
                     col = start_match_col + 1;
-                    start_match_col = 0;
+                    match_started = false;
                     //last_match_col = 0;           // [CMP] this is useful only for max-gap
                     str_it = str_seq.begin();
                     continue;
@@ -787,9 +788,10 @@ void GSP::updateSupportCountPositions(
                 if(item == *str_it)
                 {
                     // take note for the start of the match
-                    if(start_match_col == 0)
+                    if(! match_started)
                     {
                         start_match_col = col;
+                        match_started = true;
                     }
 
                     //last_match_col = col;         // [CMP] this is useful only for max-gap
@@ -807,7 +809,7 @@ void GSP::updateSupportCountPositions(
 
                         // rewind to start_match_col + 1
                         col = start_match_col + 1;
-                        start_match_col = 0;
+                        match_started = false;
                         //last_match_col = 0;       // [CMP] this is useful only for max-gap
                         str_it = str_seq.begin();
                         continue;
