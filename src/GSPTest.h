@@ -16,9 +16,6 @@ class GSPTest : public cxxtools::unit::TestSuite, public GSP
     private:
         void test_equality();
         void test_sequenceStringRepresentation();
-        void test_getAllContiguosSubsequencesDroppingAnItemFromFirstItemset();
-        void test_getAllContiguosSubsequencesDroppingAnItemFromLastItemset();
-        void test_getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset();
         void test_getAllFirstLevelContigousSubsequences();
         void test_getSubsequenceDroppingFirstItemFromSingleItemset();
         void test_getSubsequenceDroppingFirstItemFromMultipleItemset();

@@ -11,13 +11,12 @@ PATH=./BUILD/release:$PATH;
 
 
 
+#INPUT_INLINE=100
+INPUT_INLINE=401
+FILE_NAME=$INPUT_INLINE"_sax";
+
 INPUT_FOLDER="data";
-
-#OUTPUT_FOLDER="results_inline-100";
-OUTPUT_FOLDER="results_inline-401";
-
-#FILE_NAME="100_sax";
-FILE_NAME="401_sax";
+OUTPUT_FOLDER="results_inline-"$INPUT_INLINE;
 
 
 

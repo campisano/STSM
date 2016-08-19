@@ -48,9 +48,9 @@ RM=					rm -f
 # flags
 RELEASE_FLAGS=		-O3
 DEBUG_FLAGS=		-O0 -ggdb -g3
-TEST_FLAGS=			$(RELEASE_FLAGS)
+TEST_FLAGS=			$(DEBUG_FLAGS)
 
-CFLAGS=				-pipe -ansi -pedantic -Wall -Wextra -Werror
+CFLAGS=				-pipe -ansi -pedantic -Wall -Wextra
 CC_FLAGS=			$(CFLAGS) -I$(INC_DIR)
 LD_FLAGS=			-L$(LIB_DIR)
 
@@ -123,8 +123,7 @@ SOURCES_TEST:		GSPTEST
 MAIN:				GSP $(OUT_DIR)/main.o
 GSPTEST:			GSP $(INC_DIR)/GSPTest.h $(OUT_DIR)/GSPTest.o
 GSP:				SEQUENCE $(INC_DIR)/GSP.h $(OUT_DIR)/GSP.o
-SEQUENCE:			ITEMSET $(INC_DIR)/Sequence.h $(OUT_DIR)/Sequence.o
-ITEMSET:			ITEM $(INC_DIR)/Itemset.h $(OUT_DIR)/Itemset.o
+SEQUENCE:			ITEM $(INC_DIR)/Sequence.h $(OUT_DIR)/Sequence.o
 ITEM:				$(INC_DIR)/Item.h
 
 

@@ -5,7 +5,7 @@
 #include <list>
 #include <vector>
 
-#include "Itemset.h"
+#include "Item.h"
 
 class Sequence
 {
@@ -14,60 +14,32 @@ class Sequence
         explicit Sequence(std::string _string_representation);
         virtual ~Sequence();
 
+        bool operator==(const Sequence &other);
+
         void set(std::string _string_representation);
 
-        void getAllFirstLevelContigousSubsequences(
-            std::list<Sequence> &_cont_subseq
-        );
+        Item & getFirst();
+        Item & getLast();
 
-        void getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(
-            std::list<Sequence> &_cont_subseq
-        );
-
-        void getAllContiguosSubsequencesDroppingAnItemFromLastItemset(
-            std::list<Sequence> &_cont_subseq
-        );
-
-        void getAllContiguosSubsequencesDroppingAnItemFromAnyMiddleItemset(
-            std::list<Sequence> &_cont_subseq
-        );
-
+        void getCopyExceptPos(unsigned int i, Sequence & _copy_seq);
         void getSubsequenceDroppingFirstItem(Sequence &_subseq);
         void getSubsequenceDroppingLastItem(Sequence &_subseq);
-        bool operator==(const Sequence &other);
-        Itemset & getFirst();
-        Itemset & getLast();
+
         std::string toString();
         std::string toStringOfItems();
-        bool hasItemsetWithSizeGreaterThenOne();
 
         inline void clear()
         {
-            this->m_itemsets.clear();
+            this->m_items.clear();
         }
 
-        inline unsigned int size()
+        inline void append(Item _item)
         {
-            return this->m_itemsets.size();
-        }
-
-        inline void append(Itemset& _itemset)
-        {
-            this->m_itemsets.push_back(_itemset);
-        }
-
-        inline std::vector<Itemset>::iterator begin()
-        {
-            return this->m_itemsets.begin();
-        }
-
-        inline std::vector<Itemset>::iterator end()
-        {
-            return this->m_itemsets.end();
+            this->m_items.push_back(_item);
         }
 
     private:
-        std::vector<Itemset> m_itemsets;
+        std::vector<Item> m_items;
 };
 
 #endif

@@ -3,7 +3,6 @@
 #include <cxxtools/csvdeserializer.h>
 #include <cxxtools/decomposer.h>
 #include <cxxtools/jsonformatter.h>
-//#include <cxxtools/jsonserializer.h>
 #include <cxxtools/utf8codec.h>
 #include <fstream>
 #include <limits>
@@ -12,7 +11,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "Itemset.h"
+#include "Item.h"
 
 GSP::GSP()
 {
@@ -62,9 +61,6 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
     std::list<Sequence> candidates;
 
     //TODO [CMP]
-    // frequent_items = detectFrequentItems(database, min_support)
-    // frequent_1sequences = convertToSequences(frequent_items))
-
     // temporary code, probably detectFrequentItems can return
     // directly a list of Sequences
     {
@@ -75,15 +71,13 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
             it != frequent_items.end();
             ++it)
         {
-            Itemset is;
-            is.append(*it);
             Sequence seq;
-            seq.append(is);
+            seq.append(*it);
             candidates.push_back(seq);
         }
     }
 
-    //TODO [CMP] tehy aren't candidades, they are frequent 1-sequences
+    //TODO [CMP] they aren't candidades, they are frequent 1-sequences
     this->m_log_stream << "First candidates:" << std::endl;
     this->print(candidates);
 
@@ -99,13 +93,11 @@ void GSP::run( //TODO [CMP] rename to findFrequentSequences
     {
         ++seq_items;
 
-        // TODO[CMP] rename to joinSequences
         this->join(curr_candidates, seq_items, new_candidates);
         this->m_log_stream << "Candidates after Join at pass " << seq_items
             << std::endl;
         print(new_candidates);
 
-        // TODO[CMP] rename to pruneCandidates
         this->prune(seq_items + 1, new_candidates);
         this->m_log_stream << "Candidates after Prune at pass " << seq_items
             << std::endl;
@@ -429,29 +421,13 @@ void GSP::join(
             it1 != (_candidates.end());
             ++it1)
         {
-            // TODO [CMP] added and to be discussed
             // this block add sequences of repetitive items like
-            // <(aa)>
-            // <(a)(a)>
+            // e.g. <aa>
             {
-                {
-                    Sequence seq_both;
-                    Itemset is_both;
-                    is_both.append(it1->getFirst().getFirst());
-                    is_both.append(it1->getFirst().getFirst());
-                    seq_both.append(is_both);
-                    _new_candidates.push_back(seq_both);
-                }
-                {
-                    Sequence seq_separated;
-                    Itemset is_separated_1;
-                    is_separated_1.append(it1->getFirst().getFirst());
-                    Itemset is_separated_2;
-                    is_separated_2.append(it1->getFirst().getFirst());
-                    seq_separated.append(is_separated_1);
-                    seq_separated.append(is_separated_2);
-                    _new_candidates.push_back(seq_separated);
-                }
+                Sequence seq_both;
+                seq_both.append(it1->getFirst());
+                seq_both.append(it1->getFirst());
+                _new_candidates.push_back(seq_both);
             }
 
             // [CMP] a strange way to get next element
@@ -461,37 +437,19 @@ void GSP::join(
 
             for(it2 = it1_next; it2 != _candidates.end(); ++it2)
             {
+                // e.g. <ab>
                 {
                     Sequence seq_both;
-                    Itemset is_both;
-                    is_both.append(it1->getFirst().getFirst());
-                    is_both.append(it2->getFirst().getFirst());
-                    seq_both.append(is_both);
+                    seq_both.append(it1->getFirst());
+                    seq_both.append(it2->getFirst());
                     _new_candidates.push_back(seq_both);
                 }
+                // e.g. <ba>
                 {
-                    Sequence seq_separated;
-                    Itemset is_separated_1;
-                    is_separated_1.append(it1->getFirst().getFirst());
-                    Itemset is_separated_2;
-                    is_separated_2.append(it2->getFirst().getFirst());
-                    seq_separated.append(is_separated_1);
-                    seq_separated.append(is_separated_2);
-                    _new_candidates.push_back(seq_separated);
-                }
-                {
-                    Sequence seq_separated_inverted;
-                    Itemset is_separated_1_inverted;
-                    is_separated_1_inverted.append(
-                        it2->getFirst().getFirst());
-                    Itemset is_separated_2_inverted;
-                    is_separated_2_inverted.append(
-                        it1->getFirst().getFirst());
-                    seq_separated_inverted.append(
-                        is_separated_1_inverted);
-                    seq_separated_inverted.append(
-                        is_separated_2_inverted);
-                    _new_candidates.push_back(seq_separated_inverted);
+                    Sequence seq_both;
+                    seq_both.append(it2->getFirst());
+                    seq_both.append(it1->getFirst());
+                    _new_candidates.push_back(seq_both);
                 }
             }
         }
@@ -508,50 +466,14 @@ void GSP::join(
         {
             for(it2 = _candidates.begin(); it2 != _candidates.end(); ++it2)
             {
+                Sequence sub_seq_S1, sub_seq_S2;
+                it1->getSubsequenceDroppingFirstItem(sub_seq_S1);
+                it2->getSubsequenceDroppingLastItem(sub_seq_S2);
+
+                if(sub_seq_S1 == sub_seq_S2)
                 {
-                    //std::list<Sequence> sub_seqs_S1, sub_seqs_S2;
-                    //it1->getAllContiguosSubsequencesDroppingAnItemFromFirstItemset(sub_seqs_S1);
-                    //it2->getAllContiguosSubsequencesDroppingAnItemFromLastItemset(sub_seqs_S2);
-
-                    //if(sub_seqs_S1.size() > 0 && sub_seqs_S2.size() > 0)
-                    //{
-                        //TODO [CMP] to be honest,
-                        // I think that there is no a 'first item'
-                        // or 'last item' in a sequence
-                        // if the first (or last) element of a sequence
-                        // is a itemset of size > 1, there is no first
-                        // (or last) item in this itemset, because the
-                        // itemset has no order, so we should consider all
-                        // the combinations... is it correct??
-                    //    Sequence sub_seq_S1 = sub_seqs_S1[0];
-                    //    Sequence sub_seq_S2 = sub_seqs_S2[0];
-
-                    Sequence sub_seq_S1, sub_seq_S2;
-                    it1->getSubsequenceDroppingFirstItem(sub_seq_S1);
-                    it2->getSubsequenceDroppingLastItem(sub_seq_S2);
-
-                        if(sub_seq_S1 == sub_seq_S2)
-                        {
-
-                    //        std::stringstream a;
-                    //        a << it1->toString();
-                    //        a << it2->toString();
-                    //        a << sub_seq_S1.toString();
-                    //        a << sub_seq_S2.toString();
-                    //        throw std::out_of_range(a.str());
-        // The candidate sequence generated by joining S1 with S2 is the sequence
-        // S1 extended with the last item in S2. The added item becomes a separate
-        // element if it was a separate element in S2, and part of the last element of
-        // S1 otherwise.
-                            _new_candidates.push_back(
-                                this->joinSubsequences(*it1, *it2));
-                        }
-                    //}
-                }
-                //TODO [CMP] check with Florent if is correct to join
-                // S2 with S1 too
-                {
-
+                    _new_candidates.push_back(
+                        this->joinSubsequences(*it1, *it2));
                 }
             }
         }
@@ -563,21 +485,7 @@ Sequence GSP::joinSubsequences(
     Sequence& _seq2)
 {
     Sequence seq_S1_ext(_seq1);
-
-    // if is a separate element
-    if(_seq2.getLast().size() == 1)
-    {
-        Itemset is_last;
-        is_last.append(_seq2.getLast().getLast());
-        seq_S1_ext.append(is_last);
-    }
-    else
-    {
-        //TODO [CMP] itemset.getFirst() is
-        // nosense if itemset is
-        // a unordered set !!!
-        seq_S1_ext.getLast().append(_seq2.getLast().getLast());
-    }
+    seq_S1_ext.append(_seq2.getLast());
 
     return seq_S1_ext;
 }
@@ -590,7 +498,6 @@ void GSP::prune(
     // TODO [CMP] there is a temporary simple support count
     // to determine if the candidate should be removed. It is no part
     // of the GSP paper
-
     this->updateSupportCountPositions(_new_candidates, _seq_items);
 
     unsigned int support;
@@ -614,69 +521,6 @@ void GSP::prune(
                 it->toString() << '\t' << support << std::endl;
             ++it;
         }
-    }
-
-    ///////////////////////////////////////////////////////////////
-    if(false)
-    {
-        // pag. 9
-        // We delete candidate sequences that have a contiguous
-        // (k-1)-subsequence whose support count is less than the
-        // minimum support. If there is no max-gap constraint, we
-        // also delete candidate sequences that have any subsequence
-        // without minimum support.
-
-        std::list<Sequence> contiguous_subseq;
-        std::list<Sequence> filtered_candidates;
-        //bool sequence_to_keep;
-        std::list<Sequence>::iterator it, sub_it;
-
-        // obtaining all continuous subsequences
-        for(
-            it = _new_candidates.begin();
-            it != _new_candidates.end();
-            ++it)
-        {
-            contiguous_subseq.clear();
-            it->getAllFirstLevelContigousSubsequences(
-                contiguous_subseq);
-
-            //sequence_to_keep = true;
-
-            for(
-                sub_it = contiguous_subseq.begin();
-                sub_it != contiguous_subseq.end();
-                ++sub_it)
-            {
-                // TODO [CMP]
-                // mark candidate to remove if a subseq is not
-                // contained
-                /*
-                if(
-                    std::find(vector.begin(),
-                    vector.end(),
-                    (*sub_it)) == vector.end()
-                )
-                {
-                * TO TEST:
-                    sequence_to_keep = false;
-                    break;
-                }
-                */
-            }
-
-            /*
-             * * TO TEST:
-            if(sequence_to_keep)
-            {
-                filtered_candidates.push_back(*it);
-            }
-            * */
-        }
-
-        this->m_log_stream << "printing all continuous subsequences"
-            << " for candidates" << std::endl;
-        GSP::print(contiguous_subseq);
     }
 }
 
@@ -729,15 +573,6 @@ void GSP::updateSupportCountPositions(
             ++it_seq
         )
         {
-            // considering the input data-sequences as itemsets of only one
-            // item, e.g. <(a)(c)(a)(d)(n)(z)(x)(f)>
-            // so a sequence with an itemset.size() > 1 cannot exists in any
-            // of the input data-sequences.
-            if(it_seq->hasItemsetWithSizeGreaterThenOne())
-            {
-                continue;
-            }
-
             // obtaining a string representation of the sequence
             // to easy loop inside it's elements
             str_seq = it_seq->toStringOfItems();
