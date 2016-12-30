@@ -1,5 +1,5 @@
-#ifndef GSP__H__
-#define GSP__H__
+#ifndef SIM__H__
+#define SIM__H__
 
 #include <fstream>
 #include <list>
@@ -8,73 +8,70 @@
 #include <utility>
 #include <vector>
 
+#include "Candidate.h"
+#include "Database.h"
+#include "Frequency.h"
 #include "Item.h"
+#include "Point.h"
+#include "RangedSequence.h"
 #include "Sequence.h"
+#include "Size.h"
 
-class GSP
+class SIM
 {
-    public:
-        explicit GSP();
-        virtual ~GSP();
+public:
+    explicit SIM();
+    virtual ~SIM();
 
-        void run(
-            std::string _input_filename,
-            std::string _log_filename,
-            unsigned int _min_support,
-            unsigned int _max_support,
-            unsigned int _max_time_window);
+    void run(
+        const std::string _input_filename,
+        const std::string _log_filename,
+        const Frequency _min_spatial_frequency,
+        const Frequency _min_block_frequency);
 
-        void saveJSON(std::string &_output_filename);
+    void saveJSON(const std::string & _output_filename) const;
 
-    protected:
-        void setMinimumSupportPerc(unsigned int _min_support);
-        void setMaximumSupportPerc(unsigned int _max_support);
-        void setMaxTimeWindow(unsigned int _max_time_window);
-        void load(std::string &_input_filename);
-        void detectFrequentItems(std::list<Item>& _frequent_items);
+protected:
+    void setMinSpatialFreq(const Frequency _min_spatial_frequency);
+    void setMinBlockFreq(const Frequency _min_block_frequency);
 
-        void join(
-            std::list<Sequence> &_candidates,
-            unsigned int _seq_items,
-            std::list<Sequence> &_new_candidates
-        );
-        Sequence joinSubsequences(Sequence& _seq1, Sequence& _seq2);
+    void loadDatabase(const std::string & _input_filename);
 
-        void prune(
-            unsigned int _seq_items,
-            std::list<Sequence> &_new_candidates
-        );
+    void generateTheSetOfAllDatabaseItems(
+        const Database & _database,
+        SetItems & _items) const;
 
-        void pruneSequence(unsigned int _seq_items, Sequence& _sequence);
+    void generate1SizeCandidates(
+        const SetItems & _items,
+        const Point _start,
+        const Point _end,
+        ListCandidates & _candidates) const;
 
-        void updateSupportCountPositions(
-            std::list<Sequence> &_new_candidates,
-            unsigned int _seq_items
-        );
+    void generateCandidates(
+        const ListRangedSequence & _solid_sequences,
+        ListCandidates & _candidates) const;
 
-        inline unsigned int getNumDatasources()
-        {
-            return this->m_input_dataset.size();
-        }
+    void updateMatchingPositions(
+        const ListRangedSequence _solid_sequences,
+        Size _seq_size);
 
-        void print(std::list<Sequence> &_sequences);
+private:
+    Frequency m_min_spatial_freq;
+    Frequency m_min_block_freq;
 
-    private:
-        double m_min_support;
-        double m_max_support;
-        unsigned int m_max_time_window;
-        std::vector< std::vector<Item> > m_input_dataset;
-        std::map< unsigned int,    // mapping sequences per length (seq items)
-            std::map< std::string, // mapping results per sequence (toString())
-                std::pair < unsigned int,   // support count
-                    std::list <             // list of positions
-                        std::pair< unsigned int, unsigned int > // sensor, time
-                    >
-                >
-            >
-        > m_supported_sequences_positions;
+    Database m_database;
 
-        std::ofstream m_log_stream;
+    std::map<Size,    // mapping sequences per length (seq items)
+             std::map<std::string, // mapping results per seq. (toString())
+                      std::pair<unsigned int,   // support count
+                                std::list<             // list of positions
+                                    std::pair<Point, Point> // sensor, time
+                                    >
+                                >
+                      >
+             > m_supported_sequences_positions;
+
+    std::ofstream m_log_stream;
 };
 
 #endif

@@ -10,28 +10,34 @@ Sequence::Sequence()
 {
 }
 
-Sequence::Sequence(std::string _string_representation)
+Sequence::Sequence(const Item & _item)
 {
-    this->clear();
-    this->set(_string_representation);
+    clear();
+    append(_item);
+}
+
+Sequence::Sequence(const std::string & _string_representation)
+{
+    clear();
+    set(_string_representation);
 }
 
 Sequence::~Sequence()
 {
 }
 
-bool Sequence::operator==(const Sequence &other)
+bool Sequence::operator==(const Sequence & _other)
 {
-    if(this->m_items.size() != other.m_items.size())
+    if(m_items.size() != _other.m_items.size())
     {
         return false;
     }
 
-    unsigned int size = this->m_items.size();
+    Size size = m_items.size();
 
-    for(unsigned int i=0; i < size; ++i)
+    for(Size i=0; i < size; ++i)
     {
-        if(this->m_items[i] != other.m_items[i])
+        if(m_items[i] != _other.m_items[i])
         {
             return false;
         }
@@ -40,7 +46,7 @@ bool Sequence::operator==(const Sequence &other)
     return true;
 }
 
-void Sequence::set(std::string _string_representation)
+void Sequence::set(const std::string & _string_representation)
 {
     cxxtools::Regex seq_regex("^<[a-zA-Z]+>$");
 
@@ -60,94 +66,145 @@ void Sequence::set(std::string _string_representation)
     {
         Item is = items.get(1).c_str()[0];
         substr = substr.substr(items.offsetEnd(1));
-        this->append(is);
+        append(is);
     }
 
     // this can not happen
-    if(this->m_items.size() == 0)
+    if(m_items.size() == 0)
     {
         throw std::runtime_error("Sequence with 0 Items detected!");
     }
 }
 
-Item & Sequence::getFirst()
+Size Sequence::size() const
 {
-    if(this->m_items.size() < 1)
+    return m_items.size();
+}
+
+void Sequence::clear()
+{
+    m_items.clear();
+}
+
+void Sequence::append(const Item & _item)
+{
+    m_items.push_back(_item);
+}
+
+const Item & Sequence::getFirst() const
+{
+    if(m_items.size() < 1)
     {
         throw std::out_of_range("Sequence size must be at least 1.");
     }
 
-    return this->m_items[0];
+    return m_items[0];
 }
 
-Item & Sequence::getLast()
+const Item & Sequence::getLast() const
 {
-    unsigned int size = this->m_items.size();
+    Size size = m_items.size();
 
     if(size < 1)
     {
         throw std::out_of_range("Sequence size must be at least 1.");
     }
 
-    return this->m_items[size - 1];
+    return m_items[size - 1];
 }
 
-void Sequence::getCopyExceptPos(unsigned int i, Sequence & _copy_seq)
+void Sequence::getCopyExceptPos(Point _pos, Sequence & _copy_seq) const
 {
-    unsigned int size = this->m_items.size();
+    Size size = m_items.size();
 
-    if(i > (size - 1))
+    if(_pos > (size - 1))
     {
         std::stringstream message;
         message << "Sequence position cannot be greater then"
-            << " it size - 1\n size: " << size << ", i: " << i << '.';
+                << " it size - 1" << std::endl
+                << "size: " << size << ", i: " << _pos << '.';
         throw std::out_of_range(message.str());
     }
 
-    _copy_seq.clear();
-
-    for(unsigned int j = 0; j < size; ++j)
+    if(_copy_seq.size() > 0)
     {
-        if(j != i)
+        std::stringstream msg;
+        msg << "getCopyExceptPos expects"
+            << " an empty sequence as input."
+            << std::endl;
+        throw std::runtime_error(msg.str());
+    }
+
+    for(Size j = 0; j < size; ++j)
+    {
+        if(j != _pos)
         {
-            _copy_seq.append(this->m_items[j]);
+            _copy_seq.append(m_items[j]);
         }
     }
 }
 
-void Sequence::getSubsequenceDroppingFirstItem(Sequence &_subseq)
+void Sequence::getSubsequenceDroppingFirstItem(Sequence & _subseq) const
 {
     // Sequence size must be at least 1
-    if(this->m_items.size() < 1)
+    if(m_items.size() == 0)
     {
-        throw std::runtime_error("Sequence with size < 1 detected!");
+        throw std::runtime_error("There are no items to drop in the sequence.");
     }
 
     // copy all items except the first
-    this->getCopyExceptPos(0, _subseq);
+    getCopyExceptPos(0, _subseq);
 }
 
-void Sequence::getSubsequenceDroppingLastItem(Sequence &_subseq)
+void Sequence::getSubsequenceDroppingLastItem(Sequence & _subseq) const
 {
-    // Sequence size must be at least 2
-    if(this->m_items.size() < 2)
+    // Sequence size must be at least 1
+    if(m_items.size() < 1)
     {
-        throw std::runtime_error("Sequence with size < 2 detected!");
+        throw std::runtime_error("There are no items to drop in the sequence.");
     }
 
     // copy all items except the last
-    this->getCopyExceptPos(this->m_items.size() - 1, _subseq);
+    getCopyExceptPos(m_items.size() - 1, _subseq);
 }
 
-std::string Sequence::toString()
+bool Sequence::supportedBy(const Serie & _serie) const
+{
+    Serie::const_iterator match = std::search(
+        _serie.begin(), _serie.end(),
+        m_items.begin(), m_items.end());
+
+    return match != _serie.end();
+
+    // TODO [CMP] check the utility (and the possibility,
+    // i.e. without break any logic) to implement max_gap
+    // or max_stretch constraints
+
+    // obtaining a string representation of the sequence
+    // to easy loop inside it's elements
+    // std::string str_seq = toStringOfItems();
+    // Size str_seq_size = str_seq.size();
+    // std::string::iterator str_it = str_seq.begin();
+
+    // Serie::iterator it;
+
+    // for(it = _serie.begin(); it != _serie.end(); ++it)
+    // {
+
+    // }
+
+    // return false;
+}
+
+std::string Sequence::toString() const
 {
     std::stringstream output;
-    output << '<' << this->toStringOfItems() << '>';
+    output << '<' << toStringOfItems() << '>';
 
     return output.str();
 }
 
-std::string Sequence::toStringOfItems()
+std::string Sequence::toStringOfItems() const
 {
-    return std::string(this->m_items.begin(), this->m_items.end());
+    return std::string(m_items.begin(), m_items.end());
 }
