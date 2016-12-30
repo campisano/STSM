@@ -8,17 +8,17 @@
 
 // make clean all && reset && ./BUILD/release/sim > test_N.out
 
-int main(int argc, char *argv[])
+int main(int _argn, char * _argv[])
 {
-    int expected_arguments = 6;
+    unsigned int expected_arguments = 6;
     std::vector<std::string> parameters;
 
-    if(argc != 1)
+    if(_argn != 1)
     {
         // read from command line arguments
-        for(int i = 0; i < argc; ++i)
+        for(int i = 0; i < _argn; ++i)
         {
-            parameters.push_back(argv[i]);
+            parameters.push_back(_argv[i]);
         }
     }
     else
