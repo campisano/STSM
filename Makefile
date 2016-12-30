@@ -1,5 +1,5 @@
 # version of this Makefile
-MAKEFILE_VER=		0.4.1
+MAKEFILE_VER=		0.5.1
 
 
 # make options
@@ -13,7 +13,7 @@ MAKEFLAGS+=			-s
 
 
 # CUSTOM output executable file
-OUT_FILE=			gsp
+OUT_FILE=			sim
 
 # CUSTOM paths
 #INC_DIR=			inc
@@ -46,26 +46,32 @@ RM=					rm -f
 
 
 # flags
-RELEASE_FLAGS=		-O3
-DEBUG_FLAGS=		-O0 -ggdb -g3
+PLATFORM_FLAGS=-m64
+RELEASE_FLAGS=		-O3 -s
+DEBUG_FLAGS=		-O0 -ggdb -g3    # no optimization and increase debug level to 3
 TEST_FLAGS=			$(DEBUG_FLAGS)
 
-CFLAGS=				-pipe -ansi -pedantic -Wall -Wextra
+CFLAGS=				-pipe -ansi -pedantic -Wall -Wextra $(PLATFORM_FLAGS)
 CC_FLAGS=			$(CFLAGS) -I$(INC_DIR)
-LD_FLAGS=			-L$(LIB_DIR)
+LD_FLAGS=			-L$(LIB_DIR) $(PLATFORM_FLAGS)
 
 
 
 # commands
-ifeq ($(MAKECMDGOALS), debug)
+ifeq ($(MAKECMDGOALS), clean)
+	GOAL=			Clean
+else ifeq ($(MAKECMDGOALS), debug)
+	GOAL=			Debug
 	OUT_DIR=		$(DEBUG_DIR)
 	CC_COMMAND=		$(CC) $(DEBUG_FLAGS) $(CC_FLAGS)
 	LD_COMMAND=		$(LD) $(DEBUG_FLAGS) $(LD_FLAGS) $(LIBS_DEB)
 else ifeq ($(MAKECMDGOALS), test)
+	GOAL=			Test
 	OUT_DIR=		$(TEST_DIR)
 	CC_COMMAND=		$(CC) $(TEST_FLAGS) $(CC_FLAGS)
 	LD_COMMAND=		$(LD) $(TEST_FLAGS) $(LD_FLAGS) $(LIBS_TES)
 else
+	GOAL=			Release
 	OUT_DIR=		$(RELEASE_DIR)
 	CC_COMMAND=		$(CC) $(RELEASE_FLAGS) $(CC_FLAGS)
 	LD_COMMAND=		$(LD) $(RELEASE_FLAGS) $(LD_FLAGS) $(LIBS_REL)
@@ -73,6 +79,8 @@ endif
 
 
 # colors
+# https://wiki.archlinux.org/index.php/Bash/Prompt_customization#Escapes_between_command_input_and_output
+# https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_codes
 NORMAL=				"\\033[0;39m"
 GREEN=				"\\033[1;32m"
 WHITE=				"\\033[1;37m"
@@ -83,6 +91,11 @@ CYAN=				"\\033[1;36m"
 PINK=				"\\033[1;35m"
 
 SPACE=				"\\033[70G"
+SPACE="\t\t"
+# note this way to obtain actual column
+# echo -en "\E[6n"; read -sdR CURPOS; CURPOS=`echo ${CURPOS} | cut -d '[' -f 2 | cut -d ';' -f 1`; echo -en "\\033[${CURPOS};70f"
+SAVE_CUR_POS=		"\\033[s"
+RESTORE_CUR_POS=	"\\033[u"
 
 
 
@@ -97,17 +110,17 @@ CHECK=				&& echo $(ECHO_DONE) || (echo && echo $(ECHO_SHIT) && exit 1)
 #--- main target
 all:				release
 
-release:			pre INFO_VARS INFO_CC SOURCES INFO_LD INFO_OUT
+release:			INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE INFO_LD CMD_LINK
 	@echo
 	@echo "Hint: run with './$(OUT_DIR)/$(OUT_FILE)'"
 	@echo
 
-debug:				pre INFO_VARS INFO_CC SOURCES INFO_LD INFO_OUT
+debug:				INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE INFO_LD CMD_LINK
 	@echo
 	@echo "Hint: debug with 'ddd $(OUT_DIR)/$(OUT_FILE)'"
 	@echo
 
-test:				pre INFO_VARS INFO_CC SOURCES_TEST INFO_LD INFO_OUT
+test:				INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE_TEST INFO_LD CMD_LINK
 	@echo
 	@echo "Hint: test with './$(OUT_DIR)/$(OUT_FILE)'"
 	@echo
@@ -117,14 +130,25 @@ test:				pre INFO_VARS INFO_CC SOURCES_TEST INFO_LD INFO_OUT
 ################################################################################
 #--- CUSTOM dependence files
 
-SOURCES:			MAIN
-SOURCES_TEST:		GSPTEST
+CMD_COMPILE:		MAIN
+CMD_COMPILE_TEST:	MAIN_TEST
 
-MAIN:				GSP $(OUT_DIR)/main.o
-GSPTEST:			GSP $(INC_DIR)/GSPTest.h $(OUT_DIR)/GSPTest.o
-GSP:				SEQUENCE $(INC_DIR)/GSP.h $(OUT_DIR)/GSP.o
-SEQUENCE:			ITEM $(INC_DIR)/Sequence.h $(OUT_DIR)/Sequence.o
+MAIN:				SIM $(OUT_DIR)/main.o
+MAIN_TEST:			SIM $(INC_DIR)/SIMTest.h $(OUT_DIR)/SIMTest.o
+SIM:				DATABASE SERIE RANGEDSEQUENCE KERNEL SEQUENCE CANDIDATE $(INC_DIR)/SIM.h $(OUT_DIR)/SIM.o
+CANDIDATE:			SEQUENCE KERNEL RANGE $(INC_DIR)/Candidate.h $(OUT_DIR)/Candidate.o
+SEQUENCE:			ITEM SIZE $(INC_DIR)/Sequence.h $(OUT_DIR)/Sequence.o
 ITEM:				$(INC_DIR)/Item.h
+KERNEL:				SEGMENT RANGE SUPPORT FREQUENCY $(INC_DIR)/Kernel.h $(OUT_DIR)/Kernel.o
+RANGEDSEQUENCE:		SEQUENCE SIZE RANGE FREQUENCY $(INC_DIR)/RangedSequence.h $(OUT_DIR)/RangedSequence.o
+RANGE:				SEGMENT $(INC_DIR)/Range.h $(OUT_DIR)/Range.o
+SEGMENT:			POINT SIZE $(INC_DIR)/Segment.h $(OUT_DIR)/Segment.o
+SIZE:				$(INC_DIR)/Size.h
+POINT:				$(INC_DIR)/Point.h
+SUPPORT:			$(INC_DIR)/Support.h
+FREQUENCY:			$(INC_DIR)/Frequency.h
+DATABASE:			SERIE $(INC_DIR)/Database.h
+SERIE:				$(INC_DIR)/Serie.h
 
 
 
@@ -134,10 +158,14 @@ $(OUT_DIR)/%.o:	$(SRC_DIR)/%.cpp
 	@echo -n ${GREEN}"   + "${WHITE}$(SRC_DIR)/$*.cpp$(NORMAL) -o $(OUT_DIR)/$*.o
 	$(CC_COMMAND) -c $(SRC_DIR)/$*.cpp -o $(OUT_DIR)/$*.o $(CHECK)
 
+CMD_LINK:
+	@echo -n ${GREEN}"   + "${WHITE} $(OUT_DIR)"/*.o"$(NORMAL) -o $(OUT_DIR)/$(OUT_FILE)
+	$(LD_COMMAND) $(OUT_DIR)/*.o -o $(OUT_DIR)/$(OUT_FILE) $(CHECK)
+
 
 
 ################################################################################
-pre:
+CMD_PREREQ:
 	mkdir -p $(RELEASE_DIR)
 	mkdir -p $(DEBUG_DIR)
 	mkdir -p $(TEST_DIR)
@@ -145,9 +173,8 @@ pre:
 
 
 ################################################################################
-clean:
+clean:				INFO_TRG
 	@echo
-	@echo $(YELLOW)"CLEAN:"$(NORMAL)
 	@echo -n ${RED}"   - "${WHITE}$(RM) $(RELEASE_DIR)"/*.o" $(RELEASE_DIR)/$(OUT_FILE)$(NORMAL)
 	$(RM) $(RELEASE_DIR)/*.o $(RELEASE_DIR)/$(OUT_FILE)$(CHECK)
 	@echo -n ${RED}"   - "${WHITE}$(RM) $(DEBUG_DIR)"/*.o" $(DEBUG_DIR)/$(OUT_FILE)$(NORMAL)
@@ -159,6 +186,9 @@ clean:
 
 
 ################################################################################
+INFO_TRG:
+	@echo $(YELLOW)"= "$(GOAL)" ="$(NORMAL)
+
 INFO_VARS:
 	@echo
 	@echo $(YELLOW)"Variables used to build:"$(NORMAL)
@@ -174,10 +204,6 @@ INFO_LD:
 	@echo
 	@echo $(YELLOW)"Command used to link:"$(NORMAL)
 	@echo    $(BLUE)$(LD_COMMAND)$(NORMAL)
-
-INFO_OUT:
-	@echo -n ${GREEN}"   + "${WHITE} $(OUT_DIR)"/*.o"$(NORMAL) -o $(OUT_DIR)/$(OUT_FILE)
-	$(LD_COMMAND) $(OUT_DIR)/*.o -o $(OUT_DIR)/$(OUT_FILE) $(CHECK)
 
 
 
