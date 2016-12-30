@@ -31,7 +31,7 @@ args = commandArgs(TRUE);
 
 
 # configuring variables
-csv_dataset = args[1];
+csv_database = args[1];
 input_file_json = args[2];
 base_json_path_dir = dirname(input_file_json);
 base_path_dir = dirname(base_json_path_dir);
@@ -43,9 +43,9 @@ base_filename =  sub("[.][^.]*$", "", base_filename, perl=TRUE);
 # needed by plot
 source(file.path("R", "motif_lib.R"));
 load_lib();
-dataset = read.table(
-    file=csv_dataset, header=TRUE, fill=TRUE, as.is=TRUE,
-    stringsAsFactors=FALSE, sep=" ", quote=""
+database = read.table(
+    file=csv_database, header=TRUE, fill=TRUE, as.is=TRUE,
+    stringsAsFactors=FALSE, sep=",", quote=""
 );
 
 
@@ -63,6 +63,7 @@ if(is.null(json_data) || length(json_data) < 1)
 } else {
     for(len in 1:length(json_data))
     {
+        cat("\rlen =", len);
         sequence_data_by_length = json_data[[len]];
 
         if(
@@ -77,9 +78,10 @@ if(is.null(json_data) || length(json_data) < 1)
             next;
         }
 
-        if(length(sequence_data_by_length$sequences) > 100)
+        if(length(sequence_data_by_length$sequences) > 6000)
         {
-            print(paste("Too much sequence data to plot for len", len));
+            cat(paste("\n", length(sequence_data_by_length$sequences),
+                      "are too much sequences to plot for len", len, "\n"));
             next;
         }
 
@@ -121,7 +123,7 @@ if(is.null(json_data) || length(json_data) < 1)
 
         #setwd("/home/t1t0/Desktop/mestrado/GSP")
         #load("20_10_4_5_C.RData") # candidates
-        #load("t100.RData") # dataset 40x100
+        #load("t100.RData") # database 40x100
         #stmotifs = STSIdentifySTMotifs(candidates, 5, 5)
         #sttightmotifs = STSIdentifyTightSTMotifs(stmotifs, candidates$rectangles)
         #ranksttightmotifs = STSRankTightSTMotifs(sttightmotifs)
@@ -132,7 +134,7 @@ if(is.null(json_data) || length(json_data) < 1)
         );
 
         png(filename_by_len_png, bg="transparent");
-        ds = PlotSTMotifs(my_stmotifs);
+        ds = PlotSTMotifs(my_stmotifs, database);
         dev.off();
 
         # print for each sequence
@@ -156,8 +158,9 @@ if(is.null(json_data) || length(json_data) < 1)
             );
 
             png(filename_by_seq_png, bg="transparent");
-            PlotSTMotifs(my_stmotifs_tmp);
+            PlotSTMotifs(my_stmotifs_tmp, database);
             dev.off();
         }
     }
+    cat("\n");
 }
