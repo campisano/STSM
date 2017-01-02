@@ -2,6 +2,7 @@
 MAKEFILE_VER=		0.5.1
 
 
+
 # make options
 MAKEFLAGS+=			-s
 
@@ -46,7 +47,7 @@ RM=					rm -f
 
 
 # flags
-PLATFORM_FLAGS=-m64
+PLATFORM_FLAGS=		-m64
 RELEASE_FLAGS=		-O3 -s
 DEBUG_FLAGS=		-O0 -ggdb -g3    # no optimization and increase debug level to 3
 TEST_FLAGS=			$(DEBUG_FLAGS)
