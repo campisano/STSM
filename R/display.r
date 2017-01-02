@@ -1,21 +1,29 @@
 # configure detailed error outputs
 options(warn=2, keep.source=TRUE);
 
+
+
+# defining functions
+loadLibs = function(lib_names) {
+
+    repos = "http://cran.r-project.org";
+    lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
+    dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="0777");
+    .libPaths(c(lib, .libPaths()));
+
+    for(lib_name in lib_names) {
+        if (!require(lib_name, character.only=TRUE, quietly=TRUE)) {
+            install.packages(lib_name, repos=repos, lib=lib);
+            library(lib_name, character.only=TRUE, quietly=TRUE);
+        }
+    }
+    rm(lib_name, lib_names);
+}
+
+
+
 # loading dependences
-repos = "http://cran.r-project.org";
-lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
-dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="0777");
-.libPaths(c(lib, .libPaths()));
-
-dep = "rjson"; if (!require(dep, character.only=TRUE, quietly=TRUE)) {
-    install.packages(dep, repos=repos, lib=lib);
-    library(dep, character.only=TRUE);
-}; rm(dep);
-
-dep = "TSMining"; if (!require(dep, character.only=TRUE, quietly=TRUE)) {
-    install.packages(dep, repos=repos, lib=lib);
-    library(dep, character.only=TRUE);
-}; rm(dep);
+loaded_libs = loadLibs(c("rjson", "TSMining", "ggplot2"));
 
 
 
@@ -27,6 +35,7 @@ args = commandArgs(TRUE);
 #args = c();
 #args[1] = "data/100_sax-25_original.csv";
 #args[2] = "results/25_original/json/100_sax-25_original_s90_g2.json";
+#args[2] = "results/inline-100/25_original/json/100_sax-25_original_s100-100_g0.json.gz";
 
 
 
@@ -40,9 +49,7 @@ base_filename =  sub("[.][^.]*$", "", base_filename, perl=TRUE);
 
 
 
-# needed by plot
-source(file.path("R", "motif_lib.R"));
-load_lib();
+# load original database
 database = read.table(
     file=csv_database, header=TRUE, fill=TRUE, as.is=TRUE,
     stringsAsFactors=FALSE, sep=",", quote=""
@@ -68,17 +75,17 @@ if(is.null(json_data) || length(json_data) < 1)
 
         if(
             is.null(sequence_data_by_length$length) ||
-            is.null(sequence_data_by_length$sequences) ||
-            length(sequence_data_by_length$sequences) < 1
+                is.null(sequence_data_by_length$sequences) ||
+                length(sequence_data_by_length$sequences) < 1
         )
         {
-            print(paste("Empty sequence data of len", len));
+            cat(paste("\rEmpty sequence data of len", len, "\n"));
             #print("Data:");
             #dput(sequence_data_by_length);
             next;
         }
 
-        if(length(sequence_data_by_length$sequences) > 6000)
+        if(length(sequence_data_by_length$sequences) > 10000)
         {
             cat(paste("\n", length(sequence_data_by_length$sequences),
                       "are too much sequences to plot for len", len, "\n"));
@@ -86,16 +93,20 @@ if(is.null(json_data) || length(json_data) < 1)
         }
 
         sequence_length = sequence_data_by_length$length;
-        sequence_data = sequence_data_by_length$sequences;          # c++ pair
+        sequence_data = sequence_data_by_length$sequences;
 
         my_stmotifs = list();
 
         for(j in 1:length(sequence_data))
         {
             sequence_data_item = sequence_data[[j]];
-            sequence = gsub("[()<>]", "", sequence_data_item$sequence);
+            #sequence = gsub("[()<>]", "", sequence_data_item$sequence);
+            sequence = sequence_data_item$sequence;
             #support = sequence_data_item$support;
-            #match_data = sequence_data_item$positions;              # c++ pair
+            #frequency = sequence_data_item$frequency;
+            #start = sequence_data_item$start;
+            #end = sequence_data_item$end;
+            #match_data = sequence_data_item$positions;
 
             #times = unlist(lapply(match_data, function(item){item$x}));
             #spaces = unlist(lapply(match_data, function(item){item$y}));
@@ -137,6 +148,11 @@ if(is.null(json_data) || length(json_data) < 1)
         ds = PlotSTMotifs(my_stmotifs, database);
         dev.off();
 
+        # cleanup
+        rm(
+            ds, filename_by_len_png
+        );
+
         # print for each sequence
 
         for(w in 1:length(my_stmotifs))
@@ -161,6 +177,12 @@ if(is.null(json_data) || length(json_data) < 1)
             PlotSTMotifs(my_stmotifs_tmp, database);
             dev.off();
         }
+
+
+        # cleanup
+        rm(
+            sequence_length, my_stmotifs, filename_by_seq_png, my_stmotifs_tmp, sequence
+        );
     }
     cat("\n");
 }
