@@ -3,6 +3,7 @@
 #include <ctime>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -11,7 +12,7 @@
 int main(int _argn, char * _argv[])
 {
     unsigned int expected_arguments = 6;
-    std::vector<std::string> parameters;
+    std::vector < std::string > parameters;
 
     if(_argn != 1)
     {
@@ -23,6 +24,8 @@ int main(int _argn, char * _argv[])
     }
     else
     {
+        parameters.push_back((_argv[0]));
+
         // read from standard input
         for(std::string line; std::getline(std::cin, line);)
         {
@@ -37,7 +40,7 @@ int main(int _argn, char * _argv[])
         std::cerr << "Usage: "
                   << parameters[0]
                   << " <input_data.csv> <result.json>"
-                  << " <output.log> <min_spatial_frequenct>"
+                  << " <output.log> <min_spatial_frequency>"
                   << " <min_block_frequency>"
                   << std::endl;
 
@@ -64,25 +67,38 @@ int main(int _argn, char * _argv[])
               << " " << min_block_frequency
               << std::endl;
 
-    SIM sim;
+    try
+    {
+        SIM sim;
 
-    clock_t begin;
-    int elapsed_s;
+        clock_t begin;
+        int elapsed_s;
 
-    begin = clock();
-    sim.run(
-        input_data_csv, output_log, min_spatial_frequency, min_block_frequency);
-    elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
-    std::cout << "        run clock time: " << elapsed_s << "s" << std::endl;
+        begin = clock();
+        sim.run(
+            input_data_csv, output_log, min_spatial_frequency, min_block_frequency);
+        elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
+        std::cout << "        run clock time: " << elapsed_s << "s" << std::endl;
 
-    std::cout << "    saving to " << result_json << std::endl;
+        std::cout << "    saving to " << result_json << std::endl;
 
-    begin = clock();
-    sim.saveJSON(result_json);
-    elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
-    std::cout << "        save clock time: " << elapsed_s << "s" << std::endl;
+        begin = clock();
+        sim.saveJSON(result_json);
+        elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
+        std::cout << "        save clock time: " << elapsed_s << "s" << std::endl;
 
-    return 0;
+        return 0;
+    }
+    catch(const std::exception & _exc)
+    {
+        std::cerr << "std::exception: " << _exc.what() << std::endl;
+        return 1;
+    }
+    catch(...)
+    {
+        std::cerr << "unknown exception!" << std::endl;
+        return 1;
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     // Test 1:

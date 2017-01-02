@@ -25,7 +25,7 @@ private:
     Frequency m_frequency;
 };
 
-typedef std::list<RangedSequence> ListRangedSequence;
-typedef std::list<ListRangedSequence> ListListRangedSequence;
+typedef std::list < RangedSequence > ListRangedSequence;
+typedef std::list < ListRangedSequence > ListListRangedSequence;
 
 #endif

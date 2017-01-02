@@ -22,11 +22,11 @@ public:
 
     void updateCandidateKernels(
         const Serie & _serie,
-        const Point _position,
-        const Frequency _min_spatial_frequency);
+        const Point & _position,
+        const Frequency & _min_spatial_frequency);
 
     void mergeKernels(
-        const Frequency _min_spatial_freq);
+        const Frequency & _min_spatial_freq);
 
 private:
     Sequence m_sequence;
@@ -37,6 +37,6 @@ private:
     Kernel * m_current;
 };
 
-typedef std::list<Candidate> ListCandidates;
+typedef std::list < Candidate > ListCandidates;
 
 #endif

@@ -5,6 +5,6 @@
 
 #include "Serie.h"
 
-typedef std::vector<Serie> Database;
+typedef std::vector < Serie > Database;
 
 #endif

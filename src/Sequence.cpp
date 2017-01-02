@@ -113,7 +113,7 @@ const Item & Sequence::getLast() const
     return m_items[size - 1];
 }
 
-void Sequence::getCopyExceptPos(Point _pos, Sequence & _copy_seq) const
+void Sequence::getCopyExceptPos(const Point & _pos, Sequence & _copy_seq) const
 {
     Size size = m_items.size();
 

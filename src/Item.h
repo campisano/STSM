@@ -4,6 +4,6 @@
 #include <set>
 
 typedef char Item;
-typedef std::set<Item> SetItems;
+typedef std::set < Item > SetItems;
 
 #endif

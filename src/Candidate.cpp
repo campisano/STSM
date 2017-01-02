@@ -30,8 +30,8 @@ const ListKernels & Candidate::kernels() const
 
 void Candidate::updateCandidateKernels(
     const Serie & _serie,
-    const Point _position,
-    const Frequency _min_spatial_frequency)
+    const Point & _position,
+    const Frequency & _min_spatial_frequency)
 {
     bool supported = m_sequence.supportedBy(_serie);
 
@@ -76,7 +76,7 @@ void Candidate::updateCandidateKernels(
 }
 
 void Candidate::mergeKernels(
-    const Frequency _min_spatial_freq)
+    const Frequency & _min_spatial_freq)
 {
     ListKernels to_add;
     ListKernels::iterator ka_it;

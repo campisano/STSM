@@ -14,7 +14,7 @@ class Sequence
 {
 public:
     explicit Sequence();
-    explicit Sequence(const Item& _item);
+    explicit Sequence(const Item & _item);
     explicit Sequence(const std::string & _string_representation);
     virtual ~Sequence();
 
@@ -29,7 +29,7 @@ public:
     const Item & getFirst() const;
     const Item & getLast() const;
 
-    void getCopyExceptPos(Point _pos, Sequence & _copy_seq) const;
+    void getCopyExceptPos(const Point & _pos, Sequence & _copy_seq) const;
     void getSubsequenceDroppingFirstItem(Sequence & _subseq) const;
     void getSubsequenceDroppingLastItem(Sequence & _subseq) const;
 
@@ -39,7 +39,7 @@ public:
     std::string toStringOfItems() const;
 
 private:
-    std::vector<Item> m_items;
+    std::vector < Item > m_items;
 };
 
 #endif

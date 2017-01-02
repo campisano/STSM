@@ -33,6 +33,6 @@ private:
     Frequency m_frequency;
 };
 
-typedef std::list<Kernel> ListKernels;
+typedef std::list < Kernel > ListKernels;
 
 #endif
