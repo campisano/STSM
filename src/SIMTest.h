@@ -8,15 +8,13 @@
 
 class SIMTest : public cxxtools::unit::TestSuite, public SIM
 {
-    public:
-        explicit SIMTest();
-        virtual ~SIMTest();
+public:
+    explicit SIMTest();
+    virtual ~SIMTest();
 
-    private:
-        void test_equality();
-        void test_sequenceStringRepresentation();
-
-        void prepare(Sequence &_seq);
+private:
+    void test_equality();
+    void test_sequenceStringRepresentation();
 };
 
 #endif

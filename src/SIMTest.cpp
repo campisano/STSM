@@ -8,6 +8,17 @@
 #include <stdexcept>
 #include <string>
 
+
+// local utility functions
+namespace {
+    void prepare(Sequence &_seq)
+    {
+        _seq.set("<abcdefghilm>");
+    }
+}
+
+
+
 SIMTest::SIMTest() : cxxtools::unit::TestSuite("SIMTest")
 {
     std::cout << std::endl << "Test methods:" << std::endl;
@@ -44,7 +55,7 @@ void SIMTest::test_equality()
     CXXTOOLS_UNIT_ASSERT(seq1 == seq2);
 
     std::cout << std::endl
-        << "__________________________________________________";
+              << "__________________________________________________";
 }
 
 void SIMTest::test_sequenceStringRepresentation()
@@ -64,12 +75,7 @@ void SIMTest::test_sequenceStringRepresentation()
     CXXTOOLS_UNIT_ASSERT(seq1 == seq2);
 
     std::cout << std::endl
-        << "__________________________________________________";
-}
-
-void SIMTest::prepare(Sequence &_seq)
-{
-    _seq.set("<abcdefghilm>");
+              << "__________________________________________________";
 }
 
 
