@@ -4,7 +4,6 @@
 #include <cxxtools/unit/testsuite.h>
 
 #include "SIM.h"
-#include "Sequence.h"
 
 class SIMTest : public cxxtools::unit::TestSuite, public SIM
 {
@@ -13,8 +12,12 @@ public:
     virtual ~SIMTest();
 
 private:
-    void test_equality();
+    void test_sequenceEqualityOperator();
     void test_sequenceStringRepresentation();
+    void test_SIMRun_anyResult();
+    void test_SIMRun_f100_gets_only_single_ABCD100_solidSequence();
+    void test_SIMRun_f75_does_get_EFGH75_solidSequence();
+    void test_SIMRun_f90_does_not_get_EFGH75_solidSequence();
 };
 
 #endif
