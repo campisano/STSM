@@ -24,15 +24,15 @@ SIM::~SIM()
 void SIM::run(
     const std::string & _input_filename,
     const std::string & _log_filename,
-    const Frequency & _min_spatial_frequency,
-    const Frequency & _min_block_frequency)
+    const Frequency & _min_spatial_freq,
+    const Frequency & _min_block_freq)
 {
     m_database.clear();
     m_solid_sequences.clear();
     m_ranged_sequence_positions.clear();
 
-    setMinSpatialFreq(_min_spatial_frequency);
-    setMinBlockFreq(_min_block_frequency);
+    setMinSpatialFreq(_min_spatial_freq);
+    setMinBlockFreq(_min_block_freq);
 
     clock_t timer;
 
@@ -277,7 +277,8 @@ void SIM::generateCandidates(
             )
         {
             if(x_it->range().intersect(y_it->range(), rg_intersect) &&
-               rg_intersect.size() > 1)
+               rg_intersect.size() > 1
+                )
             {
                 seq1_without_first_item.clear();
                 x_it->sequence().getSubsequenceDroppingFirstItem(
@@ -303,32 +304,32 @@ void SIM::generateCandidates(
     }
 }
 
-void SIM::setMinSpatialFreq(const Frequency & _min_spatial_frequency)
+void SIM::setMinSpatialFreq(const Frequency & _min_spatial_freq)
 {
-    if(_min_spatial_frequency <=0 )
+    if(_min_spatial_freq <=0 )
     {
         std::stringstream text;
         text << "Minumum Spatial Frequency parameter value ("
-             << _min_spatial_frequency << ")"
+             << _min_spatial_freq << ")"
              << " cannot be less then or equal to 0.";
         throw std::runtime_error(text.str());
     }
 
-    m_min_spatial_freq = _min_spatial_frequency;
+    m_min_spatial_freq = _min_spatial_freq;
 }
 
-void SIM::setMinBlockFreq(const Frequency & _min_block_frequency)
+void SIM::setMinBlockFreq(const Frequency & _min_block_freq)
 {
-    if(_min_block_frequency <= 0)
+    if(_min_block_freq <= 0)
     {
         std::stringstream text;
         text << "Minumum Block Frequency parameter value ("
-             << _min_block_frequency << ")"
+             << _min_block_freq << ")"
              << " cannot be less then or equal to 0.";
         throw std::runtime_error(text.str());
     }
 
-    m_min_block_freq = _min_block_frequency;
+    m_min_block_freq = _min_block_freq;
 }
 
 void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
@@ -478,7 +479,7 @@ void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
 void SIM::printSS()
 {
     // print solid sequences
-    this->m_log_stream
+    m_log_stream
         << std::endl << "Printing solid sequences:" << std::endl;
 
     ListListRangedSequence::const_iterator it_ss_by_len;
@@ -496,7 +497,7 @@ void SIM::printSS()
             ++it_ss
             )
         {
-            this->m_log_stream
+            m_log_stream
                 << '\t' << it_ss->sequence().toStringOfItems()
                 << '\t' << "len: " << it_ss->sequence().size()
                 << '\t' << "freq: " << it_ss->frequency()
@@ -505,7 +506,7 @@ void SIM::printSS()
                 << std::endl;
 
             /*
-              this->m_log_stream << "\t\t" << "position: ";
+              m_log_stream << "\t\t" << "position: ";
 
               for(
               it_positions_vect = (
@@ -517,12 +518,12 @@ void SIM::printSS()
               ++it_positions_vect
               )
               {
-              this->m_log_stream << '('
+              m_log_stream << '('
               << it_positions_vect->first << ','
               << it_positions_vect->second << ')';
               }
 
-              this->m_log_stream << std::endl;
+              m_log_stream << std::endl;
             */
         }
     }

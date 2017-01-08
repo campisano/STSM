@@ -23,14 +23,14 @@ public:
     void run(
         const std::string & _input_filename,
         const std::string & _log_filename,
-        const Frequency & _min_spatial_frequency,
-        const Frequency & _min_block_frequency);
+        const Frequency & _min_spatial_freq,
+        const Frequency & _min_block_freq);
 
     void saveJSON(const std::string & _output_filename) const;
 
 protected:
-    void setMinSpatialFreq(const Frequency & _min_spatial_frequency);
-    void setMinBlockFreq(const Frequency & _min_block_frequency);
+    void setMinSpatialFreq(const Frequency & _min_spatial_freq);
+    void setMinBlockFreq(const Frequency & _min_block_freq);
 
     void loadDatabase(const std::string & _input_filename);
 
@@ -61,6 +61,7 @@ private:
 
     Database m_database;
 
+protected:
     ListListRangedSequence m_solid_sequences;
 
     typedef std::pair < Point, Point > Position;    // sensor, time

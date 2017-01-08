@@ -31,7 +31,7 @@ const ListKernels & Candidate::kernels() const
 void Candidate::updateCandidateKernels(
     const Serie & _serie,
     const Point & _position,
-    const Frequency & _min_spatial_frequency)
+    const Frequency & _min_spatial_freq)
 {
     bool supported = m_sequence.supportedBy(_serie);
 
@@ -46,8 +46,7 @@ void Candidate::updateCandidateKernels(
             m_kernels.push_back(
                 Kernel(
                     _position,
-                    _position,
-                    _min_spatial_frequency));
+                    _position));
             m_current = & m_kernels.back();
             m_current->support(1);
             m_current->frequency(1.0);
@@ -68,7 +67,7 @@ void Candidate::updateCandidateKernels(
         Frequency frequency = m_current->support() / m_current->size();
 
         // check validity of current kernel
-        if (frequency < _min_spatial_frequency)
+        if (frequency < _min_spatial_freq)
         {
             m_kernel_closed = true;
         }
@@ -118,8 +117,7 @@ void Candidate::mergeKernels(
                     to_add.push_back(
                         Kernel(
                             min_start,
-                            max_end,
-                            _min_spatial_freq));
+                            max_end));
                     Kernel & kernel = to_add.back();
                     kernel.support(new_support);
                     kernel.frequency(new_frequency);

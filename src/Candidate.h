@@ -23,7 +23,7 @@ public:
     void updateCandidateKernels(
         const Serie & _serie,
         const Point & _position,
-        const Frequency & _min_spatial_frequency);
+        const Frequency & _min_spatial_freq);
 
     void mergeKernels(
         const Frequency & _min_spatial_freq);
