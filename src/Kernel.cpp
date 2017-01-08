@@ -4,20 +4,16 @@
 #include <stdexcept>
 
 Kernel::Kernel(
-    const Range & _range,
-    const Frequency & _min_frequency):
-    Segment(_range.start(), _range.end()),
-    m_min_frequency(_min_frequency)
+    const Range & _range):
+    Segment(_range.start(), _range.end())
 {
     m_support = 0;
 }
 
 Kernel::Kernel(
     const Point & _start,
-    const Point & _end,
-    const Frequency & _min_frequency):
-    Segment(_start, _end),
-    m_min_frequency(_min_frequency)
+    const Point & _end):
+    Segment(_start, _end)
 {
     m_support = 0;
 }
