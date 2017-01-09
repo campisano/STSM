@@ -60,11 +60,12 @@ void Candidate::updateCandidateKernels(
         m_current->end(_position);
         m_current->support(m_current->support() + 1);
         m_current->frequency(
-            m_current->support() / m_current->size());
+            float(m_current->support()) / m_current->size());
     }
     else
     {
-        Frequency frequency = m_current->support() / m_current->size();
+        Range range(m_current->start(), _position);
+        Frequency frequency = float(m_current->support()) / range.size();
 
         // check validity of current kernel
         if (frequency < _min_spatial_freq)
@@ -106,10 +107,10 @@ void Candidate::mergeKernels(
                 ++kr_it)
             {
                 // ...that can be merged reaching the minimum spatial frequency
-                new_support = kq_it->support() + kq_it->support();
-                min_start = std::min(kq_it->start(), kq_it->start());
-                max_end = std::max(kq_it->end(), kq_it->end());
-                new_frequency = new_support / (max_end - min_start + 1);
+                new_support = kq_it->support() + kr_it->support();
+                min_start = std::min(kq_it->start(), kr_it->start());
+                max_end = std::max(kq_it->end(), kr_it->end());
+                new_frequency = float(new_support) / (max_end - min_start + 1);
 
                 if(new_frequency >= _min_spatial_freq)
                 {
