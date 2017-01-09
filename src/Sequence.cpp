@@ -176,7 +176,7 @@ bool Sequence::supportedBy(const Serie & _serie) const
 
     return match != _serie.end();
 
-    // TODO [CMP] check the utility (and the possibility,
+    //TODO [CMP] check the utility (and the possibility,
     // i.e. without break any logic) to implement max_gap
     // or max_stretch constraints
 
