@@ -8,6 +8,7 @@ Kernel::Kernel(
     Segment(_range.start(), _range.end())
 {
     m_support = 0;
+    m_frequency = 0;
 }
 
 Kernel::Kernel(
@@ -16,6 +17,7 @@ Kernel::Kernel(
     Segment(_start, _end)
 {
     m_support = 0;
+    m_frequency = 0;
 }
 
 const Support & Kernel::support() const
