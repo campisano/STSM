@@ -23,8 +23,8 @@ public:
     void run(
         const std::string & _input_filename,
         const std::string & _log_filename,
-        const Frequency & _min_spatial_freq,
-        const Frequency & _min_block_freq);
+        const unsigned int & _min_spatial_freq_perc,
+        const unsigned int & _min_block_freq_perc);
 
     void saveJSON(const std::string & _output_filename) const;
 
@@ -44,11 +44,14 @@ protected:
         const Point & _end,
         ListCandidates & _candidates) const;
 
+    void updateMatchingPositions(const ListRangedSequence & _solid_sequences);
+
     void generateCandidates(
         const ListRangedSequence & _solid_sequences,
         ListCandidates & _candidates) const;
 
-    void updateMatchingPositions(const ListRangedSequence & _solid_sequences);
+    void cleanupSolidSequencesWithSmallRangeSize(
+        ListRangedSequence & _solid_sequences, const Size _min_size) const;
 
     void printSS();
     void printSSP();
