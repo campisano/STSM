@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "Candidate.h"
+#include "Kernel.h"
 #include "Sequence.h"
 
 #define EPSILON 0.0001
@@ -28,9 +30,54 @@ SIMTest::SIMTest() : cxxtools::unit::TestSuite("SIMTest")
         &SIMTest::test_sequenceStringRepresentation);
 
     registerMethod(
-        "test_SIMRun_anyResult",
+        "test_mergeKernels_f100_size1_adjacent__does_joins",
         *this,
-        &SIMTest::test_SIMRun_anyResult);
+        &SIMTest::test_mergeKernels_f100_size1_adjacent__does_joins);
+
+    registerMethod(
+        "test_mergeKernels_f100_size2_adjacent__does_joins",
+        *this,
+        &SIMTest::test_mergeKernels_f100_size2_adjacent__does_joins);
+
+    registerMethod(
+        "test_mergeKernels_f100_size1_not_adjacent__does_not_joins",
+        *this,
+        &SIMTest::test_mergeKernels_f100_size1_not_adjacent__does_not_joins);
+
+    registerMethod(
+        "test_mergeKernels_f100_size2_not_adjacent__does_not_joins",
+        *this,
+        &SIMTest::test_mergeKernels_f100_size2_not_adjacent__does_not_joins);
+
+    registerMethod(
+        "test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins",
+        *this,
+        &SIMTest::test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins);
+
+    registerMethod(
+        "test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins",
+        *this,
+        &SIMTest::test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins);
+
+    registerMethod(
+        "test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_joins",
+        *this,
+        &SIMTest::test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_joins);
+
+    registerMethod(
+        "test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins",
+        *this,
+        &SIMTest::test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins);
+
+    registerMethod(
+        "test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins",
+        *this,
+        &SIMTest::test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins);
+
+    registerMethod(
+        "test_SIMRun_any_result",
+        *this,
+        &SIMTest::test_SIMRun_any_result);
 
     registerMethod(
         "test_SIMRun_f100_gets_only_single_ABCD100_solidSequence",
@@ -80,7 +127,311 @@ void SIMTest::test_sequenceStringRepresentation()
     CXXTOOLS_UNIT_ASSERT(seq1.toStringOfItems() == str_items);
 }
 
-void SIMTest::test_SIMRun_anyResult()
+void SIMTest::test_mergeKernels_f100_size1_adjacent__does_joins()
+{
+    // Arrange
+    Kernel k1(0, 0);
+    k1.frequency(1.0);
+    k1.support(1);
+    Kernel k2(1, 1);
+    k2.frequency(1.0);
+    k2.support(1);
+
+    ListKernels kernels;
+    kernels.push_back(k1);
+    kernels.push_back(k2);
+
+    Candidate cand(
+        Sequence("<aaa>"),
+        Range(0, 1),
+        kernels);
+
+    // Act
+    cand.mergeKernels(1.0);
+
+    // Assert
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 1);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 2);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
+}
+
+void SIMTest::test_mergeKernels_f100_size2_adjacent__does_joins()
+{
+    // Arrange
+    Kernel k1(0, 1);
+    k1.frequency(1.0);
+    k1.support(2);
+    Kernel k2(2, 3);
+    k2.frequency(1.0);
+    k2.support(2);
+
+    ListKernels kernels;
+    kernels.push_back(k1);
+    kernels.push_back(k2);
+
+    Candidate cand(
+        Sequence("<aaa>"),
+        Range(0, 3),
+        kernels);
+
+    // Act
+    cand.mergeKernels(1.0);
+
+    // Assert
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 3);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 4);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
+}
+
+void SIMTest::test_mergeKernels_f100_size1_not_adjacent__does_not_joins()
+{
+    // Arrange
+    Kernel k1(0, 0);
+    k1.frequency(1.0);
+    k1.support(1);
+    Kernel k2(2, 2);
+    k2.frequency(1.0);
+    k2.support(1);
+
+    ListKernels kernels;
+    kernels.push_back(k1);
+    kernels.push_back(k2);
+
+    Candidate cand(
+        Sequence("<aaa>"),
+        Range(0, 2),
+        kernels);
+
+    // Act
+    cand.mergeKernels(1.0);
+
+    // Assert
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 2);
+
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().start(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().end(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().support(), 1);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().front().frequency() - 1.0) < EPSILON);
+
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 2);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 2);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 1);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
+}
+
+void SIMTest::test_mergeKernels_f100_size2_not_adjacent__does_not_joins()
+{
+    // Arrange
+    Kernel k1(0, 1);
+    k1.frequency(1.0);
+    k1.support(2);
+    Kernel k2(3, 4);
+    k2.frequency(1.0);
+    k2.support(2);
+
+    ListKernels kernels;
+    kernels.push_back(k1);
+    kernels.push_back(k2);
+
+    Candidate cand(
+        Sequence("<aaa>"),
+        Range(0, 4),
+        kernels);
+
+    // Act
+    cand.mergeKernels(1.0);
+
+    // Assert
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 2);
+
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().start(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().end(), 1);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().support(), 2);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().front().frequency() - 1.0) < EPSILON);
+
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 3);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 4);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 2);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
+}
+
+void SIMTest::test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins()
+{
+    // Arrange
+    Kernel k1(0, 1);
+    k1.frequency(1.0);
+    k1.support(2);
+    Kernel k2(3, 4);
+    k2.frequency(1.0);
+    k2.support(2);
+
+    ListKernels kernels;
+    kernels.push_back(k1);
+    kernels.push_back(k2);
+
+    Candidate cand(
+        Sequence("<aaa>"),
+        Range(0, 4),
+        kernels);
+
+    // Act
+    cand.mergeKernels(0.75);
+
+    // Assert
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
+
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 4);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 4);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().back().frequency() - (4.0 / 5.0)) < EPSILON);
+}
+
+void SIMTest::test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins()
+{
+    // Arrange
+    Kernel k1(0, 2);
+    k1.frequency(1.0);
+    k1.support(3);
+    Kernel k2(4, 6);
+    k2.frequency(1.0);
+    k2.support(3);
+
+    ListKernels kernels;
+    kernels.push_back(k1);
+    kernels.push_back(k2);
+
+    Candidate cand(
+        Sequence("<aaa>"),
+        Range(0, 6),
+        kernels);
+
+    // Act
+    cand.mergeKernels(0.75);
+
+    // Assert
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
+
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 6);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 6);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().back().frequency() - (6.0 / 7.0)) < EPSILON);
+}
+
+void SIMTest::test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_joins()
+{
+    // Arrange
+    Kernel k1(0, 2);
+    k1.frequency(2.0 / 3.0);
+    k1.support(2);
+    Kernel k2(4, 6);
+    k2.frequency(2.0 / 3.0);
+    k2.support(2);
+
+    ListKernels kernels;
+    kernels.push_back(k1);
+    kernels.push_back(k2);
+
+    Candidate cand(
+        Sequence("<aaa>"),
+        Range(0, 6),
+        kernels);
+
+    // Act
+    cand.mergeKernels(0.50);
+
+    // Assert
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
+
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 6);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 4);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().back().frequency() - (4.0 / 7.0)) < EPSILON);
+}
+
+void SIMTest::test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins()
+{
+    // Arrange
+    Kernel k1(0, 0);
+    k1.frequency(1.0);
+    k1.support(1);
+    Kernel k2(2, 3);
+    k2.frequency(1.0);
+    k2.support(2);
+
+    ListKernels kernels;
+    kernels.push_back(k1);
+    kernels.push_back(k2);
+
+    Candidate cand(
+        Sequence("<aaa>"),
+        Range(0, 3),
+        kernels);
+
+    // Act
+    cand.mergeKernels(0.75);
+
+    // Assert
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
+
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 3);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 3);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().back().frequency() - (3.0 / 4.0)) < EPSILON);
+}
+
+void SIMTest::test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins()
+{
+    // Arrange
+    Kernel k1(0, 0);
+    k1.frequency(1.0);
+    k1.support(1);
+    Kernel k2(2, 3);
+    k2.frequency(1.0);
+    k2.support(2);
+
+    ListKernels kernels;
+    kernels.push_back(k1);
+    kernels.push_back(k2);
+
+    Candidate cand(
+        Sequence("<aaa>"),
+        Range(0, 3),
+        kernels);
+
+    // Act
+    cand.mergeKernels(0.90);
+
+    // Assert
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 2);
+
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().start(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().end(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().support(), 1);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().front().frequency() - 1.0) < EPSILON);
+
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 2);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 3);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 2);
+    CXXTOOLS_UNIT_ASSERT(
+        std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
+}
+
+void SIMTest::test_SIMRun_any_result()
 {
     // Arrange
 
@@ -118,6 +469,8 @@ void SIMTest::test_SIMRun_anyResult()
 
     CXXTOOLS_UNIT_ASSERT_EQUALS(
         system(("rm -f " + test_folder + "/*").c_str()), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(
+        system(("rmdir " + test_folder + "/").c_str()), 0);
 }
 
 void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
@@ -142,7 +495,7 @@ void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
         << "g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g" << std::endl
         << "h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h" << std::endl
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
-        << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,I,l,l,l,l" << std::endl;
+        << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
     ofs.close();
 
     // Act
@@ -152,7 +505,6 @@ void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences.size(), 4);
     CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences.back().size(), 1);
 
     RangedSequence rg = m_solid_sequences.back().back();
@@ -170,6 +522,8 @@ void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
 
     CXXTOOLS_UNIT_ASSERT_EQUALS(
         system(("rm -f " + test_folder + "/*").c_str()), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(
+        system(("rmdir " + test_folder + "/").c_str()), 0);
 }
 
 void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
@@ -194,7 +548,7 @@ void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
         << "g,g,g,g,g,g,g,g,g,g,g,g,g,E,F,G,H,g,g,g,g,g,g,g,g" << std::endl
         << "h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,E,F,G,H" << std::endl
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
-        << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,I,l,l,l,l" << std::endl;
+        << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
     ofs.close();
 
     // Act
@@ -204,7 +558,6 @@ void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences.size(), 4);
     CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences.back().size(), 1);
 
     RangedSequence rg = m_solid_sequences.back().back();
@@ -214,14 +567,16 @@ void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
 
     // testing synthetic known data
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "EFGH");
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 6);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 4);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 7);
-    CXXTOOLS_UNIT_ASSERT(std::abs(rg.frequency() - 1.0) < EPSILON);
+    CXXTOOLS_UNIT_ASSERT(std::abs(rg.frequency() - 0.75) < EPSILON);
 
     // Cleanup
 
     CXXTOOLS_UNIT_ASSERT_EQUALS(
         system(("rm -f " + test_folder + "/*").c_str()), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(
+        system(("rmdir " + test_folder + "/").c_str()), 0);
 }
 
 void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
@@ -246,7 +601,7 @@ void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
         << "g,g,g,g,g,g,g,g,g,g,g,g,g,E,F,G,H,g,g,g,g,g,g,g,g" << std::endl
         << "h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,E,F,G,H" << std::endl
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
-        << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,I,l,l,l,l" << std::endl;
+        << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
     ofs.close();
 
     // Act
@@ -256,7 +611,6 @@ void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences.size(), 4);
     CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences.back().size(), 1);
 
     RangedSequence rg = m_solid_sequences.back().back();
@@ -274,6 +628,8 @@ void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
 
     CXXTOOLS_UNIT_ASSERT_EQUALS(
         system(("rm -f " + test_folder + "/*").c_str()), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(
+        system(("rmdir " + test_folder + "/").c_str()), 0);
 }
 
 
