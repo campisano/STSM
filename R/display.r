@@ -7,7 +7,7 @@ options(warn=2, keep.source=TRUE);
 loadLibs = function(lib_names) {
     repos = "http://cran.r-project.org";
     lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
-    dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="0777");
+    dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="2755");
     .libPaths(c(lib, .libPaths()));
 
     for(lib_name in lib_names) {
@@ -26,7 +26,7 @@ loadLibs = function(lib_names) {
 plotRangedSequences = function(
     x_points, y_points, xmin_ranges=c(), xmax_ranges=c(),
     lim_x_min=NA, lim_x_max=NA, lim_y_min=-NA, lim_y_max=NA,
-    clean=TRUE) {
+    clean=TRUE, scale=1) {
     df_points = data.frame(x=x_points, y=y_points);
     df_rectangles = data.frame(xmin=xmin_ranges, xmax=xmax_ranges);
 
@@ -53,14 +53,15 @@ plotRangedSequences = function(
         gg = gg + geom_rect(
             data=df_rectangles,
             aes(xmin=xmin, xmax=xmax, ymin=-Inf, ymax=Inf, inherit.ae=FALSE),
-            size=0.5, color=alpha("red", 0.3), fill="red", alpha=0.1);
+            size=0.5 * scale,
+            color=alpha("darkgreen", 0.3), fill="darkgreen", alpha=0.2);
     }
 
     # then print the points
     gg = gg + geom_point(
         data=df_points,
         aes(x, y, inherit.ae=FALSE),
-        size=2, color="darkblue", alpha=0.3);
+        size=3 * scale, color="darkblue", alpha=0.5);
 
     # defines the limites
     gg = gg + coord_cartesian(
@@ -98,6 +99,26 @@ plotRangedSequences = function(
 
 
 
+dev_open_file = function(file_name, width, height, scale=1) {
+    ext = strsplit(file_name, "\\.")[[1]][[-1]];
+
+    dpi = 72
+    pointsize = 12 * dpi / 72  # do not change
+
+    if(ext == "svg") {
+        svg(file_name, bg="transparent", antialias="none",
+            pointsize=pointsize,
+            width=(width / dpi) * scale, height=(height / dpi) * scale);
+    }
+    if(ext == "png") {
+        png(file_name, bg="transparent", antialias="none",
+            pointsize=pointsize, units="in", res=dpi,
+            width=(width / dpi) * scale, height=(height / dpi) * scale);
+    }
+}
+
+
+
 # loading dependences
 loaded_libs = loadLibs(c("rjson", "TSMining", "ggplot2", "grid", "scales"));
 
@@ -108,7 +129,17 @@ loaded_libs = loadLibs(c("rjson", "TSMining", "ggplot2", "grid", "scales"));
 #     rnorm(100,2), rnorm(100,2),
 #     c(1, 2, 3), c(1.5, 2.5, 4),
 #     lim_x_min=0, lim_x_max=10, lim_y_min=0, lim_y_max=10,
-#     clean=FALSE);
+#     clean=FALSE, scale=plot_scale);
+
+
+
+# configuring variables
+plot_scale = 5;
+per_length_plot_limit = 10000;
+per_sequence_plot_limit = 50;
+per_length_plot_image_type = "png";
+per_sequence_plot_image_type = "png";
+background_img_size = "800px";
 
 
 
@@ -119,16 +150,17 @@ args = commandArgs(TRUE);
 # examples:
 #args = c();
 #args[1] = "data/100_sax-25_original.csv";
-#args[2] = "results/25_original/json/100_sax-25_original_s90_g2.json";
-#args[2] = "results/inline-100/25_original/json/100_sax-25_original_s100-100_g0.json.gz";
+#args[2] = "results/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB100_MS0.json";
+#args[3] = "results/inline-100_orientation-original/sax-25/spatial-100/block-100/stretch-0";
+#args[4] = "data/inline_100_4755x2310.jpg";
+cat("    args:", args, "\n");
 
-
-
-# configuring variables
 csv_database = args[1];
 input_file_json = args[2];
+output_img_dir = args[3];
+background_img_src = args[4];
+background_img = basename(background_img_src);
 base_json_path_dir = dirname(input_file_json);
-base_path_dir = dirname(base_json_path_dir);
 base_filename = sub(file.path(base_json_path_dir, ""), "", input_file_json);
 base_filename = sub("[.][^.]*$", "", base_filename, perl=TRUE);
 
@@ -152,154 +184,171 @@ rm(database);
 # loading json data
 cat("Loading json data", input_file_json, "...");
 json_data = fromJSON(file=input_file_json, method="C");
-cat("[done]\n")
-
-
+cat(" [DONE]\n")
 
 if(is.null(json_data) || length(json_data) < 1) {
     cat("Empty json data\n");
-} else {
-    for(iteration in 1:length(json_data)) {
-        cat("\nIteration:", iteration);
+    quit(status=1);
+}
 
-        sequence_data_by_length = json_data[[iteration]];
 
-        if(
-            is.null(sequence_data_by_length$length) ||
-                is.null(sequence_data_by_length$sequences) ||
-                length(sequence_data_by_length$sequences) < 1
-        ) {
-            cat("\rEmpty sequence data iteration", iteration,
-                "of length", sequence_data_by_length$length, "\n");
-            #cat("Data:\n");
-            #dput(sequence_data_by_length);
-            next;
+
+system(paste("cp -f", background_img_src, output_img_dir));
+
+per_length_index_file = file(file.path(
+    output_img_dir, "index.html"));
+per_length_index_lines = c("<html>", "  <body>");
+
+
+
+for(iteration in 1:length(json_data)) {
+    cat("Iteration:", iteration);
+
+    sequence_data_by_length = json_data[[iteration]];
+
+    if(
+        is.null(sequence_data_by_length$length) ||
+            is.null(sequence_data_by_length$sequences) ||
+            length(sequence_data_by_length$sequences) < 1
+    ) {
+        cat("Empty sequence data iteration", iteration,
+            "of length", sequence_data_by_length$length, "\n");
+        #cat("Data:\n");
+        #dput(sequence_data_by_length);
+        next;
+    }
+
+    cat("\tsequence length:", sequence_data_by_length$length,
+        "\tnum of ranged sequences:",
+        length(sequence_data_by_length$sequences), "...");
+
+    if(length(sequence_data_by_length$sequences) > per_length_plot_limit) {
+        cat("\n", length(sequence_data_by_length$sequences),
+            "are too much sequences to plot just only a single image",
+            "with all of them\n");
+        next;
+    }
+
+    sequence_length = sequence_data_by_length$length;
+    sequence_data = sequence_data_by_length$sequences;
+
+    ###
+    # plotting all the sequences of same length
+    ###
+
+    cat(" per-lenght plotting... ");
+
+    xmin_ranges = c(); # will be empty, no ranges
+    xmax_ranges = c(); # will be empty, no ranges
+    x_points = c();
+    y_points = c();
+
+    for(j in 1:length(sequence_data)) {
+        sequence_data_item = sequence_data[[j]];
+        sequence = sequence_data_item$sequence;
+        #frequency = sequence_data_item$frequency;
+        #start = sequence_data_item$start;
+        #end = sequence_data_item$end;
+        times = sequence_data_item$times;
+        spaces = sequence_data_item$spaces;
+
+        x_points = c(x_points, times);
+        y_points = c(y_points, spaces);
+    }
+
+    filename_by_len = file.path(
+        output_img_dir,
+        paste(base_filename, "_", sequence_length, ".",
+              per_length_plot_image_type, sep="")
+    );
+
+    dev_open_file(
+        filename_by_len, database_x_size, database_y_size, plot_scale);
+    plot(plotRangedSequences(
+        x_points, y_points, xmin_ranges, xmax_ranges,
+        lim_x_min=lim_database_x_min, lim_x_max=lim_database_x_max,
+        lim_y_min=lim_database_y_min, lim_y_max=lim_database_y_max,
+        scale=plot_scale));
+    dev.off();
+
+    per_length_index_lines = c(per_length_index_lines, paste(
+        "    <img style=\"",
+        "background:url(", background_img, ");",
+        "background-size:cover;",
+        "width:", background_img_size ,";\"",
+        " src=\"", base_filename, "_", sequence_length, ".",
+        per_length_plot_image_type,
+        "\" alt=\"\" />", sep=""));
+
+    # cleanup
+    rm(
+        filename_by_len, spaces, times, sequence, sequence_data_item,
+        j, y_points, x_points, xmax_ranges, xmin_ranges
+    );
+
+    ####
+    # plot an image with all ranges for each sequence
+    ####
+
+    # organize the data by sequence
+
+    cat(" per-sequence data ...");
+
+    seq_plotd = list();
+
+    for(j in 1:length(sequence_data)) {
+        sequence_data_item = sequence_data[[j]];
+        sequence = sequence_data_item$sequence;
+
+        if(is.null(seq_plotd[[sequence]])) {
+            seq_plotd[[sequence]] = list()
+            seq_plotd[[sequence]][["xmin_ranges"]] = c();
+            seq_plotd[[sequence]][["xmax_ranges"]] = c();
+            seq_plotd[[sequence]][["x_points"]] = c();
+            seq_plotd[[sequence]][["y_points"]] = c();
         }
 
-        cat("\tsequence length:", sequence_data_by_length$length,
-            "\tnum of ranged sequences:",
-            length(sequence_data_by_length$sequences), "...");
+        #frequency = sequence_data_item$frequency;
+        start = sequence_data_item$start;
+        end = sequence_data_item$end;
+        times = sequence_data_item$times;
+        spaces = sequence_data_item$spaces;
 
-        if(length(sequence_data_by_length$sequences) > 10000) {
-            cat("\n", length(sequence_data_by_length$sequences),
-                "are too much sequences to plot just only a single image",
-                "with all of them\n");
-            next;
-        }
+        seq_plotd[[sequence]][["xmin_ranges"]] = c(
+            seq_plotd[[sequence]][["xmin_ranges"]], start);
+        seq_plotd[[sequence]][["xmax_ranges"]] = c(
+            seq_plotd[[sequence]][["xmax_ranges"]], end);
+        seq_plotd[[sequence]][["x_points"]] = c(
+            seq_plotd[[sequence]][["x_points"]], times);
+        seq_plotd[[sequence]][["y_points"]] = c(
+            seq_plotd[[sequence]][["y_points"]], spaces);
+    }
 
-        sequence_length = sequence_data_by_length$length;
-        sequence_data = sequence_data_by_length$sequences;
+    cat(" plotting ...");
 
-        ###
-        # plotting all the sequequences of same length
-        ###
+    # plot all sequence data
 
-        xmin_ranges = c(); # will be empty, no ranges
-        xmax_ranges = c(); # will be empty, no ranges
-        x_points = c();
-        y_points = c();
+    dir.create(
+        file.path(
+            output_img_dir, base_filename, sequence_length
+        ),
+        showWarnings=FALSE, recursive=TRUE, mode="2755"
+    );
 
-        for(j in 1:length(sequence_data)) {
-            sequence_data_item = sequence_data[[j]];
-            sequence = sequence_data_item$sequence;
-            #frequency = sequence_data_item$frequency;
-            #start = sequence_data_item$start;
-            #end = sequence_data_item$end;
-            times = sequence_data_item$times;
-            spaces = sequence_data_item$spaces;
+    filename_by_seq = file.path(
+        output_img_dir, base_filename, sequence_length,
+        paste("%d", ".", per_sequence_plot_image_type, sep="")
+    );
 
-            x_points = c(x_points, times);
-            y_points = c(y_points, spaces);
-        }
+    something_plotted = FALSE;
 
-        filename_by_len = file.path(
-            base_path_dir, "img",
-            paste(base_filename, "_", sequence_length, ".svg", sep="")
-        );
+    # producing the entire bunch of plots at one time,
+    # a img with all the points and ranges for each sequence
+    dev_open_file(
+        filename_by_seq, database_x_size, database_y_size, plot_scale);
 
-        svg(filename_by_len, bg="transparent", antialias="none",
-            width=database_x_size / 50, height=database_y_size / 50);
-        # png(filename_by_len, bg="transparent", antialias="none",
-        #     res=200, units="px",
-        #     width=database_x_size * 3, height=database_y_size * 3);
-        plot(plotRangedSequences(
-            x_points, y_points, xmin_ranges, xmax_ranges,
-            lim_x_min=lim_database_x_min, lim_x_max=lim_database_x_max,
-            lim_y_min=lim_database_y_min, lim_y_max=lim_database_y_max));
-        dev.off();
-
-        # cleanup
-        rm(
-            filename_by_len, spaces, times, sequence, sequence_data_item,
-            j, y_points, x_points, xmax_ranges, xmin_ranges
-        );
-
-        ####
-        # plot an image with all ranges for each sequence
-        ####
-
-        if(length(sequence_data_by_length$sequences) > 1000) {
-            cat("\n", length(sequence_data_by_length$sequences),
-                "are too much sequences to plot one image per sequence\n");
-            next;
-        }
-
-        # organize the data by sequence
-
-        seq_plotd = list();
-
-        for(j in 1:length(sequence_data)) {
-            sequence_data_item = sequence_data[[j]];
-            sequence = sequence_data_item$sequence;
-
-            if(is.null(seq_plotd[[sequence]])) {
-                seq_plotd[[sequence]] = list()
-                seq_plotd[[sequence]][["xmin_ranges"]] = c();
-                seq_plotd[[sequence]][["xmax_ranges"]] = c();
-                seq_plotd[[sequence]][["x_points"]] = c();
-                seq_plotd[[sequence]][["y_points"]] = c();
-            }
-
-            #frequency = sequence_data_item$frequency;
-            start = sequence_data_item$start;
-            end = sequence_data_item$end;
-            times = sequence_data_item$times;
-            spaces = sequence_data_item$spaces;
-
-            seq_plotd[[sequence]][["xmin_ranges"]] = c(
-                seq_plotd[[sequence]][["xmin_ranges"]], start);
-            seq_plotd[[sequence]][["xmax_ranges"]] = c(
-                seq_plotd[[sequence]][["xmax_ranges"]], end);
-            seq_plotd[[sequence]][["x_points"]] = c(
-                seq_plotd[[sequence]][["x_points"]], times);
-            seq_plotd[[sequence]][["y_points"]] = c(
-                seq_plotd[[sequence]][["y_points"]], spaces);
-        }
-
-        # plot all sequence data
-
-        dir.create(
-            file.path(
-                base_path_dir, "img", base_filename, sequence_length
-            ),
-            showWarnings=FALSE, recursive=TRUE, mode="0777"
-        );
-
-        filename_by_seq = file.path(
-            base_path_dir, "img", base_filename, sequence_length,
-            paste("%d", ".svg", sep="")
-        );
-
-        # producing the entire bunch of plots at one time,
-        # a img with all the points and ranges for each sequence
-
-        svg(filename_by_seq, bg="transparent", antialias="none",
-            width=database_x_size / 50, height=database_y_size / 50);
-        # png(filename_by_seq, bg="transparent", antialias="none",
-        #     res=200, units="px",
-        #     width=database_x_size * 3, height=database_y_size * 3);
-
-        for(j in 1:length(seq_plotd)) {
+    for(j in 1:length(seq_plotd)) {
+        if(length(seq_plotd[[j]][["x_points"]]) > per_sequence_plot_limit) {
             plot(plotRangedSequences(
                 seq_plotd[[j]][["x_points"]],
                 seq_plotd[[j]][["y_points"]],
@@ -308,28 +357,76 @@ if(is.null(json_data) || length(json_data) < 1) {
                 lim_x_min=lim_database_x_min,
                 lim_x_max=lim_database_x_max,
                 lim_y_min=lim_database_y_min,
-                lim_y_max=lim_database_y_max));
+                lim_y_max=lim_database_y_max,
+                scale=plot_scale));
+            something_plotted = TRUE;
         }
+    }
 
-        dev.off();
+    dev.off();
 
+    rm(j);
+
+    if(something_plotted) {
         # renaming to have the sequence name
+        k = 0;
+
+
+
+        per_sequence_index_file = file(file.path(
+            output_img_dir, base_filename,
+            paste(sequence_length, ".html", sep="")));
+        per_sequence_index_lines = c("<html>", "  <body>");
 
         for(j in 1:length(seq_plotd)) {
-            file.rename(
-                file.path(
-                    base_path_dir, "img", base_filename, sequence_length,
-                    paste(j, ".svg", sep="")),
-                file.path(
-                    base_path_dir, "img", base_filename, sequence_length,
-                    paste(names(seq_plotd)[j], ".svg", sep="")));
+            if(length(seq_plotd[[j]][["x_points"]]) > per_sequence_plot_limit) {
+                k = k + 1;
+                file.rename(
+                    file.path(
+                        output_img_dir, base_filename, sequence_length,
+                        paste(k, ".", per_sequence_plot_image_type, sep="")),
+                    file.path(
+                        output_img_dir, base_filename, sequence_length,
+                        paste(names(seq_plotd)[j], ".",
+                              per_sequence_plot_image_type, sep="")));
+
+                per_sequence_index_lines = c(per_sequence_index_lines, paste(
+                    "    <img style=\"",
+                    "background:url(../", background_img, ");",
+                    "background-size:cover;",
+                    "width:800px;\"",
+                    " src=\"", sequence_length, "/",
+                    names(seq_plotd)[j], ".", per_sequence_plot_image_type,
+                    "\" alt=\"\" />", sep=""));
+            }
         }
 
-        # cleanup
-        rm(
-            filename_by_seq, sequence, j, spaces, times, end, start,
-            sequence_data_item, seq_plotd,
-            sequence_data, sequence_length, sequence_data_by_length, iteration
-        );
+        writeLines(c(per_sequence_index_lines, c("  </body>", "</html>")),
+                   per_sequence_index_file);
+        close(per_sequence_index_file);
+        rm(per_sequence_index_lines, per_sequence_index_file, k);
+
+    } else {
+        # removing unuseful directory
+        #unlink(     # [CMP] unlink won't work
+        system(paste('rmdir', file.path(
+            output_img_dir, base_filename, sequence_length)));
     }
+
+    # cleanup
+    rm(
+        filename_by_seq, sequence, spaces, times, end, start,
+        sequence_data_item, seq_plotd,
+        sequence_data, sequence_length, sequence_data_by_length, iteration
+    );
+
+    cat(" [DONE]\n")
 }
+
+
+writeLines(c(per_length_index_lines, c("  </body>", "</html>")),
+           per_length_index_file);
+close(per_length_index_file);
+rm(per_length_index_lines, per_length_index_file);
+
+result = file.create(file.path(output_img_dir, "complete"));
