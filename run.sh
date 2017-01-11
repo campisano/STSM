@@ -11,110 +11,124 @@ PATH=./BUILD/release:$PATH;
 
 
 
-INPUT_INLINES=("100" "401")
-#INPUT_INLINES=("100")
-
 INPUT_FOLDER="data";
 OUTPUT_FOLDER="results";
 
-#TYPES=("original" "transposed");
-TYPES=("original");
+BASE_IMG_NAME="4755x2310.jpg";
 
-#ALPHABETS=("25" "20" "15" "10" "5");
-ALPHABETS=("25" "20" "10");
+INLINES=("100" "401")                               # default
+#INLINES=("100")
+
+#ORIENTATIONS=("original" "transposed");
+ORIENTATIONS=("original");                          # default
+
+#SAXS=("25" "20" "15" "10" "5");
+#SAXS=("25" "20" "10");                              # default
+SAXS=("25");
 
 #MIN_SPATIAL_FREQS=("100" "90" "75" "50" "25");
-#MIN_BLOCK_FREQS=("100" "100" "100" "100" "100");
-MIN_SPATIAL_FREQS=("100" "90" "75");
-MIN_BLOCK_FREQS=("100" "100" "100");
+MIN_SPATIAL_FREQS=("100" "90" "75" "50");           # default
+#MIN_SPATIAL_FREQS=("100");
 
-#MAX_TIME_WINDOWS=("0" "2" "5" "10");
-MAX_TIME_WINDOWS=("0");
+#MIN_BLOCK_FREQS=("100" "90" "75" "50" "25");
+#MIN_BLOCK_FREQS=("100" "90" "75");                  # default
+MIN_BLOCK_FREQS=("100");
+
+#MAX_STRETCHS=("0" "2" "5" "10");
+#MAX_STRETCHS=("0" "2" "5");                         # default
+MAX_STRETCHS=("0");
 
 
-for INPUT_INLINE in "${INPUT_INLINES[@]}"
+for INLINE in "${INLINES[@]}"
 do
-    FILE_NAME=$INPUT_INLINE"_sax";
+    FILE_NAME=$INLINE"_sax";
 
-    for TYPE in "${TYPES[@]}"
+    for ORIENTATION in "${ORIENTATIONS[@]}"
     do
-        for ALPHABET in "${ALPHABETS[@]}"
+        for SAX in "${SAXS[@]}"
         do
-            INPUT_FILE=$INPUT_FOLDER"/"$FILE_NAME"-"$ALPHABET"_"$TYPE".csv";
-            SPEC_OUTPUT_FOLDER=$OUTPUT_FOLDER"/inline-"$INPUT_INLINE"/"$ALPHABET"_"$TYPE;
+            INPUT_FILE=$INPUT_FOLDER"/"$FILE_NAME"-"$SAX"_"$ORIENTATION".csv";
 
-            SUP_I=0
-            while test "${SUP_I}" -lt "${#MIN_SPATIAL_FREQS[@]}"
+            for MIN_SPATIAL_FREQ in "${MIN_SPATIAL_FREQS[@]}"
             do
-                MIN_SPATIAL_FREQ="${MIN_SPATIAL_FREQS[SUP_I]}"
-                MIN_BLOCK_FREQ="${MIN_BLOCK_FREQS[SUP_I]}"
-                SUP_I=$((SUP_I+1));
-
-                for MAX_TIME_WINDOW in "${MAX_TIME_WINDOWS[@]}"
+                for MIN_BLOCK_FREQ in "${MIN_BLOCK_FREQS[@]}"
                 do
-                    echo "--------------------------------------------------";
-                    OUTPUT_FILE=$SPEC_OUTPUT_FOLDER"/json/"$FILE_NAME"-"$ALPHABET"_"$TYPE"_s"$MIN_SPATIAL_FREQ"-"$MIN_BLOCK_FREQ"_g"$MAX_TIME_WINDOW".json";
-                    LOG_FILE=$SPEC_OUTPUT_FOLDER"/log/"$FILE_NAME"-"$ALPHABET"_"$TYPE"_s"$MIN_SPATIAL_FREQ"-"$MIN_BLOCK_FREQ"_g"$MAX_TIME_WINDOW".log";
-                    IMG_DIR=$SPEC_OUTPUT_FOLDER"/img/"$FILE_NAME"-"$ALPHABET"_"$TYPE"_s"$MIN_SPATIAL_FREQ"-"$MIN_BLOCK_FREQ"_g"$MAX_TIME_WINDOW;
+                    for MAX_STRETCH in "${MAX_STRETCHS[@]}"
+                    do
+                        echo "------------------------------------------------------------";
+                        echo -e "I:"$INLINE"\tO:"$ORIENTATION"\tS:"$SAX"\tSF:"$MIN_SPATIAL_FREQ"\tBF:"$MIN_BLOCK_FREQ"\tMS:"$MAX_STRETCH;
 
-                    mkdir -p $SPEC_OUTPUT_FOLDER"/json/";
-                    mkdir -p $SPEC_OUTPUT_FOLDER"/log/";
-                    mkdir -p $SPEC_OUTPUT_FOLDER"/img/";
+                        SPEC_OUTPUT_FOLDER=$OUTPUT_FOLDER"/inline-"$INLINE"_orientation-"$ORIENTATION"/sax-"$SAX;
 
+                        JSON_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/json";
+                        LOG_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/log";
+                        IMG_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/img/spatial-"$MIN_SPATIAL_FREQ"/block-"$MIN_BLOCK_FREQ"/stretch-"$MAX_STRETCH;
 
-                    # Produce SIM results only if was not already done
-                    if test ! -f $OUTPUT_FILE.gz
-                    then
-                        if test ! -f $OUTPUT_FILE
+                        BASE_FILENAME="I"$INLINE"_O"$ORIENTATION"_S"$SAX"_FS"$MIN_SPATIAL_FREQ"_FB"$MIN_BLOCK_FREQ"_MS"$MAX_STRETCH;
+                        OUTPUT_FILE=$JSON_OUTPUT_FOLDER"/"$BASE_FILENAME".json";
+                        LOG_FILE=$LOG_OUTPUT_FOLDER"/"$BASE_FILENAME".log";
+
+                        mkdir -p $JSON_OUTPUT_FOLDER;
+                        mkdir -p $LOG_OUTPUT_FOLDER;
+                        mkdir -p $IMG_OUTPUT_FOLDER;
+
+                        # Produce SIM results only if was not already done
+                        if test ! -f $OUTPUT_FILE.gz
                         then
-                            echo " * Running SIM $TYPE $ALPHABET $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_TIME_WINDOW [...]";
-                            time sim $INPUT_FILE $OUTPUT_FILE $LOG_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ
-                            #$MAX_TIME_WINDOW;
+                            if test ! -f $OUTPUT_FILE
+                            then
+                                echo " * Running SIM $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]";
+                                time sim $INPUT_FILE $OUTPUT_FILE $LOG_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ
+                                #$MAX_STRETCH;
+                            fi;
                         fi;
-                    fi;
 
-                    # Produce Stacked Bar data and images only if was not already done
-                    if test ! -d $IMG_DIR
-                    then
-                        if test -f $OUTPUT_FILE.gz
+                        # Produce Stacked Bar data and images only if was not already done
+                        if test ! -f $IMG_OUTPUT_FOLDER"/complete"
+                        # if test "1" == "0"
                         then
-                            echo " * Decompressing previous output file [...]";
-                            gzip -d ${OUTPUT_FILE}.gz;
+                            if test -f $OUTPUT_FILE.gz
+                            then
+                                echo " * Decompressing previous output file [...]";
+                                gzip -d ${OUTPUT_FILE}.gz;
+                            fi;
+                            if test -f $OUTPUT_FILE
+                            then
+                                #echo " * Producing Stacked Bar data"
+                                #R --vanilla --slave --file=R/stacked_bar_data.r --args $OUTPUT_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH;
+
+                                echo " * Plotting data $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]";
+                                time R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE $IMG_OUTPUT_FOLDER $INPUT_FOLDER"/inline_"$INLINE"_"$BASE_IMG_NAME;
+                            fi;
                         fi;
+
+                        # Compress outputs
                         if test -f $OUTPUT_FILE
                         then
-                            #echo " * Producing Stacked Bar data"
-                            #R --vanilla --slave --file=R/stacked_bar_data.r --args $OUTPUT_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_TIME_WINDOW;
-
-                            echo " * Plotting data $TYPE $ALPHABET $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_TIME_WINDOW [...]";
-                            time R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE;
+                            echo " * Compressing ouput file [...]";
+                            rm -f $OUTPUT_FILE.gz;
+                            gzip --fast $OUTPUT_FILE;
                         fi;
-                    fi;
-
-                    # Compress outputs
-                    if test -f $OUTPUT_FILE
-                    then
-                        echo " * Compressing ouput file [...]";
-                        rm -f $OUTPUT_FILE.gz;
-                        gzip --fast $OUTPUT_FILE;
-                    fi;
+                    done;
                 done;
             done;
         done;
     done;
 done;
 
+echo "------------------------------------------------------------";
+
 
 
 # # plotting stack bars
 # echo " * Plotting stack bars [...]";
-# for INPUT_INLINE in "${INPUT_INLINES[@]}"
+# for INLINE in "${INLINES[@]}"
 # do
-#     for TYPE in "${TYPES[@]}"
+#     for ORIENTATION in "${ORIENTATIONS[@]}"
 #     do
-#         for ALPHABET in "${ALPHABETS[@]}"
+#         for SAX in "${SAXS[@]}"
 #         do
-#             SPEC_OUTPUT_FOLDER=$OUTPUT_FOLDER"/inline-"$INPUT_INLINE"/"$ALPHABET"_"$TYPE;
+#             SPEC_OUTPUT_FOLDER=$OUTPUT_FOLDER"/inline-"$INLINE"/"$SAX"_"$ORIENTATION;
 
 #             SUP_I=0
 #             while test "${SUP_I}" -lt "${#MIN_SPATIAL_FREQS[@]}"
@@ -128,10 +142,10 @@ done;
 #                 R --vanilla --slave --file=R/stacked_bar_data_plot_supports.r --args $OUTPUT_FILE $SUP_RANGE;
 #             done;
 
-#             for MAX_TIME_WINDOW in "${MAX_TIME_WINDOWS[@]}"
+#             for MAX_STRETCH in "${MAX_STRETCHS[@]}"
 #             do
-#                 OUTPUT_FILE=$SPEC_OUTPUT_FOLDER"/stackedbar/time_window/"$MAX_TIME_WINDOW;
-#                 R --vanilla --slave --file=R/stacked_bar_data_plot_times.r --args $OUTPUT_FILE $MAX_TIME_WINDOW;
+#                 OUTPUT_FILE=$SPEC_OUTPUT_FOLDER"/stackedbar/time_window/"$MAX_STRETCH;
+#                 R --vanilla --slave --file=R/stacked_bar_data_plot_times.r --args $OUTPUT_FILE $MAX_STRETCH;
 #             done;
 #         done;
 #     done;
