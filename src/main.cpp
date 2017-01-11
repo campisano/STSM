@@ -59,7 +59,7 @@ int main(int _argn, char * _argv[])
     unsigned int min_block_frequency;
     std::stringstream(parameters[5]) >> min_block_frequency;
 
-    std::cout << "    running: "
+    std::cout << "    args: "
               << input_data_csv
               << " " << result_json
               << " " << output_log
