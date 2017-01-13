@@ -141,6 +141,32 @@ per_length_plot_image_type = "png";
 per_sequence_plot_image_type = "png";
 background_img_size = "800px";
 
+# configuring html basics
+html_pre_title = c(
+    "<!DOCTYPE html>",
+    "<html>",
+    "  <head>",
+    "    <title>");
+html_post_title_pre_container = c(
+    "    </title>",
+    "    <style type=\"text/css\">",
+    "      .container {margin: 0 auto; padding: 3px;}",
+    "      .content {float: left; margin: 3px;}",
+    "      .content.first {clear: left;}",
+    "      .clearfix:after {",
+    "          content: \".\"; display: block; height: 0;",
+    "          clear: both; visibility: hidden;}",
+    "    </style>",
+    "  </head>",
+    "  <body>",
+    "    <div class=\"container\">",
+    "      <div class=\"clearfix\">");
+html_post_container = c(
+    "      </div>",
+    "    </div>",
+    "  </body>",
+    "</html>");
+
 
 
 # evaluating arguments
@@ -151,10 +177,10 @@ args = commandArgs(TRUE);
 #args = c();
 #args[1] = "data/100_sax-25_original.csv";
 #args[2] = "results/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB100_MS0.json";
-#args[3] = "results/inline-100_orientation-original/sax-25/spatial-100/block-100/stretch-0";
+#args[3] = "results/inline-100_orientation-original/sax-25/img/spatial-100/block-100/stretch-0";
 #args[4] = "data/inline_100_4755x2310.jpg";
+#setwd("/home/shared/develop/projects/CEFET/mestrado/SIM");
 cat("    args:", args, "\n");
-
 csv_database = args[1];
 input_file_json = args[2];
 output_img_dir = args[3];
@@ -197,7 +223,8 @@ system(paste("cp -f", background_img_src, output_img_dir));
 
 per_length_index_file = file(file.path(
     output_img_dir, "index.html"));
-per_length_index_lines = c("<html>", "  <body>");
+per_length_index_lines = c(
+    html_pre_title, base_filename, html_post_title_pre_container);
 
 
 
@@ -258,7 +285,7 @@ for(iteration in 1:length(json_data)) {
 
     filename_by_len = file.path(
         output_img_dir,
-        paste(base_filename, "_", sequence_length, ".",
+        paste(sequence_length, ".",
               per_length_plot_image_type, sep="")
     );
 
@@ -271,14 +298,20 @@ for(iteration in 1:length(json_data)) {
         scale=plot_scale));
     dev.off();
 
-    per_length_index_lines = c(per_length_index_lines, paste(
-        "    <img style=\"",
-        "background:url(", background_img, ");",
-        "background-size:cover;",
-        "width:", background_img_size ,";\"",
-        " src=\"", base_filename, "_", sequence_length, ".",
-        per_length_plot_image_type,
-        "\" alt=\"\" />", sep=""));
+    per_length_index_lines = c(per_length_index_lines,
+        "        <div class=\"content first\">",
+        paste(
+            "          <img style=\"",
+            "background:url(", background_img, ");",
+            "background-size:cover;",
+            "width:", background_img_size ,";\"",
+            " src=\"", sequence_length, ".",
+            per_length_plot_image_type,
+            "\" alt=\"\"/>", sep=""),
+        "        </div>",
+        paste("        <div class=\"content\">",
+              "<a href=\"by_length_and_sequence/", sequence_length, ".html\">",
+              "sequences of length ", sequence_length, "</a></div>", sep=""));
 
     # cleanup
     rm(
@@ -330,13 +363,13 @@ for(iteration in 1:length(json_data)) {
 
     dir.create(
         file.path(
-            output_img_dir, base_filename, sequence_length
+            output_img_dir, "by_length_and_sequence", sequence_length
         ),
         showWarnings=FALSE, recursive=TRUE, mode="2755"
     );
 
     filename_by_seq = file.path(
-        output_img_dir, base_filename, sequence_length,
+        output_img_dir, "by_length_and_sequence", sequence_length,
         paste("%d", ".", per_sequence_plot_image_type, sep="")
     );
 
@@ -371,33 +404,41 @@ for(iteration in 1:length(json_data)) {
         # renaming to have the sequence name
         k = 0;
 
-
-
         per_sequence_index_file = file(file.path(
-            output_img_dir, base_filename,
+            output_img_dir, "by_length_and_sequence",
             paste(sequence_length, ".html", sep="")));
-        per_sequence_index_lines = c("<html>", "  <body>");
+        per_sequence_index_lines = c(
+            html_pre_title, sequence_length, html_post_title_pre_container);
 
         for(j in 1:length(seq_plotd)) {
-            if(length(seq_plotd[[j]][["x_points"]]) > per_sequence_plot_limit) {
+            if(length(seq_plotd[[j]][["x_points"]])
+               > per_sequence_plot_limit) {
                 k = k + 1;
                 file.rename(
                     file.path(
-                        output_img_dir, base_filename, sequence_length,
+                        output_img_dir, "by_length_and_sequence",
+                        sequence_length,
                         paste(k, ".", per_sequence_plot_image_type, sep="")),
                     file.path(
-                        output_img_dir, base_filename, sequence_length,
+                        output_img_dir, "by_length_and_sequence",
+                        sequence_length,
                         paste(names(seq_plotd)[j], ".",
                               per_sequence_plot_image_type, sep="")));
 
-                per_sequence_index_lines = c(per_sequence_index_lines, paste(
-                    "    <img style=\"",
-                    "background:url(../", background_img, ");",
-                    "background-size:cover;",
-                    "width:800px;\"",
-                    " src=\"", sequence_length, "/",
-                    names(seq_plotd)[j], ".", per_sequence_plot_image_type,
-                    "\" alt=\"\" />", sep=""));
+                per_sequence_index_lines = c(
+                    per_sequence_index_lines,
+                    "        <div class=\"content first\">",
+                    paste(
+                        "          <img style=\"",
+                        "background:url(../", background_img, ");",
+                        "background-size:cover;",
+                        "width:800px;\"",
+                        " src=\"", sequence_length, "/",
+                        names(seq_plotd)[j], ".", per_sequence_plot_image_type,
+                        "\" alt=\"\" />", sep=""),
+                    "        </div>",
+                    paste("        <div class=\"content\">",
+                          names(seq_plotd)[j], "</div>", sep=""));
             }
         }
 
@@ -410,7 +451,7 @@ for(iteration in 1:length(json_data)) {
         # removing unuseful directory
         #unlink(     # [CMP] unlink won't work
         system(paste('rmdir', file.path(
-            output_img_dir, base_filename, sequence_length)));
+            output_img_dir, "by_length_and_sequence", sequence_length)));
     }
 
     # cleanup
