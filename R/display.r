@@ -136,7 +136,7 @@ loaded_libs = loadLibs(c("rjson", "TSMining", "ggplot2", "grid", "scales"));
 # configuring variables
 plot_scale = 5;
 per_length_plot_limit = 10000;
-per_sequence_plot_limit = 50;
+per_sequence_plot_limit = 10;
 per_length_plot_image_type = "png";
 per_sequence_plot_image_type = "png";
 background_img_size = "800px";
