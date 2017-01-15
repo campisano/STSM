@@ -30,6 +30,7 @@ void SIM::run(
     m_database.clear();
     m_solid_sequences.clear();
     m_ranged_sequence_positions.clear();
+    m_solid_sequence_blocks.clear();
 
     setMinSpatialFreq(float(_min_spatial_freq_perc) / 100.0);
     setMinBlockFreq(float(_min_block_freq_perc) / 100.0);
@@ -86,8 +87,8 @@ void SIM::run(
         m_log_stream << "* Iteration for sequence of size: "
                      << seq_size << std::endl;
 
-        m_solid_sequences.push_back(ListRangedSequence());
-        ListRangedSequence & solid_sequences_k = m_solid_sequences.back();
+        ListRangedSequence & solid_sequences_k =
+            m_solid_sequences[seq_size] = ListRangedSequence();
 
         ////////////////////////////////////////////////////////////////////////
 
@@ -127,7 +128,8 @@ void SIM::run(
         timer = clock();
 
         // for each candidate
-        for(cand_it = candidates.begin();
+        for(
+            cand_it = candidates.begin();
             cand_it != candidates.end(); ++cand_it)
         {
             // find optimal spatial ranges for the current candidate
@@ -145,7 +147,7 @@ void SIM::run(
                     RangedSequence(
                         cand_it->sequence(),
                         Range(kern_it->start(), kern_it->end()),
-                        kern_it->frequency()));
+                        kern_it->support()));
             }
         }
 
@@ -159,10 +161,9 @@ void SIM::run(
 
         ////////////////////////////////////////////////////////////////////////
 
-        //TODO [CMP] to test
         m_log_stream << " - Clean up solid sequences with small range size...";
         timer = clock();
-        cleanupSolidSequencesWithSmallRangeSize(solid_sequences_k, 5);
+        cleanupSolidSequencesWithSmallRangeSize(2, solid_sequences_k);
         m_log_stream << " ends in "
                      << floor(double(clock() - timer)
                               / CLOCKS_PER_SEC * 1000) / 1000
@@ -207,16 +208,44 @@ void SIM::run(
     while(candidates.size() > 0);
 
     // print solid sequences data and positions
-    // printSS();
-    // printSSP();
+    printSolidSequences();
 
-    // SSB ← 0
+    ////////////////////////////////////////////////////////////////////////
 
-    // for each solid sequence
-    // for(;;)
-    // {
-    //     SSB.append() getSolidSequenceBlocksFromSolidSequence(SS, D, Θ)
-    // }
+    m_log_stream << " - Detecting solid sequence blocks...";
+    timer = clock();
+
+    MapRangedSequencesByLength::const_iterator it_ss_by_len;
+    ListRangedSequence::const_iterator it_ss;
+    ListSequenceBlocks sequence_blocks;
+
+    for(
+        it_ss_by_len = m_solid_sequences.begin();
+        it_ss_by_len != m_solid_sequences.end();
+        ++it_ss_by_len
+        )
+    {
+        for(
+            it_ss = it_ss_by_len->second.begin();
+            it_ss != it_ss_by_len->second.end();
+            ++it_ss
+            )
+        {
+            sequence_blocks.clear();
+            detectSolidSequenceBlocksFromSolidSequence(*it_ss, sequence_blocks);
+            m_solid_sequence_blocks.insert(
+                m_solid_sequence_blocks.end(),
+                sequence_blocks.begin(),
+                sequence_blocks.end());
+        }
+    }
+
+    m_log_stream << " ends in "
+                 << floor(double(clock() - timer)
+                          / CLOCKS_PER_SEC * 1000) / 1000
+                 << " seconds." << std::endl;
+
+    ////////////////////////////////////////////////////////////////////////
 
     m_log_stream << "* Total run time: "
                  << floor(double(clock() - start_timer)
@@ -437,18 +466,10 @@ void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
                 continue;
             }
 
-            // prepare the structure to store the positions
-            if(m_ranged_sequence_positions.find(str_seq_size)
+            if(m_ranged_sequence_positions.find(& (*it_seq))
                == m_ranged_sequence_positions.end())
             {
-                m_ranged_sequence_positions[str_seq_size] =
-                    MapPositionsBySeq();
-            }
-
-            if(m_ranged_sequence_positions[str_seq_size].find(& (*it_seq))
-               == m_ranged_sequence_positions[str_seq_size].end())
-            {
-                m_ranged_sequence_positions[str_seq_size][& (*it_seq)] =
+                m_ranged_sequence_positions[& (*it_seq)] =
                     ListPositions();
             }
 
@@ -513,7 +534,7 @@ void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
                     // then the input data-sequence contain the sequence
                     if(str_it == str_seq_rep.end())
                     {
-                        m_ranged_sequence_positions[str_seq_size][& (*it_seq)]
+                        m_ranged_sequence_positions[& (*it_seq)]
                             .push_back(Position(row, col - str_seq_size + 1));
 
                         // rewind to start_match_col + 1
@@ -534,7 +555,7 @@ void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
 }
 
 void SIM::cleanupSolidSequencesWithSmallRangeSize(
-    ListRangedSequence & _solid_sequences, const Size _min_size) const
+    const Size & _min_size, ListRangedSequence & _solid_sequences) const
 {
     ListRangedSequence::iterator it = _solid_sequences.begin();
 
@@ -558,13 +579,22 @@ void SIM::cleanupSolidSequencesWithSmallRangeSize(
     }
 }
 
-void SIM::printSS()
+void SIM::detectSolidSequenceBlocksFromSolidSequence(
+    const RangedSequence & _solid_sequence,
+    ListSequenceBlocks & _sequence_blocks) const
+{
+    // generate a candidate Sequence Block for each sequence match in the Database
+
+    // for each detected position of this solid sequence
+}
+
+void SIM::printSolidSequences()
 {
     // print solid sequences
     m_log_stream
         << std::endl << "Printing solid sequences:" << std::endl;
 
-    ListListRangedSequence::const_iterator it_ss_by_len;
+    MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
 
     for(
@@ -574,15 +604,15 @@ void SIM::printSS()
         )
     {
         for(
-            it_ss = it_ss_by_len->begin();
-            it_ss != it_ss_by_len->end();
+            it_ss = it_ss_by_len->second.begin();
+            it_ss != it_ss_by_len->second.end();
             ++it_ss
             )
         {
             m_log_stream
                 << '\t' << it_ss->sequence().toStringOfItems()
                 << '\t' << "len: " << it_ss->sequence().size()
-                << '\t' << "freq: " << it_ss->frequency()
+                << '\t' << "sup: " << it_ss->support()
                 << '\t' << "start: " << it_ss->range().start()
                 << '\t' << "end: " << it_ss->range().end()
                 << std::endl;
@@ -611,38 +641,6 @@ void SIM::printSS()
     }
 }
 
-void SIM::printSSP()
-{
-    MapSeqPositionsByLenght::const_iterator it_seq_pos_by_len;
-    MapPositionsBySeq::const_iterator it_pos_by_seq;
-    ListPositions::const_iterator it_pos;
-
-    // for each length
-    for(
-        it_seq_pos_by_len = m_ranged_sequence_positions.begin();
-        it_seq_pos_by_len != m_ranged_sequence_positions.end();
-        ++it_seq_pos_by_len
-        )
-    {
-
-        // for each sequence of that length
-        for(
-            it_pos_by_seq = it_seq_pos_by_len->second.begin();
-            it_pos_by_seq != it_seq_pos_by_len->second.end();
-            ++it_pos_by_seq
-            )
-        {
-            this->m_log_stream
-                << '\t' << it_pos_by_seq->first->sequence().toStringOfItems()
-                << '\t' << "len: " << it_pos_by_seq->first->sequence().size()
-                << '\t' << "freq: " << it_pos_by_seq->first->frequency()
-                << '\t' << "start: " << it_pos_by_seq->first->range().start()
-                << '\t' << "end: " << it_pos_by_seq->first->range().end()
-                << std::endl;
-        }
-    }
-}
-
 void SIM::saveJSON(const std::string & _output_filename) const
 {
     std::ofstream output_file;
@@ -652,44 +650,47 @@ void SIM::saveJSON(const std::string & _output_filename) const
     cxxtools::JsonFormatter formatter(ts);
     formatter.beautify(true);
 
-    MapSeqPositionsByLenght::const_iterator it_seq_pos_by_len;
-    MapPositionsBySeq::const_iterator it_pos_by_seq;
+    MapRangedSequencesByLength::const_iterator it_ss_by_len;
+    ListRangedSequence::const_iterator it_ss;
     ListPositions::const_iterator it_pos;
 
     formatter.beginArray("", "");
 
     // for each length
     for(
-        it_seq_pos_by_len = m_ranged_sequence_positions.begin();
-        it_seq_pos_by_len != m_ranged_sequence_positions.end();
-        ++it_seq_pos_by_len
+        it_ss_by_len = m_solid_sequences.begin();
+        it_ss_by_len != m_solid_sequences.end();
+        ++it_ss_by_len
         )
     {
         formatter.beginObject("", "");
-        formatter.addValueInt("length", "", it_seq_pos_by_len->first);
+        formatter.addValueInt("length", "", it_ss_by_len->first);
         formatter.beginArray("sequences", "");
 
         // for each sequence of that length
         for(
-            it_pos_by_seq = it_seq_pos_by_len->second.begin();
-            it_pos_by_seq != it_seq_pos_by_len->second.end();
-            ++it_pos_by_seq
+            it_ss = it_ss_by_len->second.begin();
+            it_ss != it_ss_by_len->second.end();
+            ++it_ss
             )
         {
+            const ListPositions & positions =
+                m_ranged_sequence_positions.find(& (*it_ss))->second;
+
             // if there are positions
-            if(it_pos_by_seq->second.size() > 0)
+            if(positions.size() > 0)
             {
                 formatter.beginObject("", "");
 
                 formatter.addValueStdString(
-                    "sequence", "", it_pos_by_seq->first->sequence()
+                    "sequence", "", it_ss->sequence()
                     .toStringOfItems());
-                formatter.addValueFloat(
-                    "frequency", "", it_pos_by_seq->first->frequency());
                 formatter.addValueInt(
-                    "start", "", it_pos_by_seq->first->range().start());
+                    "support", "", it_ss->support());
                 formatter.addValueInt(
-                    "end", "", it_pos_by_seq->first->range().end());
+                    "start", "", it_ss->range().start());
+                formatter.addValueInt(
+                    "end", "", it_ss->range().end());
 
                 // the follow strange way to structure the data
                 // is needed by R language
@@ -697,8 +698,8 @@ void SIM::saveJSON(const std::string & _output_filename) const
                     formatter.beginArray("times", "");
 
                     for(
-                        it_pos = it_pos_by_seq->second.begin();
-                        it_pos != it_pos_by_seq->second.end();
+                        it_pos = positions.begin();
+                        it_pos != positions.end();
                         ++it_pos
                         )
                     {
@@ -710,8 +711,8 @@ void SIM::saveJSON(const std::string & _output_filename) const
                     formatter.beginArray("spaces", "");
 
                     for(
-                        it_pos = it_pos_by_seq->second.begin();
-                        it_pos != it_pos_by_seq->second.end();
+                        it_pos = positions.begin();
+                        it_pos != positions.end();
                         ++it_pos
                         )
                     {

@@ -2,7 +2,10 @@
 #define SIM__H__
 
 #include <fstream>
+#include <list>
+#include <map>
 #include <string>
+#include <utility>
 
 #include "Candidate.h"
 #include "Database.h"
@@ -10,9 +13,7 @@
 #include "Item.h"
 #include "Point.h"
 #include "RangedSequence.h"
-#include <list>
-#include <map>
-#include <utility>
+#include "SequenceBlock.h"
 
 class SIM
 {
@@ -51,10 +52,13 @@ protected:
         ListCandidates & _candidates) const;
 
     void cleanupSolidSequencesWithSmallRangeSize(
-        ListRangedSequence & _solid_sequences, const Size _min_size) const;
+        const Size & _min_size, ListRangedSequence & _solid_sequences) const;
 
-    void printSS();
-    void printSSP();
+    void detectSolidSequenceBlocksFromSolidSequence(
+        const RangedSequence & _solid_sequence,
+        ListSequenceBlocks & _sequence_blocks) const;
+
+    void printSolidSequences();
 
 private:
     std::ofstream m_log_stream;
@@ -65,18 +69,17 @@ private:
     Database m_database;
 
 protected:
-    ListListRangedSequence m_solid_sequences;
+    MapRangedSequencesByLength m_solid_sequences;
 
     typedef std::pair < Point, Point > Position;    // sensor, time
     typedef std::list < Position > ListPositions;   // matched positions
     typedef std::map <
         const RangedSequence *, ListPositions
         > MapPositionsBySeq;                        // positions by sequence
-    typedef std::map <
-        const Size, MapPositionsBySeq
-        > MapSeqPositionsByLenght;                  // seq. positions by length
 
-    MapSeqPositionsByLenght m_ranged_sequence_positions;
+    MapPositionsBySeq m_ranged_sequence_positions;
+
+    ListSequenceBlocks m_solid_sequence_blocks;
 };
 
 #endif

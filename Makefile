@@ -1,5 +1,5 @@
 # version of this Makefile
-MAKEFILE_VER=		0.5.1
+MAKEFILE_VER=		0.5.2
 
 
 
@@ -136,13 +136,15 @@ CMD_COMPILE_TEST:	MAIN_TEST
 
 MAIN:				SIM $(OUT_DIR)/main.o
 MAIN_TEST:			SIM $(INC_DIR)/SIMTest.h $(OUT_DIR)/SIMTest.o
-SIM:				DATABASE SERIE RANGEDSEQUENCE KERNEL SEQUENCE CANDIDATE $(INC_DIR)/SIM.h $(OUT_DIR)/SIM.o
+SIM:				DATABASE SERIE SEQUENCEBLOCK RANGEDSEQUENCE KERNEL SEQUENCE CANDIDATE $(INC_DIR)/SIM.h $(OUT_DIR)/SIM.o
 CANDIDATE:			SEQUENCE KERNEL RANGE $(INC_DIR)/Candidate.h $(OUT_DIR)/Candidate.o
 SEQUENCE:			ITEM SIZE $(INC_DIR)/Sequence.h $(OUT_DIR)/Sequence.o
 ITEM:				$(INC_DIR)/Item.h
 KERNEL:				SEGMENT RANGE SUPPORT FREQUENCY $(INC_DIR)/Kernel.h $(OUT_DIR)/Kernel.o
 RANGEDSEQUENCE:		SEQUENCE SIZE RANGE FREQUENCY $(INC_DIR)/RangedSequence.h $(OUT_DIR)/RangedSequence.o
+SEQUENCEBLOCK:      SEQUENCE SIZE INTERVAL RANGE FREQUENCY $(INC_DIR)/SequenceBlock.h $(OUT_DIR)/SequenceBlock.o
 RANGE:				SEGMENT $(INC_DIR)/Range.h $(OUT_DIR)/Range.o
+INTERVAL:			SEGMENT $(INC_DIR)/Interval.h $(OUT_DIR)/Interval.o
 SEGMENT:			POINT SIZE $(INC_DIR)/Segment.h $(OUT_DIR)/Segment.o
 SIZE:				$(INC_DIR)/Size.h
 POINT:				$(INC_DIR)/Point.h
@@ -156,11 +158,11 @@ SERIE:				$(INC_DIR)/Serie.h
 ################################################################################
 #--- redefine the implicit rule to compile
 $(OUT_DIR)/%.o:	$(SRC_DIR)/%.cpp
-	@echo -n ${GREEN}"   + "${WHITE}$(SRC_DIR)/$*.cpp$(NORMAL) -o $(OUT_DIR)/$*.o
+	@echo -n ${GREEN}"   + "${WHITE}$(SRC_DIR)/$*.cpp$(NORMAL) -o $(OUT_DIR)/$*.o "... "
 	$(CC_COMMAND) -c $(SRC_DIR)/$*.cpp -o $(OUT_DIR)/$*.o $(CHECK)
 
 CMD_LINK:
-	@echo -n ${GREEN}"   + "${WHITE} $(OUT_DIR)"/*.o"$(NORMAL) -o $(OUT_DIR)/$(OUT_FILE)
+	@echo -n ${GREEN}"   + "${WHITE} $(OUT_DIR)"/*.o"$(NORMAL) -o $(OUT_DIR)/$(OUT_FILE) "... "
 	$(LD_COMMAND) $(OUT_DIR)/*.o -o $(OUT_DIR)/$(OUT_FILE) $(CHECK)
 
 

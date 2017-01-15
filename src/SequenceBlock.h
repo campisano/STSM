@@ -1,33 +1,34 @@
-#ifndef RANGED_SEQUENCE__H__
-#define RANGED_SEQUENCE__H__
+#ifndef SEQUENCE_BLOCK__H__
+#define SEQUENCE_BLOCK__H__
 
 #include <list>
-#include <map>
 
+#include "Interval.h"
 #include "Range.h"
 #include "Sequence.h"
-#include "Size.h"
 #include "Support.h"
 
-class RangedSequence
+class SequenceBlock
 {
 public:
-    explicit RangedSequence(
+    explicit SequenceBlock(
         const Sequence & _sequence,
         const Range & _range,
+        const Interval & _interval,
         const Support & _support);
 
     const Sequence & sequence() const;
     const Range & range() const;
+    const Interval & interval() const;
     const Support & support() const;
 
 private:
     Sequence m_sequence;
     Range m_range;
+    Interval m_interval;
     Support m_support;
 };
 
-typedef std::list < RangedSequence > ListRangedSequence;
-typedef std::map < Size, ListRangedSequence > MapRangedSequencesByLength;
+typedef std::list < SequenceBlock > ListSequenceBlocks;
 
 #endif

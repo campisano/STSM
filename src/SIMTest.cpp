@@ -463,7 +463,11 @@ void SIMTest::test_SIMRun_any_result()
     // Assert
 
     CXXTOOLS_UNIT_ASSERT(m_solid_sequences.size() > 0);
-    CXXTOOLS_UNIT_ASSERT(m_solid_sequences.back().size() > 0);
+    CXXTOOLS_UNIT_ASSERT(m_solid_sequences[2].size() > 0);
+    CXXTOOLS_UNIT_ASSERT(m_solid_sequences[3].size() > 0);
+    CXXTOOLS_UNIT_ASSERT(m_solid_sequences[4].size() > 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[5].size(), 1);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[6].size(), 0);
 
     // Cleanup
 
@@ -505,18 +509,19 @@ void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences.back().size(), 1);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[4].size(), 1);
 
-    RangedSequence rg = m_solid_sequences.back().back();
+    RangedSequence rg = m_solid_sequences[4].back();
 
     // testing defined min frequency
-    CXXTOOLS_UNIT_ASSERT(rg.frequency() >= (1 - EPSILON));
+    CXXTOOLS_UNIT_ASSERT(
+        float(rg.support()) / rg.range().size() >= (1 - EPSILON));
 
     // testing synthetic known data
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "ABCD");
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 0);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 3);
-    CXXTOOLS_UNIT_ASSERT(std::abs(rg.frequency() - 1.0) < EPSILON);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 4);
 
     // Cleanup
 
@@ -558,18 +563,19 @@ void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences.back().size(), 1);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[4].size(), 1);
 
-    RangedSequence rg = m_solid_sequences.back().back();
+    RangedSequence rg = m_solid_sequences[4].back();
 
     // testing defined min frequency
-    CXXTOOLS_UNIT_ASSERT(rg.frequency() >= (0.75 - EPSILON));
+    CXXTOOLS_UNIT_ASSERT(
+        float(rg.support()) / rg.range().size() >= (0.75 - EPSILON));
 
     // testing synthetic known data
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "EFGH");
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 4);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 7);
-    CXXTOOLS_UNIT_ASSERT(std::abs(rg.frequency() - 0.75) < EPSILON);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 3);
 
     // Cleanup
 
@@ -611,18 +617,19 @@ void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences.back().size(), 1);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[4].size(), 1);
 
-    RangedSequence rg = m_solid_sequences.back().back();
+    RangedSequence rg = m_solid_sequences[4].back();
 
     // testing defined min frequency
-    CXXTOOLS_UNIT_ASSERT(rg.frequency() >= (0.9 - EPSILON));
+    CXXTOOLS_UNIT_ASSERT(
+        float(rg.support()) / rg.range().size() >= (0.9 - EPSILON));
 
     // testing synthetic known data
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "EFGH");
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 6);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 7);
-    CXXTOOLS_UNIT_ASSERT(std::abs(rg.frequency() - 1.0) < EPSILON);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 2);
 
     // Cleanup
 

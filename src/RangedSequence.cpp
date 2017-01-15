@@ -3,10 +3,10 @@
 RangedSequence::RangedSequence(
     const Sequence & _sequence,
     const Range & _range,
-    const Frequency & _frequency):
+    const Support & _support):
     m_sequence(_sequence),
     m_range(_range),
-    m_frequency(_frequency)
+    m_support(_support)
 {
 }
 
@@ -20,7 +20,7 @@ const Range & RangedSequence::range() const
     return m_range;
 }
 
-const Frequency & RangedSequence::frequency() const
+const Support & RangedSequence::support() const
 {
-    return m_frequency;
+    return m_support;
 }
