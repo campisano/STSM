@@ -233,10 +233,10 @@ void SIM::run(
         {
             sequence_blocks.clear();
             detectSolidSequenceBlocksFromSolidSequence(*it_ss, sequence_blocks);
-            m_solid_sequence_blocks.insert(
-                m_solid_sequence_blocks.end(),
-                sequence_blocks.begin(),
-                sequence_blocks.end());
+            // m_solid_sequence_blocks.insert(
+            //     m_solid_sequence_blocks.end(),
+            //     sequence_blocks.begin(),
+            //     sequence_blocks.end());
         }
     }
 
@@ -583,9 +583,24 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     const RangedSequence & _solid_sequence,
     ListSequenceBlocks & _sequence_blocks) const
 {
-    // generate a candidate Sequence Block for each sequence match in the Database
+    // generate a candidate Sequence Block for each sequence match
+    // in the Database
+    ListPositions::const_iterator it_pos;
+    const ListPositions & positions =
+        // m_ranged_sequence_positions.find(& (*it_ss))->second;
+        m_ranged_sequence_positions.find(& _solid_sequence)->second;
 
-    // for each detected position of this solid sequence
+    // for each position
+    for(it_pos = positions.begin(); it_pos != positions.end(); ++it_pos)
+    {
+        _sequence_blocks.push_back(
+            SequenceBlock(
+                _solid_sequence.sequence(),
+                Range(it_pos->second, it_pos->second),
+                Interval(it_pos->first,
+                         it_pos->first + _solid_sequence.sequence().size() - 1),
+                _solid_sequence.sequence().size()));
+    }
 }
 
 void SIM::printSolidSequences()
@@ -603,11 +618,9 @@ void SIM::printSolidSequences()
         ++it_ss_by_len
         )
     {
-        for(
-            it_ss = it_ss_by_len->second.begin();
-            it_ss != it_ss_by_len->second.end();
-            ++it_ss
-            )
+        const ListRangedSequence & sequences = it_ss_by_len->second;
+
+        for(it_ss = sequences.begin(); it_ss != sequences.end(); ++it_ss)
         {
             m_log_stream
                 << '\t' << it_ss->sequence().toStringOfItems()
@@ -616,27 +629,6 @@ void SIM::printSolidSequences()
                 << '\t' << "start: " << it_ss->range().start()
                 << '\t' << "end: " << it_ss->range().end()
                 << std::endl;
-
-            /*
-              m_log_stream << "\t\t" << "position: ";
-
-              for(
-              it_positions_vect = (
-              it_results_map->second.second.begin()
-              );
-              it_positions_vect != (
-              it_results_map->second.second.end()
-              );
-              ++it_positions_vect
-              )
-              {
-              m_log_stream << '('
-              << it_positions_vect->first << ','
-              << it_positions_vect->second << ')';
-              }
-
-              m_log_stream << std::endl;
-            */
         }
     }
 }
@@ -663,16 +655,15 @@ void SIM::saveJSON(const std::string & _output_filename) const
         ++it_ss_by_len
         )
     {
+        const Size & size = it_ss_by_len->first;
+        const ListRangedSequence & sequences = it_ss_by_len->second;
+
         formatter.beginObject("", "");
-        formatter.addValueInt("length", "", it_ss_by_len->first);
+        formatter.addValueInt("length", "", size);
         formatter.beginArray("sequences", "");
 
         // for each sequence of that length
-        for(
-            it_ss = it_ss_by_len->second.begin();
-            it_ss != it_ss_by_len->second.end();
-            ++it_ss
-            )
+        for(it_ss = sequences.begin(); it_ss != sequences.end(); ++it_ss)
         {
             const ListPositions & positions =
                 m_ranged_sequence_positions.find(& (*it_ss))->second;
