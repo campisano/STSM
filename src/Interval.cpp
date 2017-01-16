@@ -6,3 +6,8 @@ Interval::Interval(
     Segment(_start, _end)
 {
 }
+
+Interval::Interval(const Segment & _segment):
+    Segment(_segment)
+{
+}

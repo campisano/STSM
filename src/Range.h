@@ -9,6 +9,8 @@ public:
     explicit Range(
         const Point & _start,
         const Point & _end);
+
+    explicit Range(const Segment & _segment);
 };
 
 #endif

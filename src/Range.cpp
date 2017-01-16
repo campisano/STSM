@@ -6,3 +6,8 @@ Range::Range(
     Segment(_start, _end)
 {
 }
+
+Range::Range(const Segment & _segment):
+    Segment(_segment)
+{
+}

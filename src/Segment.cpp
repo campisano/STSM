@@ -10,6 +10,12 @@ Segment::Segment(
 {
 }
 
+Segment::Segment(const Segment & _segment):
+    m_start(_segment.start()),
+    m_end(_segment.end())
+{
+}
+
 const Point & Segment::start() const
 {
     return m_start;
@@ -40,7 +46,7 @@ Size Segment::size() const
     return m_end - m_start + 1;
 }
 
-bool Segment::intersect(
+bool Segment::intersects(
     const Segment & _segment,
     Segment & _resulting_segment) const
 {
@@ -56,4 +62,12 @@ bool Segment::intersect(
     _resulting_segment.end(min_end);
 
     return true;
+}
+
+void Segment::unify(
+    const Segment & _segment,
+    Segment & _resulting_segment) const
+{
+    _resulting_segment.start(std::min(m_start, _segment.start()));
+    _resulting_segment.end(std::max(m_end, _segment.end()));
 }

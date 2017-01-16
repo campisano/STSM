@@ -11,6 +11,8 @@ public:
         const Point & _start,
         const Point & _end);
 
+    explicit Segment(const Segment & _segment);
+
     const Point & start() const;
     void start(const Point & _pos);
 
@@ -20,7 +22,11 @@ public:
     bool contains(const Point & _point) const;
     Size size() const;
 
-    bool intersect(
+    bool intersects(
+        const Segment & _segment,
+        Segment & _resulting_segment) const;
+
+    void unify(
         const Segment & _segment,
         Segment & _resulting_segment) const;
 
