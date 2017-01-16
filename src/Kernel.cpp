@@ -31,11 +31,11 @@ void Kernel::support(const Support & _support)
 
     if(_support > size)
     {
-        std::stringstream text;
-        text << "Support (" << _support
-             << ") can not be greater then range size ("
-             << size << ").";
-        throw std::runtime_error(text.str());
+        std::stringstream msg;
+        msg << "Support (" << _support
+            << ") can not be greater then range size ("
+            << size << ").";
+        throw std::runtime_error(msg.str());
     }
 
     m_support = _support;
@@ -50,10 +50,10 @@ void Kernel::frequency(const Frequency & _frequency)
 {
     if(_frequency > 1.0)
     {
-        std::stringstream text;
-        text << "Frequenc (" << _frequency
-             << ") can not be greater then 1.0.";
-        throw std::runtime_error(text.str());
+        std::stringstream msg;
+        msg << "Frequenc (" << _frequency
+            << ") can not be greater then 1.0.";
+        throw std::runtime_error(msg.str());
     }
 
     m_frequency = _frequency;
