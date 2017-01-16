@@ -228,11 +228,12 @@ void SIM::run(
         const Size & size = it_ss_by_len->first;
         const ListRangedSequence & sequences = it_ss_by_len->second;
 
+        ListSequenceBlocks & sequence_blocks =
+            m_solid_sequence_blocks[size] = ListSequenceBlocks();
+
         // for each sequence of that length
         for(it_ss = sequences.begin(); it_ss != sequences.end(); ++it_ss)
         {
-            ListSequenceBlocks & sequence_blocks =
-                m_solid_sequence_blocks[size] = ListSequenceBlocks();
             detectSolidSequenceBlocksFromSolidSequence(
                 *it_ss, m_min_block_freq, sequence_blocks);
         }
