@@ -79,7 +79,7 @@ protected:
 
     MapPositionsBySeq m_ranged_sequence_positions;
 
-    ListSequenceBlocks m_solid_sequence_blocks;
+    MapSequenceBlocksByLength m_solid_sequence_blocks;
 };
 
 #endif

@@ -217,26 +217,23 @@ void SIM::run(
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
-    ListSequenceBlocks sequence_blocks;
 
+    // for each length
     for(
         it_ss_by_len = m_solid_sequences.begin();
         it_ss_by_len != m_solid_sequences.end();
         ++it_ss_by_len
         )
     {
-        for(
-            it_ss = it_ss_by_len->second.begin();
-            it_ss != it_ss_by_len->second.end();
-            ++it_ss
-            )
+        const Size & size = it_ss_by_len->first;
+        const ListRangedSequence & sequences = it_ss_by_len->second;
+
+        // for each sequence of that length
+        for(it_ss = sequences.begin(); it_ss != sequences.end(); ++it_ss)
         {
-            sequence_blocks.clear();
+            ListSequenceBlocks & sequence_blocks =
+                m_solid_sequence_blocks[size] = ListSequenceBlocks();
             detectSolidSequenceBlocksFromSolidSequence(*it_ss, sequence_blocks);
-            // m_solid_sequence_blocks.insert(
-            //     m_solid_sequence_blocks.end(),
-            //     sequence_blocks.begin(),
-            //     sequence_blocks.end());
         }
     }
 
@@ -376,20 +373,20 @@ void SIM::setMinSpatialFreq(const Frequency & _min_spatial_freq)
 {
     if(_min_spatial_freq <=0 )
     {
-        std::stringstream text;
-        text << "Minumum Spatial Frequency parameter value ("
-             << _min_spatial_freq << ")"
-             << " cannot be less then or equal to 0.";
-        throw std::runtime_error(text.str());
+        std::stringstream msg;
+        msg << "Minumum Spatial Frequency parameter value ("
+            << _min_spatial_freq << ")"
+            << " cannot be less then or equal to 0.";
+        throw std::runtime_error(msg.str());
     }
 
     if(_min_spatial_freq > 1.0)
     {
-        std::stringstream text;
-        text << "Minumum Spatial Frequency parameter value ("
-             << _min_spatial_freq << ")"
-             << " cannot be greater then 1.0.";
-        throw std::runtime_error(text.str());
+        std::stringstream msg;
+        msg << "Minumum Spatial Frequency parameter value ("
+            << _min_spatial_freq << ")"
+            << " cannot be greater then 1.0.";
+        throw std::runtime_error(msg.str());
     }
 
     m_min_spatial_freq = _min_spatial_freq;
@@ -399,20 +396,20 @@ void SIM::setMinBlockFreq(const Frequency & _min_block_freq)
 {
     if(_min_block_freq <= 0)
     {
-        std::stringstream text;
-        text << "Minumum Block Frequency parameter value ("
-             << _min_block_freq << ")"
-             << " cannot be less then or equal to 0.";
-        throw std::runtime_error(text.str());
+        std::stringstream msg;
+        msg << "Minumum Block Frequency parameter value ("
+            << _min_block_freq << ")"
+            << " cannot be less then or equal to 0.";
+        throw std::runtime_error(msg.str());
     }
 
     if(_min_block_freq > 1.0)
     {
-        std::stringstream text;
-        text << "Minumum Block Frequency parameter value ("
-             << _min_block_freq << ")"
-             << " cannot be greater then 1.0.";
-        throw std::runtime_error(text.str());
+        std::stringstream msg;
+        msg << "Minumum Block Frequency parameter value ("
+            << _min_block_freq << ")"
+            << " cannot be greater then 1.0.";
+        throw std::runtime_error(msg.str());
     }
 
     m_min_block_freq = _min_block_freq;
@@ -424,7 +421,6 @@ void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
     unsigned int str_seq_size;
     std::string str_seq_rep;
     std::stringstream ss_tmp;
-    std::string str_seq_name;
     std::string::iterator str_it;
     unsigned int tot_rows = m_database.size();
     unsigned int tot_cols;
@@ -449,22 +445,24 @@ void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
             ++it_seq
             )
         {
-            str_seq_size = it_seq->sequence().size();
-
-            if(str_seq_size < 2)
-            {
-                // std::stringstream msg;
-                // msg << "Current support count function doesn't handle"
-                //     << " sequence with less then two items." << std::endl
-                //     << "Current sequence: '" << str_seq_rep << "'.";
-                // throw std::runtime_error(msg.str());
-                continue;
-            }
-
             if(! it_seq->range().contains(row))
             {
                 continue;
             }
+
+            // obtaining a string representation of the sequence
+            // to easy loop inside it's elements
+            str_seq_rep = it_seq->sequence().toStringOfItems();
+            str_seq_size = it_seq->sequence().size();
+
+            // if(str_seq_size < 2)
+            // {
+            //     std::stringstream msg;
+            //     msg << "Current support count function doesn't handle"
+            //         << " sequence with less then two items." << std::endl
+            //         << "Current sequence: '" << str_seq_rep << "'.";
+            //     throw std::runtime_error(msg.str());
+            // }
 
             if(m_ranged_sequence_positions.find(& (*it_seq))
                == m_ranged_sequence_positions.end())
@@ -472,15 +470,6 @@ void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
                 m_ranged_sequence_positions[& (*it_seq)] =
                     ListPositions();
             }
-
-            // obtaining a string representation of the sequence
-            // to easy loop inside it's elements
-            str_seq_rep = it_seq->sequence().toStringOfItems();
-            ss_tmp.clear();
-            ss_tmp << it_seq->sequence().toString()
-                   << '_' << it_seq->range().start()
-                   << '-' << it_seq->range().end();
-            str_seq_name = ss_tmp.str();
 
             str_it = str_seq_rep.begin();
 
@@ -563,13 +552,6 @@ void SIM::cleanupSolidSequencesWithSmallRangeSize(
     {
         if(it->range().size() < _min_size)
         {
-            // m_ranged_sequence_positions[
-            //     it->sequence().size()
-            //     ].erase(
-            //         m_ranged_sequence_positions[
-            //             it->sequence().size()].find(&(*it))
-            //         );
-
             it = _solid_sequences.erase(it);
         }
         else
@@ -644,6 +626,7 @@ void SIM::saveJSON(const std::string & _output_filename) const
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
+    MapPositionsBySeq::const_iterator it_list_pos;
     ListPositions::const_iterator it_pos;
 
     formatter.beginArray("", "");
@@ -665,56 +648,75 @@ void SIM::saveJSON(const std::string & _output_filename) const
         // for each sequence of that length
         for(it_ss = sequences.begin(); it_ss != sequences.end(); ++it_ss)
         {
-            const ListPositions & positions =
-                m_ranged_sequence_positions.find(& (*it_ss))->second;
+            formatter.beginObject("", "");
 
-            // if there are positions
-            if(positions.size() > 0)
+            formatter.addValueStdString(
+                "sequence", "", it_ss->sequence()
+                .toStringOfItems());
+            formatter.addValueInt(
+                "support", "", it_ss->support());
+            formatter.addValueInt(
+                "start", "", it_ss->range().start());
+            formatter.addValueInt(
+                "end", "", it_ss->range().end());
+
+            it_list_pos = m_ranged_sequence_positions.find(& (*it_ss));
+
+            if(it_list_pos == m_ranged_sequence_positions.end())
             {
-                formatter.beginObject("", "");
+                std::stringstream msg;
+                msg << "Can not find positions for ranged sequence '"
+                    << it_ss->sequence().toStringOfItems() << '('
+                    << it_ss->range().start() << ','
+                    << it_ss->range().end() << ")'.";
+                throw std::runtime_error(msg.str());
+            }
 
-                formatter.addValueStdString(
-                    "sequence", "", it_ss->sequence()
-                    .toStringOfItems());
-                formatter.addValueInt(
-                    "support", "", it_ss->support());
-                formatter.addValueInt(
-                    "start", "", it_ss->range().start());
-                formatter.addValueInt(
-                    "end", "", it_ss->range().end());
+            const ListPositions & positions = it_list_pos->second;
 
-                // the follow strange way to structure the data
-                // is needed by R language
+            if(positions.size() == 0)
+            {
+                std::stringstream msg;
+                msg << "We find 0 positions for ranged sequence '"
+                    << it_ss->sequence().toStringOfItems() << '('
+                    << it_ss->range().start() << ','
+                    << it_ss->range().end() << ")': this is a bug.";
+                throw std::runtime_error(msg.str());
+            }
+
+            // the follow strange way to structure the data
+            // is needed by R language
+            {
+                formatter.beginArray("times", "");
+
+                for(
+                    it_pos = positions.begin();
+                    it_pos != positions.end();
+                    ++it_pos
+                    )
                 {
-                    formatter.beginArray("times", "");
-
-                    for(
-                        it_pos = positions.begin();
-                        it_pos != positions.end();
-                        ++it_pos
-                        )
-                    {
-                        formatter.addValueInt(
-                            "", "", it_pos->first);
-                    }
-
-                    formatter.finishArray();
-                    formatter.beginArray("spaces", "");
-
-                    for(
-                        it_pos = positions.begin();
-                        it_pos != positions.end();
-                        ++it_pos
-                        )
-                    {
-                        formatter.addValueInt(
-                            "", "", it_pos->second);
-                    }
+                    formatter.addValueInt(
+                        "", "", it_pos->first);
                 }
 
                 formatter.finishArray();
-                formatter.finishObject();
+
+                formatter.beginArray("spaces", "");
+
+                for(
+                    it_pos = positions.begin();
+                    it_pos != positions.end();
+                    ++it_pos
+                    )
+                {
+                    formatter.addValueInt(
+                        "", "", it_pos->second);
+                }
+
+                formatter.finishArray();
             }
+
+            formatter.finishObject();
         }
 
         formatter.finishArray();

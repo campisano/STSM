@@ -25,6 +25,7 @@ private:
     void test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins();
     void test_SIMRun_any_result();
     void test_SIMRun_f100_gets_only_single_ABCD100_solidSequence();
+    void test_SIMRun_f100_testing_ABCD100_positions();
     void test_SIMRun_f75_does_get_EFGH75_solidSequence();
     void test_SIMRun_f90_does_not_get_EFGH75_solidSequence();
 };

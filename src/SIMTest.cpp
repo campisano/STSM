@@ -8,6 +8,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "Candidate.h"
 #include "Kernel.h"
@@ -83,6 +84,11 @@ SIMTest::SIMTest() : cxxtools::unit::TestSuite("SIMTest")
         "test_SIMRun_f100_gets_only_single_ABCD100_solidSequence",
         *this,
         &SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence);
+
+    registerMethod(
+        "test_SIMRun_f100_testing_ABCD100_positions",
+        *this,
+        &SIMTest::test_SIMRun_f100_testing_ABCD100_positions);
 
     registerMethod(
         "test_SIMRun_f75_does_get_EFGH75_solidSequence",
@@ -522,6 +528,63 @@ void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 0);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 3);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 4);
+
+    // Cleanup
+
+    CXXTOOLS_UNIT_ASSERT_EQUALS(
+        system(("rm -f " + test_folder + "/*").c_str()), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(
+        system(("rmdir " + test_folder + "/").c_str()), 0);
+}
+
+void SIMTest::test_SIMRun_f100_testing_ABCD100_positions()
+{
+    // Arrange
+
+    std::string test_folder = "test_output";
+    std::string input_file = test_folder + "/" + "input.csv";
+    std::string log_file = test_folder + "/" + "output.log";
+    CXXTOOLS_UNIT_ASSERT_EQUALS(system(("mkdir -p " + test_folder).c_str()), 0);
+
+    std::ofstream ofs(input_file.c_str());
+    ofs
+        << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
+        << "X16,X17,X18,X19,X20,X21,X22,X23,X24,X25" << std::endl
+        << "a,a,A,B,C,D,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a" << std::endl
+        << "b,b,b,A,B,C,D,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b" << std::endl
+        << "c,c,c,c,c,A,B,C,D,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c,c" << std::endl
+        << "d,A,B,C,D,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d" << std::endl
+        << "e,e,e,e,e,e,e,e,e,e,e,e,e,e,e,e,e,e,e,e,e,e,e,e,e" << std::endl
+        << "f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f,f" << std::endl
+        << "g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,g" << std::endl
+        << "h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h" << std::endl
+        << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
+        << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
+    ofs.close();
+
+    // Act
+
+    SIM::run(input_file, log_file, 100, 100);
+
+    // Assert
+
+    // testing number and last expected results
+    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[4].size(), 1);
+
+    RangedSequence & rg = m_solid_sequences[4].back();
+    ListPositions & positions = m_ranged_sequence_positions[&rg];
+    std::vector < Position > v_pos (positions.begin(), positions.end());
+
+    // testing expected positions
+    CXXTOOLS_UNIT_ASSERT_EQUALS(positions.size(), 4);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[0].first, 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[0].second, 2);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[1].first, 1);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[1].second, 3);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[2].first, 2);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[2].second, 5);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[3].first, 3);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[3].second, 1);
 
     // Cleanup
 

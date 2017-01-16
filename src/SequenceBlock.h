@@ -2,10 +2,12 @@
 #define SEQUENCE_BLOCK__H__
 
 #include <list>
+#include <map>
 
 #include "Interval.h"
 #include "Range.h"
 #include "Sequence.h"
+#include "Size.h"
 #include "Support.h"
 
 class SequenceBlock
@@ -30,5 +32,6 @@ private:
 };
 
 typedef std::list < SequenceBlock > ListSequenceBlocks;
+typedef std::map < Size, ListSequenceBlocks > MapSequenceBlocksByLength;
 
 #endif
