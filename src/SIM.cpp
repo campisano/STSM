@@ -233,7 +233,8 @@ void SIM::run(
         {
             ListSequenceBlocks & sequence_blocks =
                 m_solid_sequence_blocks[size] = ListSequenceBlocks();
-            detectSolidSequenceBlocksFromSolidSequence(*it_ss, sequence_blocks);
+            detectSolidSequenceBlocksFromSolidSequence(
+                *it_ss, m_min_block_freq, sequence_blocks);
         }
     }
 
@@ -341,7 +342,7 @@ void SIM::generateCandidates(
             )
         {
             //TODO [CMP] to test
-            if(x_it->range().intersect(y_it->range(), rg_intersect) &&
+            if(x_it->range().intersects(y_it->range(), rg_intersect) &&
                rg_intersect.size() > 1
                 )
             {
@@ -563,6 +564,7 @@ void SIM::cleanupSolidSequencesWithSmallRangeSize(
 
 void SIM::detectSolidSequenceBlocksFromSolidSequence(
     const RangedSequence & _solid_sequence,
+    const Frequency & _min_block_freq,
     ListSequenceBlocks & _sequence_blocks) const
 {
     // generate a candidate Sequence Block for each sequence match
@@ -583,6 +585,83 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                          it_pos->first + _solid_sequence.sequence().size() - 1),
                 _solid_sequence.sequence().size()));
     }
+
+    ListSequenceBlocks to_add;
+    ListSequenceBlocks::iterator it_sb_add;
+    std::list<ListSequenceBlocks::iterator> to_del;
+    std::list<ListSequenceBlocks::iterator>::iterator it_sb_del;
+
+    ListSequenceBlocks::iterator it_sb_q, it_sb_r;
+    Support new_support;
+    Range new_range(0, 0);
+    Interval new_interval(0,0);
+
+    bool mergeable;
+
+    // merge the Sequence Block candidates to obtain Solid Sequence Blocks
+    // that respect Θ
+    do
+    {
+        mergeable = false;
+
+        // for each solid sequence q
+        for(
+            it_sb_q = _sequence_blocks.begin();
+            it_sb_q != _sequence_blocks.end();
+            ++it_sb_q)
+        {
+            // for each other solid sequence r... where r > q
+            for(
+                it_sb_r = it_sb_q, ++it_sb_r; // equal to it_sb_r = it_sb_q + 1
+                it_sb_r != _sequence_blocks.end();
+                ++it_sb_r)
+            {
+                it_sb_q->range().unify(it_sb_r->range(), new_range);
+                it_sb_q->interval().unify(it_sb_r->interval(), new_interval);
+                new_support = it_sb_q->support() + it_sb_r->support();
+
+                // if num of sequence items in the block divided by
+                // the num of all items in the block is >= Θ
+                if((new_support / (new_range.size() * new_interval.size()))
+                   >= _min_block_freq)
+                {
+                    to_add.push_back(SequenceBlock(
+                                         _solid_sequence.sequence(),
+                                         new_range,
+                                         new_interval,
+                                         new_support));
+
+                    to_del.push_back(it_sb_q);
+                    to_del.push_back(it_sb_r);
+
+                    // stop the merging and update the sequence block list
+                    mergeable = true;
+                    break;
+                }
+            }
+
+            // stop the merging and update the sequence block list
+            if(mergeable)
+            {
+                break;
+            }
+        }
+
+        for(it_sb_del = to_del.begin(); it_sb_del != to_del.end(); ++it_sb_del)
+        {
+            _sequence_blocks.erase(*it_sb_del);
+        }
+
+        to_del.clear();
+
+        for(it_sb_add = to_add.begin(); it_sb_add != to_add.end(); ++it_sb_add)
+        {
+            _sequence_blocks.push_back(*it_sb_add);
+        }
+
+        to_add.clear();
+    }
+    while(mergeable);
 }
 
 void SIM::printSolidSequences()
@@ -700,7 +779,6 @@ void SIM::saveJSON(const std::string & _output_filename) const
                 }
 
                 formatter.finishArray();
-
                 formatter.beginArray("spaces", "");
 
                 for(

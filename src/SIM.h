@@ -56,6 +56,7 @@ protected:
 
     void detectSolidSequenceBlocksFromSolidSequence(
         const RangedSequence & _solid_sequence,
+        const Frequency & _min_block_freq,
         ListSequenceBlocks & _sequence_blocks) const;
 
     void printSolidSequences();
