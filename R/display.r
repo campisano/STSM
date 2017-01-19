@@ -1,28 +1,20 @@
+# include utility file
+source(file="R/utils.r")
+
+
+
 # configure detailed error outputs
-options(warn=2, keep.source=TRUE);
+utils.verbose();
 
 
 
-# defining functions
-loadLibs = function(lib_names) {
-    repos = "http://cran.r-project.org";
-    lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
-    dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="2755");
-    .libPaths(c(lib, .libPaths()));
-
-    for(lib_name in lib_names) {
-        if (!require(lib_name, character.only=TRUE, quietly=TRUE)) {
-            install.packages(lib_name, repos=repos, lib=lib,
-                             quiet=FALSE, dependencies = TRUE);
-            library(lib_name, character.only=TRUE, quietly=TRUE);
-        }
-    }
-
-    return(lib_names);
-}
+# loading dependences
+loaded_libs = utils.loadLibs(
+    c("rjson", "TSMining", "ggplot2", "grid", "scales"));
 
 
 
+# defining a specific plot function
 plotRangedSequences = function(
     x_points, y_points, xmin_ranges=c(), xmax_ranges=c(),
     lim_x_min=NA, lim_x_max=NA, lim_y_min=-NA, lim_y_max=NA,
@@ -99,31 +91,6 @@ plotRangedSequences = function(
 
 
 
-dev_open_file = function(file_name, width, height, scale=1) {
-    ext = strsplit(file_name, "\\.")[[1]][[-1]];
-
-    dpi = 72
-    pointsize = 12 * dpi / 72  # do not change
-
-    if(ext == "svg") {
-        svg(file_name, bg="transparent", antialias="none",
-            pointsize=pointsize,
-            width=(width / dpi) * scale, height=(height / dpi) * scale);
-    }
-    if(ext == "png") {
-        png(file_name, bg="transparent", antialias="none",
-            pointsize=pointsize, units="in", res=dpi,
-            width=(width / dpi) * scale, height=(height / dpi) * scale);
-    }
-}
-
-
-
-# loading dependences
-loaded_libs = loadLibs(c("rjson", "TSMining", "ggplot2", "grid", "scales"));
-
-
-
 # test plot funtion
 # plotRangedSequences(
 #     rnorm(100,2), rnorm(100,2),
@@ -181,13 +148,15 @@ args = commandArgs(TRUE);
 #args[4] = "data/inline_100_4755x2310.jpg";
 #setwd("/home/shared/develop/projects/CEFET/mestrado/SIM");
 cat("    args:", args, "\n");
+
 csv_database = args[1];
 input_file_json = args[2];
 output_img_dir = args[3];
 background_img_src = args[4];
+
 background_img = basename(background_img_src);
-base_json_path_dir = dirname(input_file_json);
-base_filename = sub(file.path(base_json_path_dir, ""), "", input_file_json);
+base_filename = sub(
+    file.path(dirname(input_file_json), ""), "", input_file_json);
 base_filename = sub("[.][^.]*$", "", base_filename, perl=TRUE);
 
 
@@ -219,8 +188,10 @@ if(is.null(json_data) || length(json_data) < 1) {
 
 
 
+# copy background image for html
 system(paste("cp -f", background_img_src, output_img_dir));
 
+# preparing html initial file
 per_length_index_file = file(file.path(
     output_img_dir, "index.html"));
 per_length_index_lines = c(
@@ -228,6 +199,7 @@ per_length_index_lines = c(
 
 
 
+# start the iterations, for each json data grouped by length
 for(iteration in 1:length(json_data)) {
     cat("Iteration:", iteration);
 
@@ -245,19 +217,19 @@ for(iteration in 1:length(json_data)) {
         next;
     }
 
-    cat("\tsequence length:", sequence_data_by_length$length,
-        "\tnum of ranged sequences:",
-        length(sequence_data_by_length$sequences), "...");
+    sequence_length = sequence_data_by_length$length;
+    sequence_data = sequence_data_by_length$sequences;
 
-    if(length(sequence_data_by_length$sequences) > per_length_plot_limit) {
-        cat("\n", length(sequence_data_by_length$sequences),
+    cat("\tsequence length:", sequence_length,
+        "\tnum of ranged sequences:",
+        length(sequence_data), "...");
+
+    if(length(sequence_data) > per_length_plot_limit) {
+        cat("\n", length(sequence_data),
             "are too much sequences to plot just only a single image",
             "with all of them\n");
         next;
     }
-
-    sequence_length = sequence_data_by_length$length;
-    sequence_data = sequence_data_by_length$sequences;
 
     ###
     # plotting all the sequences of same length
@@ -289,7 +261,7 @@ for(iteration in 1:length(json_data)) {
               per_length_plot_image_type, sep="")
     );
 
-    dev_open_file(
+    utils.dev_open_file(
         filename_by_len, database_x_size, database_y_size, plot_scale);
     plot(plotRangedSequences(
         x_points, y_points, xmin_ranges, xmax_ranges,
@@ -377,7 +349,7 @@ for(iteration in 1:length(json_data)) {
 
     # producing the entire bunch of plots at one time,
     # a img with all the points and ranges for each sequence
-    dev_open_file(
+    utils.dev_open_file(
         filename_by_seq, database_x_size, database_y_size, plot_scale);
 
     for(j in 1:length(seq_plotd)) {
@@ -464,10 +436,12 @@ for(iteration in 1:length(json_data)) {
     cat(" [DONE]\n")
 }
 
-
+# completing html file
 writeLines(c(per_length_index_lines, c("  </body>", "</html>")),
            per_length_index_file);
 close(per_length_index_file);
+
 rm(per_length_index_lines, per_length_index_file);
 
+# write a file that grants that this plot is complete for this product
 result = file.create(file.path(output_img_dir, "complete"));
