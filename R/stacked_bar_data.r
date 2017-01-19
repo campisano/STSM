@@ -1,119 +1,261 @@
+# include utility file
+source(file="R/utils.r")
+
+
+
 # configure detailed error outputs
-options(warn=2, keep.source=TRUE);
+utils.verbose();
+
+
 
 # loading dependences
-repos = "http://cran.r-project.org";
-lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
-dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="0777");
-.libPaths(c(lib, .libPaths()));
-
-dep = "rjson"; if (!require(dep, character.only=TRUE, quietly=TRUE)) {
-    install.packages(dep, repos=repos, lib=lib);
-    library(dep, character.only=TRUE);
-}; rm(dep);
-rm(lib);
+loaded_libs = utils.loadLibs(c("rjson"));
 
 
 
 # evaluating arguments
 args = commandArgs(TRUE);
-#print("Arguments:");
-#print(args);
+#cat("Arguments:\n");
+#cat(args, "\n");
 # examples:
 #args = c();
-#args[1] = "results/25_original/json/401_sax-25_original_s80-100_g10.json";
-#$MIN_SUPPORT
-#$MAX_SUPPORT
-#$MAX_TIME_WINDOW
+#args[1] = "results/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB100_MS0.json";
+#args[2] = "results/inline-100_orientation-original/sax-25/stats";
+#args[3] = 100;
+#args[4] = 100;
+#args[5] = 0;
+#cat("    args:", args, "\n");
 
-
-# configuring variables
 input_file_json = args[1];
-base_json_path_dir = dirname(input_file_json);
-base_path_dir = dirname(base_json_path_dir);
-base_filename = sub(file.path(base_json_path_dir, ""), "", input_file_json);
-base_filename =  sub("[.][^.]*$", "", base_filename, perl=TRUE);
+output_stats_dir = args[2];
+min_spatial_freq = args[3];
+min_block_freq = args[4];
+max_stretch = args[5];
 
-support_range = paste(args[2], args[3], sep="-");
-time_window = args[4];
+base_filename = sub(
+    file.path(dirname(input_file_json), ""), "", input_file_json);
+base_filename = sub("[.][^.]*$", "", base_filename, perl=TRUE);
 
-dir.create(
-    file.path(base_path_dir, "stackedbar", "time_window", time_window),
-    showWarnings=FALSE, recursive=TRUE, mode="0777");
-
-dir.create(
-    file.path(base_path_dir, "stackedbar", "support_range", support_range),
-    showWarnings=FALSE, recursive=TRUE, mode="0777");
-
-output_file_time = file.path(
-    base_path_dir, "stackedbar", "time_window", time_window,
-    paste(base_filename, ".csv", sep=""))
-
-output_file_support = file.path(
-    base_path_dir, "stackedbar", "support_range", support_range,
-    paste(base_filename, ".csv", sep=""))
-
-if(file.exists(output_file_time))
-{
-    file.remove(output_file_time)
-}
-
-if(file.exists(output_file_support))
-{
-    file.remove(output_file_support)
-}
 
 
 # loading json data
-#print(paste("Loading json data", input_file_json, "..."));
+#cat("Loading json data", input_file_json, "...");
 json_data = fromJSON(file=input_file_json, method="C");
-#print("Load complete")
+#cat(" [DONE]\n")
+
+if(is.null(json_data) || length(json_data) < 1) {
+    cat("Empty json data\n");
+    quit(status=1);
+}
 
 
 
-if(is.null(json_data) || length(json_data) < 1)
-{
-    print("Empty json data");
-} else {
-    for(len in 1:length(json_data))
-    {
-        sequence_data_by_length = json_data[[len]];
+# # preparing output folders
+# output_stats_dir = file.path(output_stats_dir, base_filename);
+# dir.create(output_stats_dir, showWarnings=FALSE, recursive=TRUE, mode="0755");
+#
+# output_file_spatial = file.path(output_stats_dir, "min_spatial_freq.csv");
+# output_file_block = file.path(output_stats_dir, "min_block_freq.csv");
+# output_file_stretch = file.path(output_stats_dir, "max_stretch.csv");
+#
+#
+#
+# # cleanup file and create header
+# empty_data = matrix(ncol=3, nrow=0);
+# colnames(empty_data) = c(
+#     "min_spatial_freq", "num_sequences", "seq_length");
+# write.table(empty_data, file=output_file_spatial, append=FALSE,
+#             row.names=FALSE, col.names=TRUE, quote=FALSE, sep=",");
+#
+# # cleanup file and create header
+# empty_data = matrix(ncol=3, nrow=0);
+# colnames(empty_data) = c(
+#     "min_block_freq", "num_sequences", "seq_length");
+# write.table(empty_data, file=output_file_block, append=FALSE,
+#             row.names=FALSE, col.names=TRUE, quote=FALSE, sep=",");
+#
+# # cleanup file and create header
+# empty_data = matrix(ncol=3, nrow=0);
+# colnames(empty_data) = c(
+#     "max_stretch", "num_sequences", "seq_length");
+# write.table(empty_data, file=output_file_stretch, append=FALSE,
+#             row.names=FALSE, col.names=TRUE, quote=FALSE, sep=",");
+#
+#
+#
+# # [CMP] not optimized code, but pretty fast
+#
+# # start the iterations, for each json data grouped by length
+# for(iteration in 1:length(json_data)) {
+#     #cat("Iteration:", iteration);
+#
+#     sequence_data_by_length = json_data[[iteration]];
+#
+#     if(
+#         is.null(sequence_data_by_length$length) ||
+#             is.null(sequence_data_by_length$sequences) ||
+#             length(sequence_data_by_length$sequences) < 1
+#     ) {
+#         cat("Empty sequence data iteration", iteration,
+#             "of length", sequence_data_by_length$length, "\n");
+#         #cat("Data:\n");
+#         #dput(sequence_data_by_length);
+#         next;
+#     }
+#
+#     sequence_length = sequence_data_by_length$length;
+#     sequence_data = sequence_data_by_length$sequences;
+#
+#     # APPEND Stacked Bar plot DATA per min_spatial_freq:
+#     # min_spatial_freq, num_sequences, seq_length
+#     write.table(
+#         as.matrix(t(c(
+#             min_spatial_freq, length(sequence_data), sequence_length))),
+#         file=output_file_spatial,
+#         append=TRUE,
+#         row.names=FALSE,
+#         col.names=FALSE,
+#         quote=FALSE,
+#         sep=",");
+#
+#     # APPEND Stacked Bar plot DATA per min_block_freq:
+#     # min_block_freq, num_sequences, seq_length
+#     write.table(
+#         as.matrix(t(c(
+#             min_block_freq, length(sequence_data), sequence_length))),
+#         file=output_file_block,
+#         append=TRUE,
+#         row.names=FALSE,
+#         col.names=FALSE,
+#         quote=FALSE,
+#         sep=",");
+#
+#     # APPEND Stacked Bar plot DATA per max_stretch:
+#     # max_stretch, num_sequences, seq_length
+#     write.table(
+#         as.matrix(t(c(
+#             max_stretch, length(sequence_data), sequence_length))),
+#         file=output_file_stretch,
+#         append=TRUE,
+#         row.names=FALSE,
+#         col.names=FALSE,
+#         quote=FALSE,
+#         sep=",");
+# }
 
-        if(
-            is.null(sequence_data_by_length$length) ||
+
+
+# retrieving number of ranges and positions group by sequence
+
+# organize the data by sequence
+seq_data = new.env(hash=TRUE, parent=emptyenv());
+
+# start the iterations, for each json data grouped by length
+for(iteration in 1:length(json_data)) {
+    #cat("Iteration:", iteration);
+
+    sequence_data_by_length = json_data[[iteration]];
+
+    if(
+        is.null(sequence_data_by_length$length) ||
             is.null(sequence_data_by_length$sequences) ||
             length(sequence_data_by_length$sequences) < 1
-        )
-        {
-            print(paste("Empty sequence data of len", len));
-            next;
+    ) {
+        cat("Empty sequence data iteration", iteration,
+            "of length", sequence_data_by_length$length, "\n");
+        #cat("Data:\n");
+        #dput(sequence_data_by_length);
+        next;
+    }
+
+    sequence_length = sequence_data_by_length$length;
+    sequence_data = sequence_data_by_length$sequences;
+
+    for(j in 1:length(sequence_data)) {
+        sequence_data_item = sequence_data[[j]];
+        sequence = sequence_data_item$sequence;
+
+        #if(is.null(seq_data[[sequence]])) {
+        if(! exists(sequence, seq_data)) {
+            #seq_data[[sequence]] = list();
+            seq_data[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
+            seq_data[[sequence]][["num_ranges"]] = 0;
+            seq_data[[sequence]][["num_pos"]] = 0;
         }
 
-        sequence_length = sequence_data_by_length$length;
-        sequence_data = sequence_data_by_length$sequences;          # c++ pair
+        seq_data[[sequence]][["num_ranges"]] =
+            seq_data[[sequence]][["num_ranges"]] + 1;
 
-        # Stacked Bar plot per time_window:
-        # support_range, num_sequences, seq_length
-        write.table(
-            as.matrix(t(c(
-                support_range, length(sequence_data), sequence_length))),
-            file=output_file_time,
-            append=TRUE,
-            row.names=FALSE,
-            col.names=FALSE,
-            quote=FALSE,
-            sep=",")
-
-        # Stacked Bar plot per support_range:
-        # time_window, num_sequences, seq_length
-        write.table(
-            as.matrix(t(c(
-                time_window, length(sequence_data), sequence_length))),
-            file=output_file_support,
-            append=TRUE,
-            row.names=FALSE,
-            col.names=FALSE,
-            quote=FALSE,
-            sep=",")
+        seq_data[[sequence]][["num_pos"]] =
+            seq_data[[sequence]][["num_pos"]] +
+            length(sequence_data_item$times);
     }
 }
+
+# transform in a matrix
+seq_matrix = new.env(hash=TRUE, parent=emptyenv());
+seq_matrix[["sequences"]] = c();
+seq_matrix[["num_ranges"]] = c();
+seq_matrix[["num_pos"]] = c();
+
+for (key in ls(seq_data)) {
+    seq_matrix[["sequences"]] = c(seq_matrix[["sequences"]], key);
+    seq_matrix[["num_ranges"]] = c(
+        seq_matrix[["num_ranges"]], seq_data[[key]][['num_ranges']]);
+    seq_matrix[["num_pos"]] = c(
+        seq_matrix[["num_pos"]], seq_data[[key]][['num_pos']]);
+}
+
+seq_data_frame = data.frame(
+    seq_matrix[["sequences"]],
+    seq_matrix[["num_ranges"]],
+    seq_matrix[["num_pos"]]);
+colnames(seq_data_frame) = c("sequences", "num_ranges", "num_pos");
+
+
+# write data to a csv
+write.table(
+    seq_data_frame,
+    file=file.path(output_stats_dir, paste(base_filename, ".csv", sep="")),
+    append=FALSE,
+    row.names=FALSE,
+    col.names=TRUE,
+    quote=FALSE,
+    sep=",");
+
+#
+# # draw a stacked bar plot
+# utils.dev_open_file(
+#     file.path(output_stats_dir, paste(base_filename, ".png", sep="")),
+#     640, 480);
+#
+# bins = as.character(sort(unique(seq_data_frame$sequences)));
+# legend = as.character(sort(unique(seq_data_frame$num_ranges)));
+#
+# ggplot() +
+#     theme_bw() +
+#     geom_bar(
+#         data = seq_data_frame,
+#         aes(
+#             x=factor(sequences), fill=num_pos
+#         ),
+#         stat="identity"
+#     ) +
+# #     geom_text(
+# #         data = input_data_cumsum,
+# #         aes(
+# #             x = sequences, y = label_ypos, label = num_pos
+# #         ),
+# #     ) +
+#     scale_x_discrete(breaks=bins, limits=bins) +
+#     scale_y_log10(labels=trans_format('log10',math_format(10^.x))) +
+#     scale_fill_discrete(
+#         breaks = legend, limits = legend, guide = guide_legend()) +
+#     labs(
+#         title = paste("Support Range:", 0),
+#         y = "Num of Sequences",
+#         x = "Time Window",
+#         fill = "Sequence Size"
+#     );
+#
+# dev.off();
