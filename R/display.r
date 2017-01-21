@@ -4,12 +4,12 @@ source(file="R/utils.r")
 
 
 # configure detailed error outputs
-utils.verbose();
+utils$verbose();
 
 
 
 # loading dependences
-loaded_libs = utils.loadLibs(
+loaded_libs = utils$loadLibs(
     c("rjson", "TSMining", "ggplot2", "grid", "scales"));
 
 
@@ -96,25 +96,27 @@ plotRangedSequences = function(
 #     rnorm(100,2), rnorm(100,2),
 #     c(1, 2, 3), c(1.5, 2.5, 4),
 #     lim_x_min=0, lim_x_max=10, lim_y_min=0, lim_y_max=10,
-#     clean=FALSE, scale=plot_scale);
+#     clean=FALSE, scale=config$plot_scale);
 
 
 
 # configuring variables
-plot_scale = 5;
-per_length_plot_limit = 10000;
-per_sequence_plot_limit = 10;
-per_length_plot_image_type = "png";
-per_sequence_plot_image_type = "png";
-background_img_size = "800px";
+config = new.env(hash=TRUE, parent=emptyenv());
+config$plot_scale = 5;
+config$max_length_plot_limit = 50000;
+config$min_positions_plot_limit = 50;
+config$per_length_plot_image_type = "png";
+config$per_sequence_plot_image_type = "png";
+config$background_img_size = "800px";
 
 # configuring html basics
-html_pre_title = c(
+html = new.env(hash=TRUE, parent=emptyenv());
+html$html_pre_title = c(
     "<!DOCTYPE html>",
     "<html>",
     "  <head>",
     "    <title>");
-html_post_title_pre_container = c(
+html$post_title_pre_container = c(
     "    </title>",
     "    <style type=\"text/css\">",
     "      .container {margin: 0 auto; padding: 3px;}",
@@ -128,7 +130,7 @@ html_post_title_pre_container = c(
     "  <body>",
     "    <div class=\"container\">",
     "      <div class=\"clearfix\">");
-html_post_container = c(
+html$post_container = c(
     "      </div>",
     "    </div>",
     "  </body>",
@@ -149,36 +151,36 @@ args = commandArgs(TRUE);
 #setwd("/home/shared/develop/projects/CEFET/mestrado/SIM");
 cat("    args:", args, "\n");
 
-csv_database = args[1];
-input_file_json = args[2];
-output_img_dir = args[3];
-background_img_src = args[4];
+vars = new.env(hash=TRUE, parent=emptyenv());
+vars$csv_database = args[1];
+vars$input_file_json = args[2];
+vars$output_img_dir = args[3];
+vars$background_img_src = args[4];
 
-background_img = basename(background_img_src);
-base_filename = sub(
-    file.path(dirname(input_file_json), ""), "", input_file_json);
-base_filename = sub("[.][^.]*$", "", base_filename, perl=TRUE);
+vars$background_img = basename(vars$background_img_src);
+vars$base_filename = sub(
+    file.path(dirname(vars$input_file_json), ""), "", vars$input_file_json);
+vars$base_filename = sub("[.][^.]*$", "", vars$base_filename, perl=TRUE);
 
 
 
-# load original database
-database = read.table(
-    file=csv_database, header=TRUE, fill=TRUE, as.is=TRUE,
+# load original database to know it size
+vars$database = read.table(
+    file=vars$csv_database, header=TRUE, fill=TRUE, as.is=TRUE,
     stringsAsFactors=FALSE, sep=",", quote=""
 );
-lim_database_x_min = 0;
-lim_database_x_max = nrow(database);
-database_x_size = lim_database_x_max - lim_database_x_min;
-lim_database_y_min = 0;
-lim_database_y_max = ncol(database);
-database_y_size = lim_database_y_max - lim_database_y_min;
-rm(database);
+vars$lim_database_x_min = 0;
+vars$lim_database_x_max = nrow(vars$database);
+vars$database_x_size = vars$lim_database_x_max - vars$lim_database_x_min;
+vars$lim_database_y_min = 0;
+vars$lim_database_y_max = ncol(vars$database);
+vars$database_y_size = vars$lim_database_y_max - vars$lim_database_y_min;
 
 
 
 # loading json data
-cat("Loading json data", input_file_json, "...");
-json_data = fromJSON(file=input_file_json, method="C");
+cat("Loading json data", vars$input_file_json, "...");
+json_data = fromJSON(file=vars$input_file_json, method="C");
 cat(" [DONE]\n")
 
 if(is.null(json_data) || length(json_data) < 1) {
@@ -189,13 +191,13 @@ if(is.null(json_data) || length(json_data) < 1) {
 
 
 # copy background image for html
-system(paste("cp -f", background_img_src, output_img_dir));
+system(paste("cp -f", vars$background_img_src, vars$output_img_dir));
 
 # preparing html initial file
 per_length_index_file = file(file.path(
-    output_img_dir, "index.html"));
+    vars$output_img_dir, "index.html"));
 per_length_index_lines = c(
-    html_pre_title, base_filename, html_post_title_pre_container);
+    html$pre_title, vars$base_filename, html$post_title_pre_container);
 
 
 
@@ -224,7 +226,7 @@ for(iteration in 1:length(json_data)) {
         "\tnum of ranged sequences:",
         length(sequence_data), "...");
 
-    if(length(sequence_data) > per_length_plot_limit) {
+    if(length(sequence_data) > config$max_length_plot_limit) {
         cat("\n", length(sequence_data),
             "are too much sequences to plot just only a single image",
             "with all of them\n");
@@ -256,40 +258,34 @@ for(iteration in 1:length(json_data)) {
     }
 
     filename_by_len = file.path(
-        output_img_dir,
+        vars$output_img_dir,
         paste(sequence_length, ".",
-              per_length_plot_image_type, sep="")
+              config$per_length_plot_image_type, sep="")
     );
 
-    utils.dev_open_file(
-        filename_by_len, database_x_size, database_y_size, plot_scale);
+    utils$dev_open_file(
+        filename_by_len, vars$database_x_size, vars$database_y_size, config$plot_scale);
     plot(plotRangedSequences(
         x_points, y_points, xmin_ranges, xmax_ranges,
-        lim_x_min=lim_database_x_min, lim_x_max=lim_database_x_max,
-        lim_y_min=lim_database_y_min, lim_y_max=lim_database_y_max,
-        scale=plot_scale));
+        lim_x_min=vars$lim_database_x_min, lim_x_max=vars$lim_database_x_max,
+        lim_y_min=vars$lim_database_y_min, lim_y_max=vars$lim_database_y_max,
+        scale=config$plot_scale));
     dev.off();
 
     per_length_index_lines = c(per_length_index_lines,
         "        <div class=\"content first\">",
         paste(
             "          <img style=\"",
-            "background:url(", background_img, ");",
+            "background:url(", vars$background_img, ");",
             "background-size:cover;",
-            "width:", background_img_size ,";\"",
+            "width:", config$background_img_size ,";\"",
             " src=\"", sequence_length, ".",
-            per_length_plot_image_type,
+            config$per_length_plot_image_type,
             "\" alt=\"\"/>", sep=""),
         "        </div>",
         paste("        <div class=\"content\">",
               "<a href=\"by_length_and_sequence/", sequence_length, ".html\">",
               "sequences of length ", sequence_length, "</a></div>", sep=""));
-
-    # cleanup
-    rm(
-        filename_by_len, spaces, times, sequence, sequence_data_item,
-        j, y_points, x_points, xmax_ranges, xmin_ranges
-    );
 
     ####
     # plot an image with all ranges for each sequence
@@ -299,21 +295,20 @@ for(iteration in 1:length(json_data)) {
 
     cat(" per-sequence data ...");
 
-    seq_plotd = list();
+    seq_plotd = new.env(hash=TRUE, parent=emptyenv());
 
     for(j in 1:length(sequence_data)) {
         sequence_data_item = sequence_data[[j]];
         sequence = sequence_data_item$sequence;
 
-        if(is.null(seq_plotd[[sequence]])) {
-            seq_plotd[[sequence]] = list()
+        if(! exists(sequence, seq_plotd)) {
+            seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
             seq_plotd[[sequence]][["xmin_ranges"]] = c();
             seq_plotd[[sequence]][["xmax_ranges"]] = c();
             seq_plotd[[sequence]][["x_points"]] = c();
             seq_plotd[[sequence]][["y_points"]] = c();
         }
 
-        #frequency = sequence_data_item$frequency;
         start = sequence_data_item$start;
         end = sequence_data_item$end;
         times = sequence_data_item$times;
@@ -335,113 +330,103 @@ for(iteration in 1:length(json_data)) {
 
     dir.create(
         file.path(
-            output_img_dir, "by_length_and_sequence", sequence_length
+            vars$output_img_dir, "by_length_and_sequence", sequence_length
         ),
         showWarnings=FALSE, recursive=TRUE, mode="2755"
     );
 
     filename_by_seq = file.path(
-        output_img_dir, "by_length_and_sequence", sequence_length,
-        paste("%d", ".", per_sequence_plot_image_type, sep="")
+        vars$output_img_dir, "by_length_and_sequence", sequence_length,
+        paste("%d", ".", config$per_sequence_plot_image_type, sep="")
     );
 
     something_plotted = FALSE;
 
     # producing the entire bunch of plots at one time,
     # a img with all the points and ranges for each sequence
-    utils.dev_open_file(
-        filename_by_seq, database_x_size, database_y_size, plot_scale);
+    utils$dev_open_file(
+        filename_by_seq, vars$database_x_size, vars$database_y_size, config$plot_scale);
 
-    for(j in 1:length(seq_plotd)) {
-        if(length(seq_plotd[[j]][["x_points"]]) > per_sequence_plot_limit) {
+    for(key in ls(seq_plotd)) {
+        if(length(seq_plotd[[key]][["x_points"]])
+           > config$min_positions_plot_limit) {
             plot(plotRangedSequences(
-                seq_plotd[[j]][["x_points"]],
-                seq_plotd[[j]][["y_points"]],
-                seq_plotd[[j]][["xmin_ranges"]],
-                seq_plotd[[j]][["xmax_ranges"]],
-                lim_x_min=lim_database_x_min,
-                lim_x_max=lim_database_x_max,
-                lim_y_min=lim_database_y_min,
-                lim_y_max=lim_database_y_max,
-                scale=plot_scale));
+                seq_plotd[[key]][["x_points"]],
+                seq_plotd[[key]][["y_points"]],
+                seq_plotd[[key]][["xmin_ranges"]],
+                seq_plotd[[key]][["xmax_ranges"]],
+                lim_x_min=vars$lim_database_x_min,
+                lim_x_max=vars$lim_database_x_max,
+                lim_y_min=vars$lim_database_y_min,
+                lim_y_max=vars$lim_database_y_max,
+                scale=config$plot_scale));
             something_plotted = TRUE;
         }
     }
 
     dev.off();
 
-    rm(j);
-
     if(something_plotted) {
         # renaming to have the sequence name
         k = 0;
 
         per_sequence_index_file = file(file.path(
-            output_img_dir, "by_length_and_sequence",
+            vars$output_img_dir, "by_length_and_sequence",
             paste(sequence_length, ".html", sep="")));
         per_sequence_index_lines = c(
-            html_pre_title, sequence_length, html_post_title_pre_container);
+            html$pre_title, sequence_length, html$post_title_pre_container);
 
-        for(j in 1:length(seq_plotd)) {
-            if(length(seq_plotd[[j]][["x_points"]])
-               > per_sequence_plot_limit) {
+        for(key in ls(seq_plotd)) {
+            if(length(seq_plotd[[key]][["x_points"]])
+               > config$min_positions_plot_limit) {
                 k = k + 1;
                 file.rename(
                     file.path(
-                        output_img_dir, "by_length_and_sequence",
+                        vars$output_img_dir, "by_length_and_sequence",
                         sequence_length,
-                        paste(k, ".", per_sequence_plot_image_type, sep="")),
+                        paste(k, ".",
+                              config$per_sequence_plot_image_type, sep="")),
                     file.path(
-                        output_img_dir, "by_length_and_sequence",
+                        vars$output_img_dir, "by_length_and_sequence",
                         sequence_length,
-                        paste(names(seq_plotd)[j], ".",
-                              per_sequence_plot_image_type, sep="")));
+                        paste(key, ".",
+                              config$per_sequence_plot_image_type, sep="")));
 
                 per_sequence_index_lines = c(
                     per_sequence_index_lines,
                     "        <div class=\"content first\">",
                     paste(
                         "          <img style=\"",
-                        "background:url(../", background_img, ");",
+                        "background:url(../", vars$background_img, ");",
                         "background-size:cover;",
                         "width:800px;\"",
                         " src=\"", sequence_length, "/",
-                        names(seq_plotd)[j], ".", per_sequence_plot_image_type,
+                        key, ".", config$per_sequence_plot_image_type,
                         "\" alt=\"\" />", sep=""),
                     "        </div>",
                     paste("        <div class=\"content\">",
-                          names(seq_plotd)[j], "</div>", sep=""));
+                          key, "</div>", sep=""));
             }
         }
 
-        writeLines(c(per_sequence_index_lines, c("  </body>", "</html>")),
+        writeLines(c(per_sequence_index_lines, html$post_container),
                    per_sequence_index_file);
         close(per_sequence_index_file);
-        rm(per_sequence_index_lines, per_sequence_index_file, k);
 
     } else {
         # removing unuseful directory
         #unlink(     # [CMP] unlink won't work
         system(paste('rmdir', file.path(
-            output_img_dir, "by_length_and_sequence", sequence_length)));
+            vars$output_img_dir, "by_length_and_sequence", sequence_length)));
     }
-
-    # cleanup
-    rm(
-        filename_by_seq, sequence, spaces, times, end, start,
-        sequence_data_item, seq_plotd,
-        sequence_data, sequence_length, sequence_data_by_length, iteration
-    );
 
     cat(" [DONE]\n")
 }
 
 # completing html file
-writeLines(c(per_length_index_lines, c("  </body>", "</html>")),
+writeLines(c(per_length_index_lines, html$post_container),
            per_length_index_file);
 close(per_length_index_file);
 
-rm(per_length_index_lines, per_length_index_file);
-
 # write a file that grants that this plot is complete for this product
-result = file.create(file.path(output_img_dir, "complete"));
+result = file.create(file.path(vars$output_img_dir, "complete"));

@@ -1,11 +1,15 @@
-utils.verbose = function() {
+utils = new.env(hash=TRUE, parent=emptyenv());
+
+
+
+utils$verbose = function() {
     options(warn=2, keep.source=TRUE);
 }
 
 
 
 # defining functions
-utils.loadLibs = function(lib_names) {
+utils$loadLibs = function(lib_names) {
     repos = "http://cran.r-project.org";
     lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
     dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="2755");
@@ -24,7 +28,7 @@ utils.loadLibs = function(lib_names) {
 
 
 
-utils.dev_open_file = function(file_name, width=480, height=480, scale=1) {
+utils$dev_open_file = function(file_name, width=480, height=480, scale=1) {
     ext = strsplit(file_name, "\\.")[[1]][[-1]];
 
     dpi = 72
