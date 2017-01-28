@@ -16,27 +16,30 @@ OUTPUT_FOLDER="results";
 
 BASE_IMG_NAME="4755x2310.jpg";
 
-INLINES=("100" "401")                               # default
-#INLINES=("100")
+
+
+#INLINES=("100" "401")
+INLINES=("100")
 
 #ORIENTATIONS=("original" "transposed");
-ORIENTATIONS=("original");                          # default
+ORIENTATIONS=("original");
 
 #SAXS=("25" "20" "15" "10" "5");
-#SAXS=("25" "20" "10");                              # default
+#SAXS=("25" "20" "10");
 SAXS=("25");
 
-#MIN_SPATIAL_FREQS=("100" "90" "75" "50" "25");
-MIN_SPATIAL_FREQS=("100" "90" "75" "50");           # default
-#MIN_SPATIAL_FREQS=("100");
+#MIN_SPATIAL_FREQS=("100" "75" "50" "25");
+#MIN_SPATIAL_FREQS=("100" "50" "25");
+MIN_SPATIAL_FREQS=("100");
 
-#MIN_BLOCK_FREQS=("100" "90" "75" "50" "25");
-#MIN_BLOCK_FREQS=("100" "90" "75");                  # default
+#MIN_BLOCK_FREQS=("100" "75" "50" "25");
+#MIN_BLOCK_FREQS=("100" "90" "75");
 MIN_BLOCK_FREQS=("100");
 
 #MAX_STRETCHS=("0" "2" "5" "10");
-#MAX_STRETCHS=("0" "2" "5");                         # default
+#MAX_STRETCHS=("0" "2" "5");
 MAX_STRETCHS=("0");
+
 
 
 for INLINE in "${INLINES[@]}"
@@ -62,6 +65,7 @@ do
 
                         JSON_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/json";
                         LOG_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/log";
+                        STATS_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/stats";
                         IMG_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/img/spatial-"$MIN_SPATIAL_FREQ"/block-"$MIN_BLOCK_FREQ"/stretch-"$MAX_STRETCH;
 
                         BASE_FILENAME="I"$INLINE"_O"$ORIENTATION"_S"$SAX"_FS"$MIN_SPATIAL_FREQ"_FB"$MIN_BLOCK_FREQ"_MS"$MAX_STRETCH;
@@ -70,6 +74,7 @@ do
 
                         mkdir -p $JSON_OUTPUT_FOLDER;
                         mkdir -p $LOG_OUTPUT_FOLDER;
+                        mkdir -p $STATS_OUTPUT_FOLDER;
                         mkdir -p $IMG_OUTPUT_FOLDER;
 
                         # Produce SIM results only if was not already done
@@ -86,6 +91,7 @@ do
                         # Produce Stacked Bar data and images only if was not already done
                         if test ! -f $IMG_OUTPUT_FOLDER"/complete"
                         # if test "1" == "0"
+                        # if test "1" == "1"
                         then
                             if test -f $OUTPUT_FILE.gz
                             then
@@ -94,8 +100,8 @@ do
                             fi;
                             if test -f $OUTPUT_FILE
                             then
-                                #echo " * Producing Stacked Bar data"
-                                #R --vanilla --slave --file=R/stacked_bar_data.r --args $OUTPUT_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH;
+                                echo " * Producing Stacked Bar data"
+                                R --vanilla --slave --file=R/stacked_bar_data.r --args $OUTPUT_FILE $STATS_OUTPUT_FOLDER $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH;
 
                                 echo " * Plotting data $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]";
                                 time R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE $IMG_OUTPUT_FOLDER $INPUT_FOLDER"/inline_"$INLINE"_"$BASE_IMG_NAME;
