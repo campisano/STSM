@@ -57,9 +57,10 @@ protected:
     void detectSolidSequenceBlocksFromSolidSequence(
         const RangedSequence & _solid_sequence,
         const Frequency & _min_block_freq,
-        ListSequenceBlocks & _sequence_blocks) const;
+        ListSequenceBlocks & _sequence_blocks);
 
     void printSolidSequences();
+    void printSolidBlocks();
 
 private:
     std::ofstream m_log_stream;

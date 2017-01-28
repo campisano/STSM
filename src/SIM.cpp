@@ -9,6 +9,12 @@
 #include <stdexcept>
 #include <string>
 
+// TODO [CMP] put in a good place
+namespace {
+    unsigned int MIN_RANGE_SIZE = 2;
+    unsigned int MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2;
+}
+
 SIM::SIM()
 {
     //TODO [CMP] the loadDatabase() can be performed there
@@ -163,7 +169,8 @@ void SIM::run(
 
         m_log_stream << " - Clean up solid sequences with small range size...";
         timer = clock();
-        cleanupSolidSequencesWithSmallRangeSize(2, solid_sequences_k);
+        cleanupSolidSequencesWithSmallRangeSize(
+            MIN_RANGE_SIZE, solid_sequences_k);
         m_log_stream << " ends in "
                      << floor(double(clock() - timer)
                               / CLOCKS_PER_SEC * 1000) / 1000
@@ -181,18 +188,9 @@ void SIM::run(
 
         ////////////////////////////////////////////////////////////////////////
 
-        m_log_stream << " - Clean up candidates...";
-        timer = clock();
-        candidates.clear();
-        m_log_stream << " ends in "
-                     << floor(double(clock() - timer)
-                              / CLOCKS_PER_SEC * 1000) / 1000
-                     << " seconds." << std::endl;
-
-        ////////////////////////////////////////////////////////////////////////
-
         m_log_stream << " - Generating candidates...";
         timer = clock();
+        candidates.clear();
         generateCandidates(solid_sequences_k, candidates);
         m_log_stream << " ends in "
                      << floor(double(clock() - timer)
@@ -207,10 +205,12 @@ void SIM::run(
     }
     while(candidates.size() > 0);
 
+    ////////////////////////////////////////////////////////////////////////////
+
     // print solid sequences data and positions
     printSolidSequences();
 
-    ////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
 
     m_log_stream << " - Detecting solid sequence blocks...";
     timer = clock();
@@ -244,7 +244,12 @@ void SIM::run(
                           / CLOCKS_PER_SEC * 1000) / 1000
                  << " seconds." << std::endl;
 
-    ////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+
+    // print solid blocks data and positions
+    printSolidBlocks();
+
+    ////////////////////////////////////////////////////////////////////////////
 
     m_log_stream << "* Total run time: "
                  << floor(double(clock() - start_timer)
@@ -566,19 +571,29 @@ void SIM::cleanupSolidSequencesWithSmallRangeSize(
 void SIM::detectSolidSequenceBlocksFromSolidSequence(
     const RangedSequence & _solid_sequence,
     const Frequency & _min_block_freq,
-    ListSequenceBlocks & _sequence_blocks) const
+    ListSequenceBlocks & _sequence_blocks)
 {
+    if(_solid_sequence.sequence().size() < MIN_SOLID_BLOCK_SEQUENCE_SIZE)
+    {
+        return;
+    }
+
+    m_log_stream << _solid_sequence.sequence().toStringOfItems() << '('
+                 << _solid_sequence.range().start() << ','
+                 << _solid_sequence.range().end() << ')';
+
     // generate a candidate Sequence Block for each sequence match
     // in the Database
+    ListSequenceBlocks sb_candidates;
+
     ListPositions::const_iterator it_pos;
     const ListPositions & positions =
-        // m_ranged_sequence_positions.find(& (*it_ss))->second;
         m_ranged_sequence_positions.find(& _solid_sequence)->second;
 
     // for each position
     for(it_pos = positions.begin(); it_pos != positions.end(); ++it_pos)
     {
-        _sequence_blocks.push_back(
+        sb_candidates.push_back(
             SequenceBlock(
                 _solid_sequence.sequence(),
                 Range(it_pos->second, it_pos->second),
@@ -586,6 +601,8 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                          it_pos->first + _solid_sequence.sequence().size() - 1),
                 _solid_sequence.sequence().size()));
     }
+
+    m_log_stream << "\tsize: " << sb_candidates.size() << "\t merges: ";
 
     ListSequenceBlocks to_add;
     ListSequenceBlocks::iterator it_sb_add;
@@ -597,24 +614,27 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     Range new_range(0, 0);
     Interval new_interval(0,0);
 
-    bool mergeable;
+    bool did_any_merge;
+    bool current_q_used_to_merge;
 
     // merge the Sequence Block candidates to obtain Solid Sequence Blocks
     // that respect Θ
     do
     {
-        mergeable = false;
+        did_any_merge = false;
 
         // for each solid sequence q
         for(
-            it_sb_q = _sequence_blocks.begin();
-            it_sb_q != _sequence_blocks.end();
+            it_sb_q = sb_candidates.begin();
+            it_sb_q != sb_candidates.end();
             ++it_sb_q)
         {
+            current_q_used_to_merge = false;
+
             // for each other solid sequence r... where r > q
             for(
                 it_sb_r = it_sb_q, ++it_sb_r; // equal to it_sb_r = it_sb_q + 1
-                it_sb_r != _sequence_blocks.end();
+                it_sb_r != sb_candidates.end();
                 ++it_sb_r)
             {
                 it_sb_q->range().unify(it_sb_r->range(), new_range);
@@ -626,6 +646,8 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                 if((new_support / (new_range.size() * new_interval.size()))
                    >= _min_block_freq)
                 {
+                    m_log_stream << '.';
+
                     to_add.push_back(SequenceBlock(
                                          _solid_sequence.sequence(),
                                          new_range,
@@ -635,41 +657,52 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                     to_del.push_back(it_sb_q);
                     to_del.push_back(it_sb_r);
 
-                    // stop the merging and update the sequence block list
-                    mergeable = true;
+                    did_any_merge = true;
+                    current_q_used_to_merge = true;
+
+                    // the current q was used in a merge,
+                    // so it can not be used with any r
                     break;
                 }
             }
 
-            // stop the merging and update the sequence block list
-            if(mergeable)
+            if(current_q_used_to_merge)
             {
-                break;
+                // current q was used, we need to continue from q=r+1
+                // because current q and r can not be used anymore
+                it_sb_q = it_sb_r;
+                continue;  // q will be incremented in the for statement
             }
         }
 
         for(it_sb_del = to_del.begin(); it_sb_del != to_del.end(); ++it_sb_del)
         {
-            _sequence_blocks.erase(*it_sb_del);
+            sb_candidates.erase(*it_sb_del);
         }
 
         to_del.clear();
 
         for(it_sb_add = to_add.begin(); it_sb_add != to_add.end(); ++it_sb_add)
         {
-            _sequence_blocks.push_back(*it_sb_add);
+            sb_candidates.push_back(*it_sb_add);
         }
 
         to_add.clear();
     }
-    while(mergeable);
+    while(did_any_merge);
+
+    m_log_stream << std::endl;
+
+    _sequence_blocks.insert(
+        _sequence_blocks.end(),
+        sb_candidates.begin(),
+        sb_candidates.end()
+        );
 }
 
 void SIM::printSolidSequences()
 {
-    // print solid sequences
-    m_log_stream
-        << std::endl << "Printing solid sequences:" << std::endl;
+    m_log_stream << std::endl << "Printing solid sequences:" << std::endl;
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
@@ -688,8 +721,38 @@ void SIM::printSolidSequences()
                 << '\t' << it_ss->sequence().toStringOfItems()
                 << '\t' << "len: " << it_ss->sequence().size()
                 << '\t' << "sup: " << it_ss->support()
-                << '\t' << "start: " << it_ss->range().start()
-                << '\t' << "end: " << it_ss->range().end()
+                << '\t' << "r.s: " << it_ss->range().start()
+                << '\t' << "r.e: " << it_ss->range().end()
+                << std::endl;
+        }
+    }
+}
+
+void SIM::printSolidBlocks()
+{
+    m_log_stream << std::endl << "Printing solid blocks:" << std::endl;
+
+    MapSequenceBlocksByLength::const_iterator it_sb_by_len;
+    ListSequenceBlocks::const_iterator it_sb;
+
+    for(
+        it_sb_by_len = m_solid_sequence_blocks.begin();
+        it_sb_by_len != m_solid_sequence_blocks.end();
+        ++it_sb_by_len
+        )
+    {
+        const ListSequenceBlocks & blocks = it_sb_by_len->second;
+
+        for(it_sb = blocks.begin(); it_sb != blocks.end(); ++it_sb)
+        {
+            m_log_stream
+                << '\t' << it_sb->sequence().toStringOfItems()
+                << '\t' << "len: " << it_sb->sequence().size()
+                << '\t' << "sup: " << it_sb->support()
+                << '\t' << "r.s: " << it_sb->range().start()
+                << '\t' << "r.e: " << it_sb->range().end()
+                << '\t' << "i.s: " << it_sb->interval().start()
+                << '\t' << "i.e: " << it_sb->interval().end()
                 << std::endl;
         }
     }

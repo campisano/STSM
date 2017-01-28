@@ -88,11 +88,12 @@ void Candidate::mergeKernels(
     Point min_start, max_end;
     Frequency new_frequency;
 
-    bool mergeable;
+    bool did_any_merge;
+    bool current_q_used_to_merge;
 
     do
     {
-        mergeable = false;
+        did_any_merge = false;
 
         // for each kernel range q in the candidate kernels
         for(
@@ -100,6 +101,8 @@ void Candidate::mergeKernels(
             kq_it != m_kernels.end();
             ++kq_it)
         {
+            current_q_used_to_merge = false;
+
             // for each other ranges... where r > q
             for(
                 kr_it = kq_it, ++kr_it; // equivalent to kr_it = kq_it + 1
@@ -115,11 +118,9 @@ void Candidate::mergeKernels(
                 if(new_frequency >= _min_spatial_freq)
                 {
                     // generate a new merged kernel
-                    to_add.push_back(
-                        Kernel(
-                            min_start,
-                            max_end));
+                    to_add.push_back(Kernel(min_start, max_end));
                     Kernel & kernel = to_add.back();
+
                     kernel.support(new_support);
                     kernel.frequency(new_frequency);
 
@@ -127,16 +128,21 @@ void Candidate::mergeKernels(
                     to_del.push_back(kq_it);
                     to_del.push_back(kr_it);
 
-                    // stop the merging and update the kernel list
-                    mergeable = true;
+                    did_any_merge = true;
+                    current_q_used_to_merge = false;
+
+                    // the current q was used in a merge,
+                    // so it can not be used with any r
                     break;
                 }
             }
 
-            // stop the merging and update the kernel list
-            if(mergeable)
+            if(current_q_used_to_merge)
             {
-                break;
+                // current q was used, we need to continue from q=r+1
+                // because current q and r can not be used anymore
+                kq_it = kr_it;
+                continue;  // q will be incremented in the for statement
             }
         }
 
@@ -154,5 +160,5 @@ void Candidate::mergeKernels(
 
         to_add.clear();
     }
-    while (mergeable);
+    while (did_any_merge);
 }
