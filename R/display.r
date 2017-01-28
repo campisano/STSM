@@ -111,7 +111,7 @@ config$background_img_size = "800px";
 
 # configuring html basics
 html = new.env(hash=TRUE, parent=emptyenv());
-html$html_pre_title = c(
+html$pre_title = c(
     "<!DOCTYPE html>",
     "<html>",
     "  <head>",
@@ -148,8 +148,9 @@ args = commandArgs(TRUE);
 #args[2] = "results/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB100_MS0.json";
 #args[3] = "results/inline-100_orientation-original/sax-25/img/spatial-100/block-100/stretch-0";
 #args[4] = "data/inline_100_4755x2310.jpg";
+#cat("    args:", args, "\n");
+
 #setwd("/home/shared/develop/projects/CEFET/mestrado/SIM");
-cat("    args:", args, "\n");
 
 vars = new.env(hash=TRUE, parent=emptyenv());
 vars$csv_database = args[1];
@@ -179,9 +180,9 @@ vars$database_y_size = vars$lim_database_y_max - vars$lim_database_y_min;
 
 
 # loading json data
-cat("Loading json data", vars$input_file_json, "...");
+#cat("Loading json data", vars$input_file_json, "...");
 json_data = fromJSON(file=vars$input_file_json, method="C");
-cat(" [DONE]\n")
+#cat(" [DONE]\n")
 
 if(is.null(json_data) || length(json_data) < 1) {
     cat("Empty json data\n");
@@ -270,7 +271,7 @@ for(iteration in 1:length(json_data)) {
         lim_x_min=vars$lim_database_x_min, lim_x_max=vars$lim_database_x_max,
         lim_y_min=vars$lim_database_y_min, lim_y_max=vars$lim_database_y_max,
         scale=config$plot_scale));
-    dev.off();
+    invisible(dev.off());
 
     per_length_index_lines = c(per_length_index_lines,
         "        <div class=\"content first\">",
@@ -364,7 +365,7 @@ for(iteration in 1:length(json_data)) {
         }
     }
 
-    dev.off();
+    invisible(dev.off());
 
     if(something_plotted) {
         # renaming to have the sequence name
@@ -420,7 +421,7 @@ for(iteration in 1:length(json_data)) {
             vars$output_img_dir, "by_length_and_sequence", sequence_length)));
     }
 
-    cat(" [DONE]\n")
+    cat(" [DONE]\n");
 }
 
 # completing html file
