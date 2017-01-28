@@ -1,5 +1,5 @@
 # include utility file
-source(file="R/utils.r")
+source(file="R/utils.r");
 
 
 
@@ -25,6 +25,8 @@ args = commandArgs(TRUE);
 #args[4] = 100;
 #args[5] = 0;
 #cat("    args:", args, "\n");
+
+#setwd("/home/shared/develop/projects/CEFET/mestrado/SIM");
 
 vars = new.env(hash=TRUE, parent=emptyenv());
 vars$input_file_json = args[1];
@@ -148,11 +150,14 @@ if(is.null(json_data) || length(json_data) < 1) {
 
 # retrieving number of ranges and positions group by sequence
 
-# organize data by sequence
-by_seq_data = new.env(hash=TRUE, parent=emptyenv());
+# count matching postions by sequence
+pos_by_seq = new.env(hash=TRUE, parent=emptyenv());
 
-# organize data by length
-by_len_data = new.env(hash=TRUE, parent=emptyenv());
+# count matching postions by length
+pos_by_len = new.env(hash=TRUE, parent=emptyenv());
+
+# count sequences by length
+seq_by_len = new.env(hash=TRUE, parent=emptyenv());
 
 # start the iterations, for each json data grouped by length
 for(iteration in 1:length(json_data)) {
@@ -179,39 +184,55 @@ for(iteration in 1:length(json_data)) {
         sequence_data_item = sequence_data[[j]];
         sequence = sequence_data_item$sequence;
 
-        # skip sequence containing mmmmm
-        if(length(grep("mmmmm", sequence)) == 0) {
+        # skip sequence containing mmmmmmmmmm
+        if(length(grep("mmmmmmmmmm", sequence)) == 0) {
 
-            # organize data by sequence
-            if(! exists(sequence, by_seq_data)) {
-                by_seq_data[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
-                by_seq_data[[sequence]][["num_ranges"]] = 0;
-                by_seq_data[[sequence]][["num_pos"]] = 0;
+            # count matching postions by sequence
+            if(! exists(sequence, pos_by_seq)) {
+                pos_by_seq[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
+                pos_by_seq[[sequence]][["num_ranges"]] = 0;
+                pos_by_seq[[sequence]][["num_pos"]] = 0;
             }
 
-            by_seq_data[[sequence]][["num_ranges"]] =
-                by_seq_data[[sequence]][["num_ranges"]] + 1;
+            pos_by_seq[[sequence]][["num_ranges"]] =
+                pos_by_seq[[sequence]][["num_ranges"]] + 1;
 
-            by_seq_data[[sequence]][["num_pos"]] =
-                by_seq_data[[sequence]][["num_pos"]] +
+            pos_by_seq[[sequence]][["num_pos"]] =
+                pos_by_seq[[sequence]][["num_pos"]] +
                 length(sequence_data_item$times);
 
-            # organize data by length
             len = as.character(sequence_length);
-            if(! exists(len, by_len_data)) {
-                by_len_data[[len]] = new.env(hash=TRUE, parent=emptyenv());
-                by_len_data[[len]][["num_ranges"]] = 0;
-                by_len_data[[len]][["num_pos"]] = 0;
+
+            # count matching postions by length
+            if(! exists(len, pos_by_len)) {
+                pos_by_len[[len]] = new.env(hash=TRUE, parent=emptyenv());
+                pos_by_len[[len]][["num_ranges"]] = 0;
+                pos_by_len[[len]][["num_pos"]] = 0;
             }
 
-            by_len_data[[len]][["num_ranges"]] =
-                by_len_data[[len]][["num_ranges"]] + 1;
+            pos_by_len[[len]][["num_ranges"]] =
+                pos_by_len[[len]][["num_ranges"]] + 1;
 
-            by_len_data[[len]][["num_pos"]] =
-                by_len_data[[len]][["num_pos"]] +
+            pos_by_len[[len]][["num_pos"]] =
+                pos_by_len[[len]][["num_pos"]] +
                 length(sequence_data_item$times);
+
+            # count sequences by length
+            if(! exists(len, seq_by_len)) {
+                seq_by_len[[len]] = new.env(hash=TRUE, parent=emptyenv());
+                seq_by_len[[len]][["sequences"]] =
+                    new.env(hash=TRUE, parent=emptyenv());
+            }
+
+            # using a map to get uniques values
+            seq_by_len[[len]][["sequences"]][[sequence]] = TRUE;
         }
     }
+
+    # correcting count sequences by length
+
+    seq_by_len[[len]][["sequences"]] =
+        length(seq_by_len[[len]][["sequences"]]);
 }
 
 
@@ -234,27 +255,57 @@ to_data_frame_of_3 = function(data, name1, name2, name3) {
     return(data_frame);
 }
 
-by_seq_data_frame = to_data_frame_of_3(
-    by_seq_data, "sequence", "num_ranges", "num_pos");
+to_data_frame_of_2 = function(data, name1, name2) {
+    data1 = c();
+    data2 = c();
 
-by_len_data_frame = to_data_frame_of_3(
-    by_len_data, "length", "num_ranges", "num_pos");
+    for (key in ls(data)) {
+        data1 = c(data1, key);
+        data2 = c(data2, data[[key]][[name2]]);
+    }
+
+    data_frame = data.frame(data1, data2);
+    colnames(data_frame) = c(name1, name2);
+
+    return(data_frame);
+}
+
+
+
+pos_by_seq_frame = to_data_frame_of_3(
+    pos_by_seq, "sequence", "num_ranges", "num_pos");
+
+pos_by_len_frame = to_data_frame_of_3(
+    pos_by_len, "length", "num_ranges", "num_pos");
+
+seq_by_len_frame = to_data_frame_of_2(
+    seq_by_len, "length", "sequences");
+
 
 
 # write data to a csv
 write.table(
-    by_seq_data_frame,
+    pos_by_seq_frame,
     file=file.path(vars$output_stats_dir,
-                   paste(vars$base_filename, "_sequences.csv", sep="")),
+                   paste(vars$base_filename, "_matches-by-seq.csv", sep="")),
     append=FALSE,
     row.names=FALSE,
     col.names=TRUE,
     quote=FALSE,
     sep=",");
 write.table(
-    by_len_data_frame,
+    pos_by_len_frame,
     file=file.path(vars$output_stats_dir,
-                   paste(vars$base_filename, "_lengths.csv", sep="")),
+                   paste(vars$base_filename, "_matches-by-len.csv", sep="")),
+    append=FALSE,
+    row.names=FALSE,
+    col.names=TRUE,
+    quote=FALSE,
+    sep=",");
+write.table(
+    seq_by_len_frame,
+    file=file.path(vars$output_stats_dir,
+                   paste(vars$base_filename, "_sequences-by-len.csv", sep="")),
     append=FALSE,
     row.names=FALSE,
     col.names=TRUE,
@@ -263,101 +314,180 @@ write.table(
 
 
 
-# draw a point plot of sequences vs num_pos
+# # draw a point plot of num_pos by sequence
+# utils$dev_open_file(
+#     file.path(vars$output_stats_dir,
+#               paste(vars$base_filename, "_numpos-by-sequence.png", sep="")),
+#     10000, 10000);
+# gg = ggplot();
+# gg = gg + theme_bw();
+# gg = gg + geom_point(
+#     data=pos_by_seq_frame, aes(sequence, num_pos), size=25);
+# gg = gg + theme(axis.text.x = element_text(angle=90, hjust=1));
+# gg = gg + theme(panel.background=element_rect(fill="white", colour=NA));
+# gg = gg + theme(plot.background=element_rect(fill="white", colour=NA));
+# gg = gg + theme(panel.grid=element_blank());
+# gg = gg + theme(panel.border=element_blank())
+# gg = gg + theme(plot.margin=unit(c(0,0,0,0), "null"));
+# gg = gg + theme(panel.margin=unit(c(0,0,0,0), "null"));
+# gg = gg + labs(
+#     title=paste("Frequency:", vars$min_spatial_freq),
+#     x="Sequence value",
+#     y="Num of positions");
+# plot(gg);
+# invisible(dev.off());
+#
+#
+#
+# # draw a point plot of num_ranges by sequence
+# utils$dev_open_file(
+#     file.path(vars$output_stats_dir,
+#               paste(vars$base_filename, "_numranges-by-sequence.png", sep="")),
+#     10000, 10000);
+# gg = ggplot();
+# gg = gg + theme_bw();
+# gg = gg + geom_point(
+#     data=pos_by_seq_frame, aes(sequence, num_ranges), size=25);
+# gg = gg + theme(axis.text.x = element_text(angle=90, hjust=1));
+# gg = gg + theme(panel.background=element_rect(fill="white", colour=NA));
+# gg = gg + theme(plot.background=element_rect(fill="white", colour=NA));
+# gg = gg + theme(panel.grid=element_blank());
+# gg = gg + theme(panel.border=element_blank())
+# gg = gg + theme(plot.margin=unit(c(0,0,0,0), "null"));
+# gg = gg + theme(panel.margin=unit(c(0,0,0,0), "null"));
+# gg = gg + labs(
+#     title=paste("Frequency:", vars$min_spatial_freq),
+#     x="Sequence value",
+#     y="Num of ranges");
+# plot(gg);
+# invisible(dev.off());
+
+
+
+# cleanup excess of data
+# pos_by_len_frame$length = as.numeric(pos_by_len_frame$length);
+# pos_by_len_frame = pos_by_len_frame[(pos_by_len_frame$length <= 50),];
+# pos_by_len_frame$length = as.character(pos_by_len_frame$length);
+
+# draw a stacked bar plot of num_pos by length in log scale
 utils$dev_open_file(
     file.path(vars$output_stats_dir,
-              paste(vars$base_filename, "_sequence-num_pos.png", sep="")),
-    10000, 10000);
-gg = ggplot();
-gg = gg + theme_bw();
-gg = gg + geom_point(
-    data=by_seq_data_frame, aes(sequence, num_pos), size=25);
-gg = gg + theme(axis.text.x = element_text(angle=90, hjust=1));
-gg = gg + theme(panel.background=element_rect(fill="white", colour=NA));
-gg = gg + theme(plot.background=element_rect(fill="white", colour=NA));
-gg = gg + theme(panel.grid=element_blank());
-gg = gg + theme(panel.border=element_blank())
-gg = gg + theme(plot.margin=unit(c(0,0,0,0), "null"));
-gg = gg + theme(panel.margin=unit(c(0,0,0,0), "null"));
-gg = gg + labs(
-    title=paste("Frequency:", vars$min_spatial_freq),
-    x="Sequence value",
-    y="Num of positions");
-plot(gg);
-dev.off();
-
-
-
-# draw a point plot of sequences vs num_ranges
-utils$dev_open_file(
-    file.path(vars$output_stats_dir,
-              paste(vars$base_filename, "_sequence-num_ranges.png", sep="")),
-    10000, 10000);
-gg = ggplot();
-gg = gg + theme_bw();
-gg = gg + geom_point(
-    data=by_seq_data_frame, aes(sequence, num_ranges), size=25);
-gg = gg + theme(axis.text.x = element_text(angle=90, hjust=1));
-gg = gg + theme(panel.background=element_rect(fill="white", colour=NA));
-gg = gg + theme(plot.background=element_rect(fill="white", colour=NA));
-gg = gg + theme(panel.grid=element_blank());
-gg = gg + theme(panel.border=element_blank())
-gg = gg + theme(plot.margin=unit(c(0,0,0,0), "null"));
-gg = gg + theme(panel.margin=unit(c(0,0,0,0), "null"));
-gg = gg + labs(
-    title=paste("Frequency:", vars$min_spatial_freq),
-    x="Sequence value",
-    y="Num of ranges");
-plot(gg);
-dev.off();
-
-
-# cleanup
-by_len_data_frame$length = as.numeric(by_len_data_frame$length);
-by_len_data_frame = by_len_data_frame[(by_len_data_frame$length <= 50),];
-by_len_data_frame$length = as.character(by_len_data_frame$length);
-
-# draw a stacked bar plot
-utils$dev_open_file(
-    file.path(vars$output_stats_dir,
-              paste(vars$base_filename, "_length-num_pos-log.png", sep="")),
+              paste(vars$base_filename, "_numpos-by-len_log.png", sep="")),
     640, 480);
-bins = as.character(sort(as.numeric(unique(by_len_data_frame$length))));
-legend = as.character(sort(unique(by_len_data_frame$num_ranges)));
+bins = as.character(sort(as.numeric(unique(pos_by_len_frame$length))));
 gg = ggplot();
 gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
-gg = gg + geom_bar(data=by_len_data_frame, aes(length, num_pos), stat="identity");
+gg = gg + geom_bar(
+    data=pos_by_len_frame, aes(length, num_pos), stat="identity");
 gg = gg + labs(
-    title=paste("Frequency:", vars$min_spatial_freq),
+    title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
     x="Sequence lengths",
     y="Num of positions");
 plot(gg);
-dev.off();
+invisible(dev.off());
 
-
-# cleanup
-by_len_data_frame$length = as.numeric(by_len_data_frame$length);
-by_len_data_frame = by_len_data_frame[(by_len_data_frame$length > 1),];
-by_len_data_frame$length = as.character(by_len_data_frame$length);
-
-# draw a stacked bar plot
+# draw a stacked bar plot of num_ranges by length in log scale
 utils$dev_open_file(
     file.path(vars$output_stats_dir,
-              paste(vars$base_filename, "_length-num_pos-linear.png", sep="")),
+              paste(vars$base_filename, "_numranges-by-len_log.png", sep="")),
     640, 480);
-bins = as.character(sort(as.numeric(unique(by_len_data_frame$length))));
-legend = as.character(sort(unique(by_len_data_frame$num_ranges)));
+bins = as.character(sort(as.numeric(unique(pos_by_len_frame$length))));
 gg = ggplot();
 gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
-gg = gg + scale_y_continuous();
-gg = gg + geom_bar(data=by_len_data_frame, aes(length, num_pos), stat="identity");
+gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
+gg = gg + geom_bar(
+    data=pos_by_len_frame, aes(length, num_ranges), stat="identity");
 gg = gg + labs(
-    title=paste("Frequency:", vars$min_spatial_freq),
+    title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
+    x="Sequence lengths",
+    y="Num of ranges");
+plot(gg);
+invisible(dev.off());
+
+
+
+# # cleanup excess of data
+# pos_by_len_frame$length = as.numeric(pos_by_len_frame$length);
+# pos_by_len_frame = pos_by_len_frame[(pos_by_len_frame$length > 1),];
+# pos_by_len_frame$length = as.character(pos_by_len_frame$length);
+
+# draw a stacked bar plot of num_pos by length in linear scale
+utils$dev_open_file(
+    file.path(vars$output_stats_dir,
+              paste(vars$base_filename, "_numpos-by-len_linear.png", sep="")),
+    640, 480);
+bins = as.character(sort(as.numeric(unique(pos_by_len_frame$length))));
+gg = ggplot();
+gg = gg + theme_bw();
+gg = gg + scale_x_discrete(breaks=bins, limits=bins);
+gg = gg + scale_y_continuous(labels=comma);
+gg = gg + geom_bar(data=pos_by_len_frame, aes(length, num_pos), stat="identity");
+gg = gg + labs(
+    title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
     x="Sequence lengths",
     y="Num of positions");
 plot(gg);
-dev.off();
+invisible(dev.off());
 
+# draw a stacked bar plot of num_ranges by length in linear scale
+utils$dev_open_file(
+    file.path(vars$output_stats_dir,
+              paste(vars$base_filename, "_numranges-by-len_linear.png", sep="")),
+    640, 480);
+bins = as.character(sort(as.numeric(unique(pos_by_len_frame$length))));
+gg = ggplot();
+gg = gg + theme_bw();
+gg = gg + scale_x_discrete(breaks=bins, limits=bins);
+gg = gg + scale_y_continuous(labels=comma);
+gg = gg + geom_bar(data=pos_by_len_frame, aes(length, num_ranges), stat="identity");
+gg = gg + labs(
+    title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
+    x="Sequence lengths",
+    y="Num of ranges");
+plot(gg);
+invisible(dev.off());
+
+
+
+# draw a stacked bar plot of sequences by length
+utils$dev_open_file(
+    file.path(vars$output_stats_dir,
+              paste(vars$base_filename, "_sequences-by-len_log.png", sep="")),
+    640, 480);
+bins = as.character(sort(as.numeric(unique(seq_by_len_frame$length))));
+gg = ggplot();
+gg = gg + theme_bw();
+gg = gg + scale_x_discrete(breaks=bins, limits=bins);
+gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
+gg = gg + geom_bar(
+    data=seq_by_len_frame, aes(length, sequences), stat="identity");
+gg = gg + labs(
+    title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
+    x="Sequence lengths",
+    y="Num of sequence patterns");
+plot(gg);
+invisible(dev.off());
+
+
+
+# draw a stacked bar plot of sequences by length
+utils$dev_open_file(
+    file.path(vars$output_stats_dir,
+              paste(vars$base_filename, "_sequences-by-len_linear.png", sep="")),
+    640, 480);
+bins = as.character(sort(as.numeric(unique(seq_by_len_frame$length))));
+gg = ggplot();
+gg = gg + theme_bw();
+gg = gg + scale_x_discrete(breaks=bins, limits=bins);
+gg = gg + scale_y_continuous(labels=comma);
+gg = gg + geom_bar(
+    data=seq_by_len_frame, aes(length, sequences), stat="identity");
+gg = gg + labs(
+    title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
+    x="Sequence lengths",
+    y="Num of sequence patterns");
+plot(gg);
+invisible(dev.off());
