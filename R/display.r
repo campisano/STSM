@@ -58,23 +58,23 @@ plotSequencePositionsRangesAndIntervals = function(
             color=alpha("darkgreen", 0.3), fill="darkgreen", alpha=0.2);
     }
 
-    # if defined, print the blocks
-    if(
-        length(xmin_interval) > 0 && length(xmax_interval) > 0 &&
-            length(ymin_interval) > 0 && length(ymax_interval) > 0
-        ) {
-        gg = gg + geom_rect(
-            data=df_blocks,
-            aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, inherit.ae=FALSE),
-            size=0.5 * scale,
-            color=alpha("black", 0.3), fill="black", alpha=0.2);
-    }
-
     # then print the points
     gg = gg + geom_point(
         data=df_points,
         aes(x, y, inherit.ae=FALSE),
         size=3 * scale, color="darkblue", alpha=0.5);
+
+    # finally, if defined, print the blocks
+    if(
+        length(xmin_interval) > 0 && length(xmax_interval) > 0 &&
+            length(ymin_interval) > 0 && length(ymax_interval) > 0
+    ) {
+        gg = gg + geom_rect(
+            data=df_blocks,
+            aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, inherit.ae=FALSE),
+            size=0.5 * scale,
+            color=alpha("black", 0.75), fill="black", alpha=0.3);
+    }
 
     # defines the limites
     gg = gg + coord_cartesian(
@@ -241,7 +241,7 @@ for(iteration in 1:length(solid_sequences)) {
             is.null(sequence_data_by_length$sequences) ||
             length(sequence_data_by_length$sequences) < 1
     ) {
-        cat("Empty sequence data iteration", iteration,
+        cat("\nEmpty sequence data iteration", iteration,
             "of length", sequence_data_by_length$length, "\n");
         #cat("Data:\n");
         #dput(sequence_data_by_length);
@@ -250,6 +250,11 @@ for(iteration in 1:length(solid_sequences)) {
 
     sequence_length = sequence_data_by_length$length;
     sequence_data = sequence_data_by_length$sequences;
+
+    if(sequence_length == 1) {
+        cat("\t", "Skipping sequences data of sequence length == 1.\n")
+        next;
+    }
 
     cat("\tsequence length:", sequence_length,
         "\tnum of ranged sequences:",
