@@ -64,8 +64,8 @@ do
 
                         RUN_LOG=$SPEC_OUTPUT_FOLDER"/run_"$BASE_FILENAME".out";
 
-                        echo "------------------------------------------------------------" >> $RUN_LOG 2>&1;
-                        echo -e "I:"$INLINE"\tO:"$ORIENTATION"\tS:"$SAX"\tSF:"$MIN_SPATIAL_FREQ"\tBF:"$MIN_BLOCK_FREQ"\tMS:"$MAX_STRETCH >> $RUN_LOG 2>&1;
+                        echo "------------------------------------------------------------" 2>&1 | tee -a $RUN_LOG;
+                        echo -e "I:"$INLINE"\tO:"$ORIENTATION"\tS:"$SAX"\tSF:"$MIN_SPATIAL_FREQ"\tBF:"$MIN_BLOCK_FREQ"\tMS:"$MAX_STRETCH 2>&1 | tee -a $RUN_LOG;
 
                         JSON_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/json";
                         LOG_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/log";
@@ -84,7 +84,7 @@ do
                         then
                             if test ! -f $OUTPUT_FILE
                             then
-                                echo " * Running SIM $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" >> $RUN_LOG 2>&1;
+                                echo " * Running SIM $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" 2>&1 | tee -a $RUN_LOG;
                                 time sim $INPUT_FILE $OUTPUT_FILE $LOG_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ
                                 #$MAX_STRETCH;
                             fi;
@@ -97,15 +97,15 @@ do
                         then
                             if test -f $OUTPUT_FILE.gz
                             then
-                                echo " * Decompressing previous output file [...]" >> $RUN_LOG 2>&1;
+                                echo " * Decompressing previous output file [...]" 2>&1 | tee -a $RUN_LOG;
                                 gzip -d ${OUTPUT_FILE}.gz;
                             fi;
                             if test -f $OUTPUT_FILE
                             then
-                                echo " * Producing Stacked Bar data" >> $RUN_LOG 2>&1;
+                                echo " * Producing Stacked Bar data" 2>&1 | tee -a $RUN_LOG;
                                 R --vanilla --slave --file=R/stacked_bar_data.r --args $OUTPUT_FILE $STATS_OUTPUT_FOLDER $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH;
 
-                                echo " * Plotting data $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" >> $RUN_LOG 2>&1;
+                                echo " * Plotting data $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" 2>&1 | tee -a $RUN_LOG;
                                 time R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE $IMG_OUTPUT_FOLDER $INPUT_FOLDER"/inline_"$INLINE"_"$BASE_IMG_NAME;
                             fi;
                         fi;
@@ -113,7 +113,7 @@ do
                         # Compress outputs
                         if test -f $OUTPUT_FILE
                         then
-                            echo " * Compressing ouput file [...]" >> $RUN_LOG 2>&1;
+                            echo " * Compressing ouput file [...]" 2>&1 | tee -a $RUN_LOG;
                             rm -f $OUTPUT_FILE.gz;
                             gzip --fast $OUTPUT_FILE;
                         fi;
