@@ -31,3 +31,8 @@ const Support & SequenceBlock::support() const
 {
     return m_support;
 }
+
+Frequency SequenceBlock::frequency() const
+{
+    return float(m_support) / (m_range.size() * m_interval.size());
+}

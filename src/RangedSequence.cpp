@@ -24,3 +24,8 @@ const Support & RangedSequence::support() const
 {
     return m_support;
 }
+
+Frequency RangedSequence::frequency() const
+{
+    return float(m_support) / m_range.size();
+}

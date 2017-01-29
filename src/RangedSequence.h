@@ -4,6 +4,7 @@
 #include <list>
 #include <map>
 
+#include "Frequency.h"
 #include "Range.h"
 #include "Sequence.h"
 #include "Size.h"
@@ -20,6 +21,8 @@ public:
     const Sequence & sequence() const;
     const Range & range() const;
     const Support & support() const;
+
+    Frequency frequency() const;
 
 private:
     Sequence m_sequence;

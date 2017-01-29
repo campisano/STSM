@@ -568,15 +568,12 @@ void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
 
     RangedSequence & rg = m_solid_sequences[4].back();
 
-    // testing defined min frequency
-    CXXTOOLS_UNIT_ASSERT(
-        float(rg.support()) / rg.range().size() >= (1 - EPSILON));
-
     // testing synthetic known data
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "ABCD");
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 0);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 3);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 4);
+    CXXTOOLS_UNIT_ASSERT((rg.frequency() - min_spatial) < EPSILON);
 
     // Cleanup
 
@@ -673,15 +670,12 @@ void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
 
     RangedSequence & rg = m_solid_sequences[4].back();
 
-    // testing defined min frequency
-    CXXTOOLS_UNIT_ASSERT(
-        float(rg.support()) / rg.range().size() >= (min_spatial - EPSILON));
-
     // testing synthetic known data
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "EFGH");
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 4);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 7);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 3);
+    CXXTOOLS_UNIT_ASSERT((rg.frequency() - min_spatial) < EPSILON);
 
     // Cleanup
 
@@ -725,14 +719,14 @@ void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
     RangedSequence & rg = m_solid_sequences[4].back();
 
     // testing defined min frequency
-    CXXTOOLS_UNIT_ASSERT(
-        float(rg.support()) / rg.range().size() >= (min_spatial - EPSILON));
+    CXXTOOLS_UNIT_ASSERT(rg.frequency() >= (min_spatial - EPSILON));
 
     // testing synthetic known data
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "EFGH");
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 6);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 7);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 2);
+    CXXTOOLS_UNIT_ASSERT((rg.frequency() - 1.0) < EPSILON);
 
     // Cleanup
 
@@ -777,18 +771,12 @@ void SIMTest::test_SIMRun_f100_b100_does_get_EFGHI_solidBlock()
     RangedSequence & rg = m_solid_sequences[5].back();
     SequenceBlock & sb = m_solid_sequence_blocks[5].back();
 
-    // testing defined min frequency
-    CXXTOOLS_UNIT_ASSERT(
-        float(rg.support()) / rg.range().size() >= (min_spatial - EPSILON));
-    CXXTOOLS_UNIT_ASSERT(
-        float(sb.support()) / (
-            sb.range().size() * sb.interval().size()) >= (min_block - EPSILON));
-
     // testing synthetic known data
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "EFGHI");
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 4);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 6);
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 3);
+    CXXTOOLS_UNIT_ASSERT((rg.frequency() - min_spatial) < EPSILON);
 
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.sequence().toStringOfItems(), "EFGHI");
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().start(), 4);
@@ -796,6 +784,7 @@ void SIMTest::test_SIMRun_f100_b100_does_get_EFGHI_solidBlock()
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().start(), 13);
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().end(), 17);
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.support(), 15);
+    CXXTOOLS_UNIT_ASSERT((sb.frequency() - min_block) < EPSILON);
 
     // Cleanup
 
@@ -895,9 +884,7 @@ void SIMTest::test_SIMRun_f75_b75_does_get_EFGHI7575_solidBlock()
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().start(), 13);
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().end(), 17);
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.support(), 15);
-    CXXTOOLS_UNIT_ASSERT(std::abs((float(sb.support())
-                                   / (sb.range().size() * sb.interval().size())
-                                      ) - min_block) < EPSILON);
+    CXXTOOLS_UNIT_ASSERT((sb.frequency() - min_block) < EPSILON);
 
     // Cleanup
 
@@ -947,9 +934,7 @@ void SIMTest::test_SIMRun_f100_b50_does_get_EFGHI10025_solidBlock()
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().start(), 13);
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().end(), 22);
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.support(), 20);
-    CXXTOOLS_UNIT_ASSERT(std::abs((float(sb.support())
-                                   / (sb.range().size() * sb.interval().size())
-                                      ) - min_block) < EPSILON);
+    CXXTOOLS_UNIT_ASSERT((sb.frequency() - min_block) < EPSILON);
 
     // Cleanup
 
@@ -999,9 +984,7 @@ void SIMTest::test_SIMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock()
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().start(), 13);
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().end(), 22);
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.support(), 15);
-    CXXTOOLS_UNIT_ASSERT(std::abs((float(sb.support())
-                                   / (sb.range().size() * sb.interval().size())
-                                      ) - min_block) < EPSILON);
+    CXXTOOLS_UNIT_ASSERT((sb.frequency() - min_block) < EPSILON);
 
     // Cleanup
 
