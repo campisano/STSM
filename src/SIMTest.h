@@ -28,6 +28,11 @@ private:
     void test_SIMRun_f100_testing_ABCD100_positions();
     void test_SIMRun_f75_does_get_EFGH75_solidSequence();
     void test_SIMRun_f90_does_not_get_EFGH75_solidSequence();
+    void test_SIMRun_f100_b100_does_get_EFGHI_solidBlock();
+    void test_SIMRun_f100_b100_does_not_get_diagonal_EFGHI();
+    void test_SIMRun_f75_b75_does_get_EFGHI7575_solidBlock();
+    void test_SIMRun_f100_b50_does_get_EFGHI10025_solidBlock();
+    void test_SIMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock();
 };
 
 #endif

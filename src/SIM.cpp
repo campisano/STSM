@@ -645,7 +645,8 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
                 // if num of sequence items in the block divided by
                 // the num of all items in the block is >= Θ
-                if((new_support / (new_range.size() * new_interval.size()))
+                if((float(new_support) / (
+                        new_range.size() * new_interval.size()))
                    >= _min_block_freq)
                 {
                     m_log_stream << '.';
