@@ -15,38 +15,59 @@ loaded_libs = utils$loadLibs(
 
 
 # defining a specific plot function
-plotRangedSequences = function(
-    x_points, y_points, xmin_ranges=c(), xmax_ranges=c(),
+plotSequencePositionsRangesAndIntervals = function(
+    x_points, y_points,
+    xmin_ranges=c(), xmax_ranges=c(),
+    xmin_interval=c(), xmax_interval=c(),
+    ymin_interval=c(), ymax_interval=c(),
     lim_x_min=NA, lim_x_max=NA, lim_y_min=-NA, lim_y_max=NA,
     clean=TRUE, scale=1) {
+
     df_points = data.frame(x=x_points, y=y_points);
     df_rectangles = data.frame(xmin=xmin_ranges, xmax=xmax_ranges);
+    df_blocks = data.frame(
+        xmin=xmin_interval, xmax=xmax_interval,
+        ymin=ymin_interval, ymax=ymax_interval
+        );
 
+    # define limits, if not defined
     if(is.na(lim_x_min)) {
-        lim_x_min = min(c(df_points$x, df_rectangles$xmin));
+        lim_x_min = min(c(df_points$x, df_rectangles$xmin, df_blocks$xmin));
     }
 
     if(is.na(lim_x_max)) {
-        lim_x_max = max(c(df_points$x, df_rectangles$xmin));
+        lim_x_max = max(c(df_points$x, df_rectangles$xmax, df_blocks$xmax));
     }
 
     if(is.na(lim_y_min)) {
-        lim_y_min = min(c(df_points$y, df_rectangles$ymin));
+        lim_y_min = min(c(df_points$y, df_rectangles$ymin, df_blocks$ymin));
     }
 
     if(is.na(lim_y_max)) {
-        lim_y_max = max(c(df_points$y, df_rectangles$ymin));
+        lim_y_max = max(c(df_points$y, df_rectangles$ymax, df_blocks$ymax));
     }
 
     gg = ggplot();
 
-    # if defined, print the range
+    # if defined, print the ranges
     if(length(xmin_ranges) > 0 && length(xmax_ranges) > 0) {
         gg = gg + geom_rect(
             data=df_rectangles,
             aes(xmin=xmin, xmax=xmax, ymin=-Inf, ymax=Inf, inherit.ae=FALSE),
             size=0.5 * scale,
             color=alpha("darkgreen", 0.3), fill="darkgreen", alpha=0.2);
+    }
+
+    # if defined, print the blocks
+    if(
+        length(xmin_interval) > 0 && length(xmax_interval) > 0 &&
+            length(ymin_interval) > 0 && length(ymax_interval) > 0
+        ) {
+        gg = gg + geom_rect(
+            data=df_blocks,
+            aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, inherit.ae=FALSE),
+            size=0.5 * scale,
+            color=alpha("black", 0.3), fill="black", alpha=0.2);
     }
 
     # then print the points
@@ -91,12 +112,14 @@ plotRangedSequences = function(
 
 
 
-# test plot funtion
-# plotRangedSequences(
+# # test plot function
+# plotSequencePositionsRangesAndIntervals(
 #     rnorm(100,2), rnorm(100,2),
-#     c(1, 2, 3), c(1.5, 2.5, 4),
+#     xmin_ranges=c(1, 2, 3), xmax_ranges=c(1.5, 2.5, 4),
+#     xmin_interval=c(3, 6), xmax_interval=c(4, 8),
+#     ymin_interval=c(2, 4), ymax_interval=c(5, 10),
 #     lim_x_min=0, lim_x_max=10, lim_y_min=0, lim_y_max=10,
-#     clean=FALSE, scale=config$plot_scale);
+#     clean=FALSE, scale=5);
 
 
 
@@ -106,7 +129,7 @@ config$plot_scale = 5;
 config$max_length_plot_limit = 50000;
 config$min_positions_plot_limit = 50;
 config$per_length_plot_image_type = "png";
-config$per_sequence_plot_image_type = "png";
+config$per_sequence_plot_image_type = "svg";
 config$background_img_size = "800px";
 
 # configuring html basics
@@ -185,11 +208,18 @@ json_data = fromJSON(file=vars$input_file_json, method="C");
 #cat(" [DONE]\n")
 
 if(is.null(json_data) || length(json_data) < 1) {
-    cat("Empty json data\n");
+    cat("Empty json data!\n");
     quit(status=1);
 }
 
+solid_sequences = json_data$solid_sequences;
+solid_blocks = json_data$solid_blocks;
 
+if(length(solid_sequences) != length(solid_blocks)) {
+    cat("Num of solid sequence lengths",
+        "expected to be equal to num of solid blocks length!\n");
+    quit(status=1);
+}
 
 # copy background image for html
 system(paste("cp -f", vars$background_img_src, vars$output_img_dir));
@@ -200,13 +230,11 @@ per_length_index_file = file(file.path(
 per_length_index_lines = c(
     html$pre_title, vars$base_filename, html$post_title_pre_container);
 
-
-
 # start the iterations, for each json data grouped by length
-for(iteration in 1:length(json_data)) {
+for(iteration in 1:length(solid_sequences)) {
     cat("Iteration:", iteration);
 
-    sequence_data_by_length = json_data[[iteration]];
+    sequence_data_by_length = solid_sequences[[iteration]];
 
     if(
         is.null(sequence_data_by_length$length) ||
@@ -266,8 +294,9 @@ for(iteration in 1:length(json_data)) {
 
     utils$dev_open_file(
         filename_by_len, vars$database_x_size, vars$database_y_size, config$plot_scale);
-    plot(plotRangedSequences(
-        x_points, y_points, xmin_ranges, xmax_ranges,
+    plot(plotSequencePositionsRangesAndIntervals(
+        x_points, y_points,
+        xmin_ranges=xmin_ranges, xmax_ranges=xmax_ranges,
         lim_x_min=vars$lim_database_x_min, lim_x_max=vars$lim_database_x_max,
         lim_y_min=vars$lim_database_y_min, lim_y_max=vars$lim_database_y_max,
         scale=config$plot_scale));
@@ -289,7 +318,7 @@ for(iteration in 1:length(json_data)) {
               "sequences of length ", sequence_length, "</a></div>", sep=""));
 
     ####
-    # plot an image with all ranges for each sequence
+    # plot an image with all ranges and blocks for each sequence
     ####
 
     # organize the data by sequence
@@ -298,16 +327,22 @@ for(iteration in 1:length(json_data)) {
 
     seq_plotd = new.env(hash=TRUE, parent=emptyenv());
 
+    # ranges
+
     for(j in 1:length(sequence_data)) {
         sequence_data_item = sequence_data[[j]];
         sequence = sequence_data_item$sequence;
 
         if(! exists(sequence, seq_plotd)) {
             seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
-            seq_plotd[[sequence]][["xmin_ranges"]] = c();
-            seq_plotd[[sequence]][["xmax_ranges"]] = c();
-            seq_plotd[[sequence]][["x_points"]] = c();
-            seq_plotd[[sequence]][["y_points"]] = c();
+            seq_plotd[[sequence]]$xmin_ranges = c();
+            seq_plotd[[sequence]]$xmax_ranges = c();
+            seq_plotd[[sequence]]$xmin_interval = c();
+            seq_plotd[[sequence]]$xmax_interval = c();
+            seq_plotd[[sequence]]$ymin_interval = c();
+            seq_plotd[[sequence]]$ymax_interval = c();
+            seq_plotd[[sequence]]$x_points = c();
+            seq_plotd[[sequence]]$y_points = c();
         }
 
         start = sequence_data_item$start;
@@ -315,15 +350,65 @@ for(iteration in 1:length(json_data)) {
         times = sequence_data_item$times;
         spaces = sequence_data_item$spaces;
 
-        seq_plotd[[sequence]][["xmin_ranges"]] = c(
-            seq_plotd[[sequence]][["xmin_ranges"]], start);
-        seq_plotd[[sequence]][["xmax_ranges"]] = c(
-            seq_plotd[[sequence]][["xmax_ranges"]], end);
-        seq_plotd[[sequence]][["x_points"]] = c(
-            seq_plotd[[sequence]][["x_points"]], times);
-        seq_plotd[[sequence]][["y_points"]] = c(
-            seq_plotd[[sequence]][["y_points"]], spaces);
+        seq_plotd[[sequence]]$xmin_ranges = c(
+            seq_plotd[[sequence]]$xmin_ranges, start);
+        seq_plotd[[sequence]]$xmax_ranges = c(
+            seq_plotd[[sequence]]$xmax_ranges, end);
+        seq_plotd[[sequence]]$x_points = c(
+            seq_plotd[[sequence]]$x_points, times);
+        seq_plotd[[sequence]]$y_points = c(
+            seq_plotd[[sequence]]$y_points, spaces);
     }
+
+    # blocks
+
+    solid_blocks_data_by_length = solid_blocks[[iteration]];
+
+    if(
+        is.null(solid_blocks_data_by_length$length) ||
+            is.null(solid_blocks_data_by_length$blocks) ||
+            length(solid_blocks_data_by_length$blocks) < 1
+        ) {
+        cat("\n\tError in block data.\n");
+    } else if (solid_blocks_data_by_length$length != sequence_length) {
+        cat("\n\tThe length of sequences in the same index of solid sequences",
+            "and solid blocks must be the same.\n");
+    } else {
+        solid_blocks_data = solid_blocks_data_by_length$blocks;
+
+        for(j in 1:length(solid_blocks_data)) {
+            block_data_item = solid_blocks_data[[j]];
+            sequence = block_data_item$sequence;
+
+            if(! exists(sequence, seq_plotd)) {
+                cat("Sequence is in a block and is not in a range...\n");
+                seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
+                seq_plotd[[sequence]]$xmin_ranges = c();
+                seq_plotd[[sequence]]$xmax_ranges = c();
+                seq_plotd[[sequence]]$xmin_interval = c();
+                seq_plotd[[sequence]]$xmax_interval = c();
+                seq_plotd[[sequence]]$ymin_interval = c();
+                seq_plotd[[sequence]]$ymax_interval = c();
+                seq_plotd[[sequence]]$x_points = c();
+                seq_plotd[[sequence]]$y_points = c();
+            }
+
+            r_start = block_data_item$r_start;
+            r_end = block_data_item$r_end;
+            i_start = block_data_item$i_start;
+            i_end = block_data_item$i_end;
+
+            seq_plotd[[sequence]]$xmin_interval = c(
+                seq_plotd[[sequence]]$xmin_interval, r_start);
+            seq_plotd[[sequence]]$xmax_interval = c(
+                seq_plotd[[sequence]]$xmax_interval, r_end);
+            seq_plotd[[sequence]]$ymin_interval = c(
+                seq_plotd[[sequence]]$ymin_interval, i_start);
+            seq_plotd[[sequence]]$ymax_interval = c(
+                seq_plotd[[sequence]]$ymax_interval, i_end);
+        }
+    }
+
 
     cat(" plotting ...");
 
@@ -349,13 +434,17 @@ for(iteration in 1:length(json_data)) {
         filename_by_seq, vars$database_x_size, vars$database_y_size, config$plot_scale);
 
     for(key in ls(seq_plotd)) {
-        if(length(seq_plotd[[key]][["x_points"]])
+        if(length(seq_plotd[[key]]$x_points)
            > config$min_positions_plot_limit) {
-            plot(plotRangedSequences(
-                seq_plotd[[key]][["x_points"]],
-                seq_plotd[[key]][["y_points"]],
-                seq_plotd[[key]][["xmin_ranges"]],
-                seq_plotd[[key]][["xmax_ranges"]],
+            plot(plotSequencePositionsRangesAndIntervals(
+                seq_plotd[[key]]$x_points,
+                seq_plotd[[key]]$y_points,
+                xmin_ranges=seq_plotd[[key]]$xmin_ranges,
+                xmax_ranges=seq_plotd[[key]]$xmax_ranges,
+                xmin_interval=seq_plotd[[key]]$xmin_interval,
+                xmax_interval=seq_plotd[[key]]$xmax_interval,
+                ymin_interval=seq_plotd[[key]]$ymin_interval,
+                ymax_interval=seq_plotd[[key]]$ymax_interval,
                 lim_x_min=vars$lim_database_x_min,
                 lim_x_max=vars$lim_database_x_max,
                 lim_y_min=vars$lim_database_y_min,
@@ -378,7 +467,7 @@ for(iteration in 1:length(json_data)) {
             html$pre_title, sequence_length, html$post_title_pre_container);
 
         for(key in ls(seq_plotd)) {
-            if(length(seq_plotd[[key]][["x_points"]])
+            if(length(seq_plotd[[key]]$x_points)
                > config$min_positions_plot_limit) {
                 k = k + 1;
                 file.rename(

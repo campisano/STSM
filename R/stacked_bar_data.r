@@ -51,6 +51,8 @@ if(is.null(json_data) || length(json_data) < 1) {
     quit(status=1);
 }
 
+solid_sequences = json_data$solid_sequences;
+
 
 
 # # preparing output folders
@@ -89,10 +91,10 @@ if(is.null(json_data) || length(json_data) < 1) {
 # # [CMP] not optimized code, but pretty fast
 #
 # # start the iterations, for each json data grouped by length
-# for(iteration in 1:length(json_data)) {
+# for(iteration in 1:length(solid_sequences)) {
 #     #cat("Iteration:", iteration);
 #
-#     sequence_data_by_length = json_data[[iteration]];
+#     sequence_data_by_length = solid_sequences[[iteration]];
 #
 #     if(
 #         is.null(sequence_data_by_length$length) ||
@@ -160,10 +162,10 @@ pos_by_len = new.env(hash=TRUE, parent=emptyenv());
 seq_by_len = new.env(hash=TRUE, parent=emptyenv());
 
 # start the iterations, for each json data grouped by length
-for(iteration in 1:length(json_data)) {
+for(iteration in 1:length(solid_sequences)) {
     #cat("Iteration:", iteration);
 
-    sequence_data_by_length = json_data[[iteration]];
+    sequence_data_by_length = solid_sequences[[iteration]];
 
     if(
         is.null(sequence_data_by_length$length) ||
@@ -190,15 +192,15 @@ for(iteration in 1:length(json_data)) {
             # count matching postions by sequence
             if(! exists(sequence, pos_by_seq)) {
                 pos_by_seq[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
-                pos_by_seq[[sequence]][["num_ranges"]] = 0;
-                pos_by_seq[[sequence]][["num_pos"]] = 0;
+                pos_by_seq[[sequence]]$num_ranges = 0;
+                pos_by_seq[[sequence]]$num_pos = 0;
             }
 
-            pos_by_seq[[sequence]][["num_ranges"]] =
-                pos_by_seq[[sequence]][["num_ranges"]] + 1;
+            pos_by_seq[[sequence]]$num_ranges =
+                pos_by_seq[[sequence]]$num_ranges + 1;
 
-            pos_by_seq[[sequence]][["num_pos"]] =
-                pos_by_seq[[sequence]][["num_pos"]] +
+            pos_by_seq[[sequence]]$num_pos =
+                pos_by_seq[[sequence]]$num_pos +
                 length(sequence_data_item$times);
 
             len = as.character(sequence_length);
@@ -206,33 +208,33 @@ for(iteration in 1:length(json_data)) {
             # count matching postions by length
             if(! exists(len, pos_by_len)) {
                 pos_by_len[[len]] = new.env(hash=TRUE, parent=emptyenv());
-                pos_by_len[[len]][["num_ranges"]] = 0;
-                pos_by_len[[len]][["num_pos"]] = 0;
+                pos_by_len[[len]]$num_ranges = 0;
+                pos_by_len[[len]]$num_pos = 0;
             }
 
-            pos_by_len[[len]][["num_ranges"]] =
-                pos_by_len[[len]][["num_ranges"]] + 1;
+            pos_by_len[[len]]$num_ranges =
+                pos_by_len[[len]]$num_ranges + 1;
 
-            pos_by_len[[len]][["num_pos"]] =
-                pos_by_len[[len]][["num_pos"]] +
+            pos_by_len[[len]]$num_pos =
+                pos_by_len[[len]]$num_pos +
                 length(sequence_data_item$times);
 
             # count sequences by length
             if(! exists(len, seq_by_len)) {
                 seq_by_len[[len]] = new.env(hash=TRUE, parent=emptyenv());
-                seq_by_len[[len]][["sequences"]] =
+                seq_by_len[[len]]$sequences =
                     new.env(hash=TRUE, parent=emptyenv());
             }
 
             # using a map to get uniques values
-            seq_by_len[[len]][["sequences"]][[sequence]] = TRUE;
+            seq_by_len[[len]]$sequences[[sequence]] = TRUE;
         }
     }
 
     # correcting count sequences by length
 
-    seq_by_len[[len]][["sequences"]] =
-        length(seq_by_len[[len]][["sequences"]]);
+    seq_by_len[[len]]$sequences =
+        length(seq_by_len[[len]]$sequences);
 }
 
 

@@ -578,7 +578,8 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         return;
     }
 
-    m_log_stream << _solid_sequence.sequence().toStringOfItems() << '('
+    m_log_stream << std::endl << '\t'
+                 << _solid_sequence.sequence().toStringOfItems() << '('
                  << _solid_sequence.range().start() << ','
                  << _solid_sequence.range().end() << ')';
 
@@ -596,9 +597,9 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         sb_candidates.push_back(
             SequenceBlock(
                 _solid_sequence.sequence(),
-                Range(it_pos->second, it_pos->second),
-                Interval(it_pos->first,
-                         it_pos->first + _solid_sequence.sequence().size() - 1),
+                Range(it_pos->first, it_pos->first),
+                Interval(it_pos->second,
+                         it_pos->second + _solid_sequence.sequence().size() - 1),
                 _solid_sequence.sequence().size()));
     }
 
@@ -646,7 +647,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                 if((new_support / (new_range.size() * new_interval.size()))
                    >= _min_block_freq)
                 {
-                    m_log_stream << '.';
+                    m_log_stream << '|' << new_range.start() << '-' << new_range.end() << ' ' << new_interval.start() << '-' << new_interval.end();
 
                     to_add.push_back(SequenceBlock(
                                          _solid_sequence.sequence(),
@@ -763,18 +764,19 @@ void SIM::saveJSON(const std::string & _output_filename) const
     std::ofstream output_file;
     output_file.open(_output_filename.c_str());
     cxxtools::TextOStream ts(output_file, new cxxtools::Utf8Codec());
-
     cxxtools::JsonFormatter formatter(ts);
     formatter.beautify(true);
+
+    formatter.beginObject("", "");
+
+    formatter.beginArray("solid_sequences", "");
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
     MapPositionsBySeq::const_iterator it_list_pos;
     ListPositions::const_iterator it_pos;
 
-    formatter.beginArray("", "");
-
-    // for each length
+    // for each length in m_solid_sequences
     for(
         it_ss_by_len = m_solid_sequences.begin();
         it_ss_by_len != m_solid_sequences.end();
@@ -794,8 +796,7 @@ void SIM::saveJSON(const std::string & _output_filename) const
             formatter.beginObject("", "");
 
             formatter.addValueStdString(
-                "sequence", "", it_ss->sequence()
-                .toStringOfItems());
+                "sequence", "", it_ss->sequence().toStringOfItems());
             formatter.addValueInt(
                 "support", "", it_ss->support());
             formatter.addValueInt(
@@ -866,4 +867,51 @@ void SIM::saveJSON(const std::string & _output_filename) const
     }
 
     formatter.finishArray();
+
+    formatter.beginArray("solid_blocks", "");
+
+    MapSequenceBlocksByLength::const_iterator it_sb_by_len;
+    ListSequenceBlocks::const_iterator it_sb;
+
+    // for each length in m_solid_blocks
+    for(
+        it_sb_by_len = m_solid_sequence_blocks.begin();
+        it_sb_by_len != m_solid_sequence_blocks.end();
+        ++it_sb_by_len
+        )
+    {
+        const Size & size = it_sb_by_len->first;
+        const ListSequenceBlocks & blocks = it_sb_by_len->second;
+
+        formatter.beginObject("", "");
+        formatter.addValueInt("length", "", size);
+        formatter.beginArray("blocks", "");
+
+        // for each sequence of that length
+        for(it_sb = blocks.begin(); it_sb != blocks.end(); ++it_sb)
+        {
+            formatter.beginObject("", "");
+
+            formatter.addValueStdString(
+                "sequence", "", it_sb->sequence().toStringOfItems());
+            formatter.addValueInt(
+                "support", "", it_sb->support());
+            formatter.addValueInt(
+                "r_start", "", it_sb->range().start());
+            formatter.addValueInt(
+                "r_end", "", it_sb->range().end());
+            formatter.addValueInt(
+                "i_start", "", it_sb->interval().start());
+            formatter.addValueInt(
+                "i_end", "", it_sb->interval().end());
+
+            formatter.finishObject();
+        }
+
+        formatter.finishArray();
+        formatter.finishObject();
+    }
+    formatter.finishArray();
+
+    formatter.finishObject();
 }
