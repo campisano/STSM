@@ -647,7 +647,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                 if((new_support / (new_range.size() * new_interval.size()))
                    >= _min_block_freq)
                 {
-                    m_log_stream << '|' << new_range.start() << '-' << new_range.end() << ' ' << new_interval.start() << '-' << new_interval.end();
+                    m_log_stream << '.';
 
                     to_add.push_back(SequenceBlock(
                                          _solid_sequence.sequence(),
@@ -831,7 +831,7 @@ void SIM::saveJSON(const std::string & _output_filename) const
             // the follow strange way to structure the data
             // is needed by R language
             {
-                formatter.beginArray("times", "");
+                formatter.beginArray("spaces", "");
 
                 for(
                     it_pos = positions.begin();
@@ -844,7 +844,7 @@ void SIM::saveJSON(const std::string & _output_filename) const
                 }
 
                 formatter.finishArray();
-                formatter.beginArray("spaces", "");
+                formatter.beginArray("times", "");
 
                 for(
                     it_pos = positions.begin();

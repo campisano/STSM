@@ -276,14 +276,11 @@ for(iteration in 1:length(solid_sequences)) {
     for(j in 1:length(sequence_data)) {
         sequence_data_item = sequence_data[[j]];
         sequence = sequence_data_item$sequence;
-        #frequency = sequence_data_item$frequency;
-        #start = sequence_data_item$start;
-        #end = sequence_data_item$end;
-        times = sequence_data_item$times;
         spaces = sequence_data_item$spaces;
+        times = sequence_data_item$times;
 
-        x_points = c(x_points, times);
-        y_points = c(y_points, spaces);
+        x_points = c(x_points, spaces);
+        y_points = c(y_points, times);
     }
 
     filename_by_len = file.path(
@@ -347,17 +344,17 @@ for(iteration in 1:length(solid_sequences)) {
 
         start = sequence_data_item$start;
         end = sequence_data_item$end;
-        times = sequence_data_item$times;
         spaces = sequence_data_item$spaces;
+        times = sequence_data_item$times;
 
         seq_plotd[[sequence]]$xmin_ranges = c(
             seq_plotd[[sequence]]$xmin_ranges, start);
         seq_plotd[[sequence]]$xmax_ranges = c(
             seq_plotd[[sequence]]$xmax_ranges, end);
         seq_plotd[[sequence]]$x_points = c(
-            seq_plotd[[sequence]]$x_points, times);
+            seq_plotd[[sequence]]$x_points, spaces);
         seq_plotd[[sequence]]$y_points = c(
-            seq_plotd[[sequence]]$y_points, spaces);
+            seq_plotd[[sequence]]$y_points, times);
     }
 
     # blocks

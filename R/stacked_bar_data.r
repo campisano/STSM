@@ -201,7 +201,7 @@ for(iteration in 1:length(solid_sequences)) {
 
             pos_by_seq[[sequence]]$num_pos =
                 pos_by_seq[[sequence]]$num_pos +
-                length(sequence_data_item$times);
+                length(sequence_data_item$spaces);
 
             len = as.character(sequence_length);
 
@@ -217,7 +217,7 @@ for(iteration in 1:length(solid_sequences)) {
 
             pos_by_len[[len]]$num_pos =
                 pos_by_len[[len]]$num_pos +
-                length(sequence_data_item$times);
+                length(sequence_data_item$spaces);
 
             # count sequences by length
             if(! exists(len, seq_by_len)) {
