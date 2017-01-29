@@ -129,7 +129,7 @@ void Candidate::mergeKernels(
                     to_del.push_back(kr_it);
 
                     did_any_merge = true;
-                    current_q_used_to_merge = false;
+                    current_q_used_to_merge = true;
 
                     // the current q was used in a merge,
                     // so it can not be used with any r
