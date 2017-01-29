@@ -10,7 +10,8 @@
 #include <string>
 
 // TODO [CMP] put in a good place
-namespace {
+namespace
+{
     unsigned int MIN_RANGE_SIZE = 2;
     unsigned int MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2;
 }

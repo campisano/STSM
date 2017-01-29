@@ -14,7 +14,34 @@
 #include "Kernel.h"
 #include "Sequence.h"
 
-#define EPSILON 0.0001
+namespace
+{
+    double EPSILON = 0.0001;
+    std::string TEST_FOLDER = "test_output";
+
+    void prepareTestFolder(
+        const std::string & _data,
+        std::string & _input_file,
+        std::string & _log_file)
+    {
+        _input_file = TEST_FOLDER + "/" + "input.csv";
+        _log_file = TEST_FOLDER + "/" + "output.log";
+        CXXTOOLS_UNIT_ASSERT_EQUALS(
+            system(("mkdir -p " + TEST_FOLDER).c_str()), 0);
+
+        std::ofstream ofs(_input_file.c_str());
+        ofs << _data;
+        ofs.close();
+    }
+
+    void cleanupTestFolder()
+    {
+        CXXTOOLS_UNIT_ASSERT_EQUALS(
+            system(("rm -f " + TEST_FOLDER + "/*").c_str()), 0);
+        CXXTOOLS_UNIT_ASSERT_EQUALS(
+            system(("rmdir " + TEST_FOLDER + "/").c_str()),  0);
+    }
+}
 
 SIMTest::SIMTest() : cxxtools::unit::TestSuite("SIMTest")
 {
@@ -441,14 +468,13 @@ void SIMTest::test_SIMRun_any_result()
 {
     // Arrange
 
-    std::string test_folder = "test_output";
-    std::string input_file = test_folder + "/" + "input.csv";
-    std::string log_file = test_folder + "/" + "output.log";
-    CXXTOOLS_UNIT_ASSERT_EQUALS(system(("mkdir -p " + test_folder).c_str()), 0);
+    Frequency min_spatial = 1.0;
+    Frequency min_block = 1.0;
+    std::string input_file;
+    std::string log_file;
 
-    std::ofstream ofs(input_file.c_str());
-    ofs
-        << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
+    std::stringstream ss;
+    ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
         << "X16,X17,X18,X19,X20,X21,X22,X23,X24,X25" << std::endl
         << "a,a,A,B,C,D,a,a,a,a,a,a,a,a,a,a,a,a,a,a,L,M,N,a,a" << std::endl
         << "b,b,b,A,B,C,D,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b" << std::endl
@@ -460,11 +486,12 @@ void SIMTest::test_SIMRun_any_result()
         << "h,h,h,h,h,E,F,G,H,I,h,h,h,h,h,h,h,h,h,h,h,h,J,K,h" << std::endl
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,E,F,G,H,I,l,l,l,l" << std::endl;
-    ofs.close();
+
+    prepareTestFolder(ss.str(), input_file, log_file);
 
     // Act
 
-    SIM::run(input_file, log_file, 100, 100);
+    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -477,24 +504,20 @@ void SIMTest::test_SIMRun_any_result()
 
     // Cleanup
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(
-        system(("rm -f " + test_folder + "/*").c_str()), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(
-        system(("rmdir " + test_folder + "/").c_str()), 0);
+    cleanupTestFolder();
 }
 
 void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
 {
     // Arrange
 
-    std::string test_folder = "test_output";
-    std::string input_file = test_folder + "/" + "input.csv";
-    std::string log_file = test_folder + "/" + "output.log";
-    CXXTOOLS_UNIT_ASSERT_EQUALS(system(("mkdir -p " + test_folder).c_str()), 0);
+    Frequency min_spatial = 1.0;
+    Frequency min_block = 1.0;
+    std::string input_file;
+    std::string log_file;
 
-    std::ofstream ofs(input_file.c_str());
-    ofs
-        << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
+    std::stringstream ss;
+    ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
         << "X16,X17,X18,X19,X20,X21,X22,X23,X24,X25" << std::endl
         << "a,a,A,B,C,D,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a" << std::endl
         << "b,b,b,A,B,C,D,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b" << std::endl
@@ -506,18 +529,19 @@ void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
         << "h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h" << std::endl
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
-    ofs.close();
+
+    prepareTestFolder(ss.str(), input_file, log_file);
 
     // Act
 
-    SIM::run(input_file, log_file, 100, 100);
+    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
     // testing number and last expected results
     CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[4].size(), 1);
 
-    RangedSequence rg = m_solid_sequences[4].back();
+    RangedSequence & rg = m_solid_sequences[4].back();
 
     // testing defined min frequency
     CXXTOOLS_UNIT_ASSERT(
@@ -531,24 +555,20 @@ void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
 
     // Cleanup
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(
-        system(("rm -f " + test_folder + "/*").c_str()), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(
-        system(("rmdir " + test_folder + "/").c_str()), 0);
+    cleanupTestFolder();
 }
 
 void SIMTest::test_SIMRun_f100_testing_ABCD100_positions()
 {
     // Arrange
 
-    std::string test_folder = "test_output";
-    std::string input_file = test_folder + "/" + "input.csv";
-    std::string log_file = test_folder + "/" + "output.log";
-    CXXTOOLS_UNIT_ASSERT_EQUALS(system(("mkdir -p " + test_folder).c_str()), 0);
+    Frequency min_spatial = 1.0;
+    Frequency min_block = 1.0;
+    std::string input_file;
+    std::string log_file;
 
-    std::ofstream ofs(input_file.c_str());
-    ofs
-        << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
+    std::stringstream ss;
+    ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
         << "X16,X17,X18,X19,X20,X21,X22,X23,X24,X25" << std::endl
         << "a,a,A,B,C,D,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a" << std::endl
         << "b,b,b,A,B,C,D,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b" << std::endl
@@ -560,11 +580,12 @@ void SIMTest::test_SIMRun_f100_testing_ABCD100_positions()
         << "h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h" << std::endl
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
-    ofs.close();
+
+    prepareTestFolder(ss.str(), input_file, log_file);
 
     // Act
 
-    SIM::run(input_file, log_file, 100, 100);
+    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -588,24 +609,20 @@ void SIMTest::test_SIMRun_f100_testing_ABCD100_positions()
 
     // Cleanup
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(
-        system(("rm -f " + test_folder + "/*").c_str()), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(
-        system(("rmdir " + test_folder + "/").c_str()), 0);
+    cleanupTestFolder();
 }
 
 void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
 {
     // Arrange
 
-    std::string test_folder = "test_output";
-    std::string input_file = test_folder + "/" + "input.csv";
-    std::string log_file = test_folder + "/" + "output.log";
-    CXXTOOLS_UNIT_ASSERT_EQUALS(system(("mkdir -p " + test_folder).c_str()), 0);
+    Frequency min_spatial = 0.75;
+    Frequency min_block = 1.0;
+    std::string input_file;
+    std::string log_file;
 
-    std::ofstream ofs(input_file.c_str());
-    ofs
-        << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
+    std::stringstream ss;
+    ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
         << "X16,X17,X18,X19,X20,X21,X22,X23,X24,X25" << std::endl
         << "a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a" << std::endl
         << "b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b" << std::endl
@@ -617,22 +634,23 @@ void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
         << "h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,E,F,G,H" << std::endl
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
-    ofs.close();
+
+    prepareTestFolder(ss.str(), input_file, log_file);
 
     // Act
 
-    SIM::run(input_file, log_file, 75, 100);
+    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
     // testing number and last expected results
     CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[4].size(), 1);
 
-    RangedSequence rg = m_solid_sequences[4].back();
+    RangedSequence & rg = m_solid_sequences[4].back();
 
     // testing defined min frequency
     CXXTOOLS_UNIT_ASSERT(
-        float(rg.support()) / rg.range().size() >= (0.75 - EPSILON));
+        float(rg.support()) / rg.range().size() >= (min_spatial - EPSILON));
 
     // testing synthetic known data
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "EFGH");
@@ -642,24 +660,20 @@ void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
 
     // Cleanup
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(
-        system(("rm -f " + test_folder + "/*").c_str()), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(
-        system(("rmdir " + test_folder + "/").c_str()), 0);
+    cleanupTestFolder();
 }
 
 void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
 {
     // Arrange
 
-    std::string test_folder = "test_output";
-    std::string input_file = test_folder + "/" + "input.csv";
-    std::string log_file = test_folder + "/" + "output.log";
-    CXXTOOLS_UNIT_ASSERT_EQUALS(system(("mkdir -p " + test_folder).c_str()), 0);
+    Frequency min_spatial = 0.9;
+    Frequency min_block = 1.0;
+    std::string input_file;
+    std::string log_file;
 
-    std::ofstream ofs(input_file.c_str());
-    ofs
-        << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
+    std::stringstream ss;
+    ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
         << "X16,X17,X18,X19,X20,X21,X22,X23,X24,X25" << std::endl
         << "a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a" << std::endl
         << "b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b" << std::endl
@@ -671,22 +685,23 @@ void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
         << "h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,E,F,G,H" << std::endl
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
-    ofs.close();
+
+    prepareTestFolder(ss.str(), input_file, log_file);
 
     // Act
 
-    SIM::run(input_file, log_file, 90, 100);
+    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
     // testing number and last expected results
     CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[4].size(), 1);
 
-    RangedSequence rg = m_solid_sequences[4].back();
+    RangedSequence & rg = m_solid_sequences[4].back();
 
     // testing defined min frequency
     CXXTOOLS_UNIT_ASSERT(
-        float(rg.support()) / rg.range().size() >= (0.9 - EPSILON));
+        float(rg.support()) / rg.range().size() >= (min_spatial - EPSILON));
 
     // testing synthetic known data
     CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "EFGH");
@@ -696,13 +711,8 @@ void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
 
     // Cleanup
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(
-        system(("rm -f " + test_folder + "/*").c_str()), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(
-        system(("rmdir " + test_folder + "/").c_str()), 0);
+    cleanupTestFolder();
 }
-
-
 
 cxxtools::unit::RegisterTest<SIMTest> register_SIMTest;
 
