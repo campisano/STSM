@@ -28,13 +28,12 @@ ORIENTATIONS=("original");
 #SAXS=("25" "20" "10");
 SAXS=("25");
 
-#MIN_SPATIAL_FREQS=("100" "75" "50" "25");
+MIN_SPATIAL_FREQS=("100" "75" "50" "25");
 #MIN_SPATIAL_FREQS=("100" "50" "25");
-MIN_SPATIAL_FREQS=("100");
+#MIN_SPATIAL_FREQS=("25");
 
-#MIN_BLOCK_FREQS=("100" "75" "50" "25");
-#MIN_BLOCK_FREQS=("100" "90" "75");
-MIN_BLOCK_FREQS=("100");
+MIN_BLOCK_FREQS=("50" "25" "5");
+#MIN_BLOCK_FREQS=("5");
 
 #MAX_STRETCHS=("0" "2" "5" "10");
 #MAX_STRETCHS=("0" "2" "5");
@@ -58,17 +57,20 @@ do
                 do
                     for MAX_STRETCH in "${MAX_STRETCHS[@]}"
                     do
-                        echo "------------------------------------------------------------";
-                        echo -e "I:"$INLINE"\tO:"$ORIENTATION"\tS:"$SAX"\tSF:"$MIN_SPATIAL_FREQ"\tBF:"$MIN_BLOCK_FREQ"\tMS:"$MAX_STRETCH;
-
                         SPEC_OUTPUT_FOLDER=$OUTPUT_FOLDER"/inline-"$INLINE"_orientation-"$ORIENTATION"/sax-"$SAX;
+                        BASE_FILENAME="I"$INLINE"_O"$ORIENTATION"_S"$SAX"_FS"$MIN_SPATIAL_FREQ"_FB"$MIN_BLOCK_FREQ"_MS"$MAX_STRETCH;
+
+                        mkdir -p $SPEC_OUTPUT_FOLDER;
+
+                        RUN_LOG=$SPEC_OUTPUT_FOLDER"/run_"$BASE_FILENAME".out";
+
+                        echo "------------------------------------------------------------" >> $RUN_LOG 2>&1;
+                        echo -e "I:"$INLINE"\tO:"$ORIENTATION"\tS:"$SAX"\tSF:"$MIN_SPATIAL_FREQ"\tBF:"$MIN_BLOCK_FREQ"\tMS:"$MAX_STRETCH >> $RUN_LOG 2>&1;
 
                         JSON_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/json";
                         LOG_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/log";
                         STATS_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/stats";
                         IMG_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/img/spatial-"$MIN_SPATIAL_FREQ"/block-"$MIN_BLOCK_FREQ"/stretch-"$MAX_STRETCH;
-
-                        BASE_FILENAME="I"$INLINE"_O"$ORIENTATION"_S"$SAX"_FS"$MIN_SPATIAL_FREQ"_FB"$MIN_BLOCK_FREQ"_MS"$MAX_STRETCH;
                         OUTPUT_FILE=$JSON_OUTPUT_FOLDER"/"$BASE_FILENAME".json";
                         LOG_FILE=$LOG_OUTPUT_FOLDER"/"$BASE_FILENAME".log";
 
@@ -82,7 +84,7 @@ do
                         then
                             if test ! -f $OUTPUT_FILE
                             then
-                                echo " * Running SIM $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]";
+                                echo " * Running SIM $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" >> $RUN_LOG 2>&1;
                                 time sim $INPUT_FILE $OUTPUT_FILE $LOG_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ
                                 #$MAX_STRETCH;
                             fi;
@@ -95,15 +97,15 @@ do
                         then
                             if test -f $OUTPUT_FILE.gz
                             then
-                                echo " * Decompressing previous output file [...]";
+                                echo " * Decompressing previous output file [...]" >> $RUN_LOG 2>&1;
                                 gzip -d ${OUTPUT_FILE}.gz;
                             fi;
                             if test -f $OUTPUT_FILE
                             then
-                                echo " * Producing Stacked Bar data"
+                                echo " * Producing Stacked Bar data" >> $RUN_LOG 2>&1;
                                 R --vanilla --slave --file=R/stacked_bar_data.r --args $OUTPUT_FILE $STATS_OUTPUT_FOLDER $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH;
 
-                                echo " * Plotting data $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]";
+                                echo " * Plotting data $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" >> $RUN_LOG 2>&1;
                                 time R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE $IMG_OUTPUT_FOLDER $INPUT_FOLDER"/inline_"$INLINE"_"$BASE_IMG_NAME;
                             fi;
                         fi;
@@ -111,7 +113,7 @@ do
                         # Compress outputs
                         if test -f $OUTPUT_FILE
                         then
-                            echo " * Compressing ouput file [...]";
+                            echo " * Compressing ouput file [...]" >> $RUN_LOG 2>&1;
                             rm -f $OUTPUT_FILE.gz;
                             gzip --fast $OUTPUT_FILE;
                         fi;
