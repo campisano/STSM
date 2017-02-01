@@ -245,7 +245,7 @@ to_data_frame_of_3 = function(data, name1, name2, name3) {
     data2 = c();
     data3 = c();
 
-    for (key in ls(data)) {
+    for(key in ls(data)) {
         data1 = c(data1, key);
         data2 = c(data2, data[[key]][[name2]]);
         data3 = c(data3, data[[key]][[name3]]);
@@ -261,7 +261,7 @@ to_data_frame_of_2 = function(data, name1, name2) {
     data1 = c();
     data2 = c();
 
-    for (key in ls(data)) {
+    for(key in ls(data)) {
         data1 = c(data1, key);
         data2 = c(data2, data[[key]][[name2]]);
     }
@@ -324,7 +324,7 @@ write.table(
 # gg = ggplot();
 # gg = gg + theme_bw();
 # gg = gg + geom_point(
-#     data=pos_by_seq_frame, aes(sequence, num_pos), size=25);
+#     data=pos_by_seq_frame, aes_string("sequence", "num_pos"), size=25);
 # gg = gg + theme(axis.text.x = element_text(angle=90, hjust=1));
 # gg = gg + theme(panel.background=element_rect(fill="white", colour=NA));
 # gg = gg + theme(plot.background=element_rect(fill="white", colour=NA));
@@ -349,7 +349,7 @@ write.table(
 # gg = ggplot();
 # gg = gg + theme_bw();
 # gg = gg + geom_point(
-#     data=pos_by_seq_frame, aes(sequence, num_ranges), size=25);
+#     data=pos_by_seq_frame, aes_string("sequence", "num_ranges"), size=25);
 # gg = gg + theme(axis.text.x = element_text(angle=90, hjust=1));
 # gg = gg + theme(panel.background=element_rect(fill="white", colour=NA));
 # gg = gg + theme(plot.background=element_rect(fill="white", colour=NA));
@@ -382,7 +382,7 @@ gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
 gg = gg + geom_bar(
-    data=pos_by_len_frame, aes(length, num_pos), stat="identity");
+    data=pos_by_len_frame, aes_string("length", "num_pos"), stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
     x="Sequence lengths",
@@ -401,7 +401,7 @@ gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
 gg = gg + geom_bar(
-    data=pos_by_len_frame, aes(length, num_ranges), stat="identity");
+    data=pos_by_len_frame, aes_string("length", "num_ranges"), stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
     x="Sequence lengths",
@@ -426,7 +426,8 @@ gg = ggplot();
 gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_continuous(labels=comma);
-gg = gg + geom_bar(data=pos_by_len_frame, aes(length, num_pos), stat="identity");
+gg = gg + geom_bar(
+    data=pos_by_len_frame, aes_string("length", "num_pos"), stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
     x="Sequence lengths",
@@ -436,15 +437,17 @@ invisible(dev.off());
 
 # draw a stacked bar plot of num_ranges by length in linear scale
 utils$dev_open_file(
-    file.path(vars$output_stats_dir,
-              paste(vars$base_filename, "_numranges-by-len_linear.png", sep="")),
+    file.path(vars$output_stats_dir, paste(
+        vars$base_filename, "_numranges-by-len_linear.png", sep="")),
     640, 480);
 bins = as.character(sort(as.numeric(unique(pos_by_len_frame$length))));
 gg = ggplot();
 gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_continuous(labels=comma);
-gg = gg + geom_bar(data=pos_by_len_frame, aes(length, num_ranges), stat="identity");
+gg = gg + geom_bar(
+    data=pos_by_len_frame,
+    aes_string("length", "num_ranges"), stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
     x="Sequence lengths",
@@ -465,7 +468,7 @@ gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
 gg = gg + geom_bar(
-    data=seq_by_len_frame, aes(length, sequences), stat="identity");
+    data=seq_by_len_frame, aes_string("length", "sequences"), stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
     x="Sequence lengths",
@@ -477,8 +480,9 @@ invisible(dev.off());
 
 # draw a stacked bar plot of sequences by length
 utils$dev_open_file(
-    file.path(vars$output_stats_dir,
-              paste(vars$base_filename, "_sequences-by-len_linear.png", sep="")),
+    file.path(
+        vars$output_stats_dir,
+        paste(vars$base_filename, "_sequences-by-len_linear.png", sep="")),
     640, 480);
 bins = as.character(sort(as.numeric(unique(seq_by_len_frame$length))));
 gg = ggplot();
@@ -486,7 +490,7 @@ gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_continuous(labels=comma);
 gg = gg + geom_bar(
-    data=seq_by_len_frame, aes(length, sequences), stat="identity");
+    data=seq_by_len_frame, aes_string("length", "sequences"), stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
     x="Sequence lengths",

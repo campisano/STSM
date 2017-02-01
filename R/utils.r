@@ -16,7 +16,7 @@ utils$loadLibs = function(lib_names) {
     .libPaths(c(lib, .libPaths()));
 
     for(lib_name in lib_names) {
-        if (!require(lib_name, character.only=TRUE, quietly=TRUE)) {
+        if(!require(lib_name, character.only=TRUE, quietly=TRUE)) {
             install.packages(lib_name, repos=repos, lib=lib,
                              quiet=FALSE, dependencies = TRUE);
             library(lib_name, character.only=TRUE, quietly=TRUE);
@@ -28,7 +28,11 @@ utils$loadLibs = function(lib_names) {
 
 
 
-utils$dev_open_file = function(file_name, width=480, height=480, scale=1) {
+utils$loadLibs(c("compiler"));
+
+
+
+dev_open_file_src = function(file_name, width=480, height=480, scale=1) {
     ext = strsplit(file_name, "\\.")[[1]][[-1]];
 
     dpi = 72
@@ -45,3 +49,5 @@ utils$dev_open_file = function(file_name, width=480, height=480, scale=1) {
             width=(width / dpi) * scale, height=(height / dpi) * scale);
     }
 }
+utils$dev_open_file = cmpfun(dev_open_file_src);
+rm(dev_open_file_src);

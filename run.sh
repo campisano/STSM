@@ -4,6 +4,9 @@ MEM_LIMIT=5248000;      # 5GB
 #MEM_LIMIT=7340032;      # 7GB
 #MEM_LIMIT=15728640;     # 15GB
 ulimit -v $MEM_LIMIT;
+TIMECMD=(`which time` -f "real: %e, user: %U, sys: %S");
+
+
 
 PATH=./BUILD/release:$PATH;
 #PATH=./BUILD/debug:$PATH;
@@ -28,12 +31,12 @@ ORIENTATIONS=("original");
 #SAXS=("25" "20" "10");
 SAXS=("25");
 
-MIN_SPATIAL_FREQS=("100" "75" "50" "25");
+#MIN_SPATIAL_FREQS=("100" "75" "50" "25");
 #MIN_SPATIAL_FREQS=("100" "50" "25");
-#MIN_SPATIAL_FREQS=("25");
+MIN_SPATIAL_FREQS=("25");
 
-MIN_BLOCK_FREQS=("50" "25" "5");
-#MIN_BLOCK_FREQS=("5");
+#MIN_BLOCK_FREQS=("50" "25" "5");
+MIN_BLOCK_FREQS=("5");
 
 #MAX_STRETCHS=("0" "2" "5" "10");
 #MAX_STRETCHS=("0" "2" "5");
@@ -85,7 +88,7 @@ do
                             if test ! -f $OUTPUT_FILE
                             then
                                 echo " * Running SIM $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" 2>&1 | tee -a $RUN_LOG;
-                                time sim $INPUT_FILE $OUTPUT_FILE $LOG_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ
+                                "${TIMECMD[@]}" sim $INPUT_FILE $OUTPUT_FILE $LOG_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ
                                 #$MAX_STRETCH;
                             fi;
                         fi;
@@ -103,10 +106,10 @@ do
                             if test -f $OUTPUT_FILE
                             then
                                 echo " * Producing Stacked Bar data" 2>&1 | tee -a $RUN_LOG;
-                                R --vanilla --slave --file=R/stacked_bar_data.r --args $OUTPUT_FILE $STATS_OUTPUT_FOLDER $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH;
+                                # "${TIMECMD[@]}" R --vanilla --slave --file=R/stacked_bar_data.r --args $OUTPUT_FILE $STATS_OUTPUT_FOLDER $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH;
 
                                 echo " * Plotting data $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" 2>&1 | tee -a $RUN_LOG;
-                                time R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE $IMG_OUTPUT_FOLDER $INPUT_FOLDER"/inline_"$INLINE"_"$BASE_IMG_NAME;
+                                "${TIMECMD[@]}" R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE $IMG_OUTPUT_FOLDER $INPUT_FOLDER"/inline_"$INLINE"_"$BASE_IMG_NAME;
                             fi;
                         fi;
 

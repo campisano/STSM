@@ -10,12 +10,12 @@ utils$verbose();
 
 # loading dependences
 loaded_libs = utils$loadLibs(
-    c("rjson", "TSMining", "ggplot2", "grid", "scales"));
+    c("compiler", "rjson", "TSMining", "ggplot2", "grid", "scales"));
 
 
 
 # defining a specific plot function
-plotSequencePositionsRangesAndIntervals = function(
+plotSequencePositionsRangesAndIntervals_src = function(
     x_points, y_points,
     xmin_ranges=c(), xmax_ranges=c(),
     xmin_interval=c(), xmax_interval=c(),
@@ -53,15 +53,17 @@ plotSequencePositionsRangesAndIntervals = function(
     if(length(xmin_ranges) > 0 && length(xmax_ranges) > 0) {
         gg = gg + geom_rect(
             data=df_rectangles,
-            aes(xmin=xmin, xmax=xmax, ymin=-Inf, ymax=Inf, inherit.ae=FALSE),
+            aes_string(
+                xmin="xmin", xmax="xmax",
+                ymin=-Inf, ymax=Inf, inherit.ae=FALSE),
             size=0.5 * scale,
-            color=alpha("darkgreen", 0.3), fill="darkgreen", alpha=0.2);
+            color=alpha("darkgreen", 0.5), fill="darkgreen", alpha=0.15);
     }
 
     # then print the points
     gg = gg + geom_point(
         data=df_points,
-        aes(x, y, inherit.ae=FALSE),
+        aes_string("x", "y", inherit.ae=FALSE),
         size=3 * scale, color="darkblue", alpha=0.5);
 
     # finally, if defined, print the blocks
@@ -71,9 +73,11 @@ plotSequencePositionsRangesAndIntervals = function(
     ) {
         gg = gg + geom_rect(
             data=df_blocks,
-            aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, inherit.ae=FALSE),
+            aes_string(
+                xmin="xmin", xmax="xmax",
+                ymin="ymin", ymax="ymax", inherit.ae=FALSE),
             size=0.5 * scale,
-            color=alpha("black", 0.75), fill="black", alpha=0.3);
+            color=alpha("black", 0.9), fill="black", alpha=0.5);
     }
 
     # defines the limites
@@ -100,7 +104,7 @@ plotSequencePositionsRangesAndIntervals = function(
         gg = gg + theme(axis.line=element_blank())
         gg = gg + theme(legend.position="none")
         gg = gg + theme(axis.ticks.length=unit(0, "null"))
-        gg = gg + theme(axis.ticks.margin=unit(0, "null"))
+#        gg = gg + theme(axis.ticks.margin=unit(0, "null"))
         gg = gg + theme(legend.margin=unit(0, "null"))
     } else {
         # start from the top to the bottom
@@ -109,6 +113,8 @@ plotSequencePositionsRangesAndIntervals = function(
 
     return(gg);
 }
+plotSequencePositionsRangesAndIntervals = cmpfun(
+    plotSequencePositionsRangesAndIntervals_src);
 
 
 
@@ -126,8 +132,9 @@ plotSequencePositionsRangesAndIntervals = function(
 # configuring variables
 config = new.env(hash=TRUE, parent=emptyenv());
 config$plot_scale = 5;
-config$max_length_plot_limit = 50000;
-config$min_positions_plot_limit = 50;
+config$max_length_plot_limit = 100000;
+config$per_sequence_plot_requires_a_range_with_min_pos = 10;
+config$per_sequence_plot_requires_a_block_with_min_pixels = 10;
 config$per_length_plot_image_type = "png";
 config$per_sequence_plot_image_type = "svg";
 config$background_img_size = "800px";
@@ -252,13 +259,12 @@ for(iteration in 1:length(solid_sequences)) {
     sequence_data = sequence_data_by_length$sequences;
 
     if(sequence_length == 1) {
-        cat("\t", "Skipping sequences data of sequence length == 1.\n")
+        cat("\t[WARN] Skipping sequences data of sequence length == 1.\n")
         next;
     }
 
-    cat("\tsequence length:", sequence_length,
-        "\tnum of ranged sequences:",
-        length(sequence_data), "...");
+    cat(", length:", sequence_length);
+    cat(", ranged sequences:", length(sequence_data));
 
     if(length(sequence_data) > config$max_length_plot_limit) {
         cat("\n", length(sequence_data),
@@ -271,7 +277,7 @@ for(iteration in 1:length(solid_sequences)) {
     # plotting all the sequences of same length
     ###
 
-    cat(" per-lenght plotting... ");
+    cat(", computing per-len data...");
 
     xmin_ranges = c(); # will be empty, no ranges
     xmax_ranges = c(); # will be empty, no ranges
@@ -295,7 +301,8 @@ for(iteration in 1:length(solid_sequences)) {
     );
 
     utils$dev_open_file(
-        filename_by_len, vars$database_x_size, vars$database_y_size, config$plot_scale);
+        filename_by_len, vars$database_x_size, vars$database_y_size,
+        config$plot_scale);
     plot(plotSequencePositionsRangesAndIntervals(
         x_points, y_points,
         xmin_ranges=xmin_ranges, xmax_ranges=xmax_ranges,
@@ -325,7 +332,7 @@ for(iteration in 1:length(solid_sequences)) {
 
     # organize the data by sequence
 
-    cat(" per-sequence data ...");
+    cat(", computing per-seq. data...");
 
     seq_plotd = new.env(hash=TRUE, parent=emptyenv());
 
@@ -337,6 +344,8 @@ for(iteration in 1:length(solid_sequences)) {
 
         if(! exists(sequence, seq_plotd)) {
             seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
+            seq_plotd[[sequence]]$range_with_min_pos = FALSE;
+            seq_plotd[[sequence]]$block_with_min_pixels = FALSE;
             seq_plotd[[sequence]]$xmin_ranges = c();
             seq_plotd[[sequence]]$xmax_ranges = c();
             seq_plotd[[sequence]]$xmin_interval = c();
@@ -351,6 +360,15 @@ for(iteration in 1:length(solid_sequences)) {
         end = sequence_data_item$end;
         spaces = sequence_data_item$spaces;
         times = sequence_data_item$times;
+
+        # per_sequence_plot_requires_a_range_with_min_pos condition
+        if(
+            (! seq_plotd[[sequence]]$range_with_min_pos) &&
+                (length(spaces) >=
+                     config$per_sequence_plot_requires_a_range_with_min_pos)
+            ) {
+            seq_plotd[[sequence]]$range_with_min_pos = TRUE;
+        }
 
         seq_plotd[[sequence]]$xmin_ranges = c(
             seq_plotd[[sequence]]$xmin_ranges, start);
@@ -372,7 +390,7 @@ for(iteration in 1:length(solid_sequences)) {
             length(solid_blocks_data_by_length$blocks) < 1
         ) {
         cat("\n\tError in block data.\n");
-    } else if (solid_blocks_data_by_length$length != sequence_length) {
+    } else if(solid_blocks_data_by_length$length != sequence_length) {
         cat("\n\tThe length of sequences in the same index of solid sequences",
             "and solid blocks must be the same.\n");
     } else {
@@ -383,8 +401,11 @@ for(iteration in 1:length(solid_sequences)) {
             sequence = block_data_item$sequence;
 
             if(! exists(sequence, seq_plotd)) {
-                cat("Sequence is in a block and is not in a range...\n");
+                cat("\t[WARN] STRANGE!!!",
+                    "Sequence is in a block and is not in a range...\n");
                 seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
+                seq_plotd[[sequence]]$range_with_min_pos = FALSE;
+                seq_plotd[[sequence]]$block_with_min_pixels = FALSE;
                 seq_plotd[[sequence]]$xmin_ranges = c();
                 seq_plotd[[sequence]]$xmax_ranges = c();
                 seq_plotd[[sequence]]$xmin_interval = c();
@@ -400,6 +421,15 @@ for(iteration in 1:length(solid_sequences)) {
             i_start = block_data_item$i_start;
             i_end = block_data_item$i_end;
 
+            # per_sequence_plot_requires_a_block_with_min_pixels condition
+            if(
+                (! seq_plotd[[sequence]]$block_with_min_pixels) &&
+                    (((r_end - r_start + 1) * (i_end - i_start + 1)) >=
+                    config$per_sequence_plot_requires_a_block_with_min_pixels)
+                ) {
+                seq_plotd[[sequence]]$block_with_min_pixels = TRUE;
+            }
+
             seq_plotd[[sequence]]$xmin_interval = c(
                 seq_plotd[[sequence]]$xmin_interval, r_start);
             seq_plotd[[sequence]]$xmax_interval = c(
@@ -412,7 +442,7 @@ for(iteration in 1:length(solid_sequences)) {
     }
 
 
-    cat(" plotting ...");
+    cat(", plotting...");
 
     # plot all sequence data
 
@@ -428,16 +458,22 @@ for(iteration in 1:length(solid_sequences)) {
         paste("%d", ".", config$per_sequence_plot_image_type, sep="")
     );
 
+    k = 0;
+
     something_plotted = FALSE;
 
     # producing the entire bunch of plots at one time,
     # a img with all the points and ranges for each sequence
     utils$dev_open_file(
-        filename_by_seq, vars$database_x_size, vars$database_y_size, config$plot_scale);
+        filename_by_seq, vars$database_x_size, vars$database_y_size,
+        config$plot_scale);
 
     for(key in ls(seq_plotd)) {
-        if(length(seq_plotd[[key]]$x_points)
-           > config$min_positions_plot_limit) {
+        k = k + 1;
+        if(
+            seq_plotd[[key]]$range_with_min_pos &&
+                seq_plotd[[key]]$block_with_min_pixels
+            ) {
             plot(plotSequencePositionsRangesAndIntervals(
                 seq_plotd[[key]]$x_points,
                 seq_plotd[[key]]$y_points,
@@ -458,6 +494,8 @@ for(iteration in 1:length(solid_sequences)) {
 
     invisible(dev.off());
 
+    cat(", sequences:", k);
+
     if(something_plotted) {
         # renaming to have the sequence name
         k = 0;
@@ -469,8 +507,10 @@ for(iteration in 1:length(solid_sequences)) {
             html$pre_title, sequence_length, html$post_title_pre_container);
 
         for(key in ls(seq_plotd)) {
-            if(length(seq_plotd[[key]]$x_points)
-               > config$min_positions_plot_limit) {
+            if(
+                seq_plotd[[key]]$range_with_min_pos &&
+                    seq_plotd[[key]]$block_with_min_pixels
+                ) {
                 k = k + 1;
                 file.rename(
                     file.path(
@@ -500,6 +540,8 @@ for(iteration in 1:length(solid_sequences)) {
                           key, "</div>", sep=""));
             }
         }
+
+        cat(", plotted:", k);
 
         writeLines(c(per_sequence_index_lines, html$post_container),
                    per_sequence_index_file);

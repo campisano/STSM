@@ -7,7 +7,7 @@ lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
 dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="0777");
 .libPaths(c(lib, .libPaths()));
 
-dep = "TSMining"; if (!require(dep, character.only=TRUE, quietly=TRUE)) {
+dep = "TSMining"; if(!require(dep, character.only=TRUE, quietly=TRUE)) {
     install.packages(dep, repos=repos, lib=lib);
     library(dep, character.only=TRUE);
 }; rm(dep);
