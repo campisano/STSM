@@ -1,3 +1,5 @@
+#setwd("/home/shared/develop/projects/CEFET/mestrado/SIM");
+
 # include utility file
 source(file="R/utils.r");
 
@@ -25,8 +27,6 @@ args = commandArgs(TRUE);
 #args[4] = 100;
 #args[5] = 0;
 #cat("    args:", args, "\n");
-
-#setwd("/home/shared/develop/projects/CEFET/mestrado/SIM");
 
 vars = new.env(hash=TRUE, parent=emptyenv());
 vars$input_file_json = args[1];

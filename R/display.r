@@ -1,3 +1,5 @@
+#setwd("/home/shared/develop/projects/CEFET/mestrado/SIM");
+
 # include utility file
 source(file="R/utils.r")
 
@@ -179,8 +181,6 @@ args = commandArgs(TRUE);
 #args[3] = "results/inline-100_orientation-original/sax-25/img/spatial-100/block-100/stretch-0";
 #args[4] = "data/inline_100_4755x2310.jpg";
 #cat("    args:", args, "\n");
-
-#setwd("/home/shared/develop/projects/CEFET/mestrado/SIM");
 
 vars = new.env(hash=TRUE, parent=emptyenv());
 vars$csv_database = args[1];
@@ -512,6 +512,8 @@ for(iteration in 1:length(solid_sequences)) {
                     seq_plotd[[key]]$block_with_min_pixels
                 ) {
                 k = k + 1;
+
+                # rename to final image file
                 file.rename(
                     file.path(
                         vars$output_img_dir, "by_length_and_sequence",
@@ -524,17 +526,46 @@ for(iteration in 1:length(solid_sequences)) {
                         paste(key, ".",
                               config$per_sequence_plot_image_type, sep="")));
 
+                # create a separated html
+                per_len_sequence_index_file = file(file.path(
+                    vars$output_img_dir, "by_length_and_sequence",
+                    paste(sequence_length, "/", key, ".html", sep="")));
+                writeLines(
+                    c(
+                        html$pre_title, key,
+                        html$post_title_pre_container,
+                        paste(
+                            "        <div class=\"content first\">",
+                            key, "</div>"),
+                        paste(
+                            "        <div class=\"content first\">",
+                            "<img style=\"",
+                            "background:url(../../", vars$background_img, ");",
+                            "background-size:cover;",
+                            "width:100%;\"",
+                            " src=\"",
+                            key, ".", config$per_sequence_plot_image_type,
+                            "\" alt=\"\" /></div>", sep=""),
+                        html$post_container),
+                    per_len_sequence_index_file);
+                close(per_len_sequence_index_file);
+
+                # add an entry to the per-length html
                 per_sequence_index_lines = c(
                     per_sequence_index_lines,
                     "        <div class=\"content first\">",
                     paste(
-                        "          <img style=\"",
+                        "          <a href=\"", sequence_length, "/",
+                        key, ".html\">", sep=""),
+                    paste(
+                        "            <img style=\"",
                         "background:url(../", vars$background_img, ");",
                         "background-size:cover;",
                         "width:800px;\"",
                         " src=\"", sequence_length, "/",
                         key, ".", config$per_sequence_plot_image_type,
                         "\" alt=\"\" />", sep=""),
+                    "          </a>",
                     "        </div>",
                     paste("        <div class=\"content\">",
                           key, "</div>", sep=""));
