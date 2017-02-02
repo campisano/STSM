@@ -59,7 +59,7 @@ plotSequencePositionsRangesAndIntervals_src = function(
                 xmin="xmin", xmax="xmax",
                 ymin=-Inf, ymax=Inf, inherit.ae=FALSE),
             size=0.5 * scale,
-            color=alpha("darkgreen", 0.5), fill="darkgreen", alpha=0.15);
+            color=alpha("darkgreen", 0.5), fill="darkgreen", alpha=0.1);
     }
 
     # then print the points
@@ -79,7 +79,7 @@ plotSequencePositionsRangesAndIntervals_src = function(
                 xmin="xmin", xmax="xmax",
                 ymin="ymin", ymax="ymax", inherit.ae=FALSE),
             size=0.5 * scale,
-            color=alpha("black", 0.9), fill="black", alpha=0.5);
+            color=alpha("darkred", 1), fill="darkred", alpha=0.5);
     }
 
     # defines the limites
@@ -136,7 +136,7 @@ config = new.env(hash=TRUE, parent=emptyenv());
 config$plot_scale = 5;
 config$max_length_plot_limit = 100000;
 config$per_sequence_plot_requires_a_range_with_min_pos = 10;
-config$per_sequence_plot_requires_a_block_with_min_pixels = 10;
+config$per_sequence_plot_requires_a_block_with_min_pixels = 100;
 config$per_length_plot_image_type = "png";
 config$per_sequence_plot_image_type = "svg";
 config$background_img_size = "800px";
