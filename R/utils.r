@@ -9,15 +9,31 @@ utils$verbose = function() {
 
 
 # defining functions
-utils$loadLibs = function(lib_names) {
+utils$loadLibs = function(lib_name_and_vers) {
     repos = "http://cran.r-project.org";
     lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
     dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="2755");
     .libPaths(c(lib, .libPaths()));
 
-    for(lib_name in lib_names) {
+    # use devtools
+    lib_name = "versions";
+
+    if(!require(lib_name, character.only=TRUE, quietly=TRUE)) {
+        install.packages(lib_name, repos=repos, lib=lib,
+                         quiet=FALSE, dependencies = TRUE);
+        library(lib_name, character.only=TRUE, quietly=TRUE);
+    }
+
+    lib_names = c();
+
+    # install specific libs
+    for(lib_name_and_ver in lib_name_and_vers) {
+        lib_name = unlist(strsplit(lib_name_and_ver, ":"))[1];
+        lib_ver = unlist(strsplit(lib_name_and_ver, ":"))[2];
+        lib_names = c(lib_names, lib_name);
+
         if(!require(lib_name, character.only=TRUE, quietly=TRUE)) {
-            install.packages(lib_name, repos=repos, lib=lib,
+            install.versions(lib_name, versions=lib_ver, repos=repos, lib=lib,
                              quiet=FALSE, dependencies = TRUE);
             library(lib_name, character.only=TRUE, quietly=TRUE);
         }

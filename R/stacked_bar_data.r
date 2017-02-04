@@ -11,7 +11,11 @@ utils$verbose();
 
 
 # loading dependences
-loaded_libs = utils$loadLibs(c("rjson", "ggplot2", "grid", "scales"));
+loaded_libs = utils$loadLibs(c(
+    "rjson:0.2.15",
+    "ggplot2:1.0.0",
+    "grid:3.1.1",
+    "scales:3.1.1"));
 
 
 

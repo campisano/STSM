@@ -11,8 +11,13 @@ utils$verbose();
 
 
 # loading dependences
-loaded_libs = utils$loadLibs(
-    c("compiler", "rjson", "TSMining", "ggplot2", "grid", "scales"));
+loaded_libs = utils$loadLibs(c(
+    "compiler:3.1.1",
+    "rjson:0.2.15",
+    "TSMining:1.0",
+    "ggplot2:1.0.0",
+    "grid:3.1.1",
+    "scales:3.1.1"));
 
 
 
