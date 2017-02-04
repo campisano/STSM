@@ -29,11 +29,11 @@ ORIENTATIONS=("original");
 
 #SAXS=("25" "20" "15" "10" "5");
 #SAXS=("25" "20" "10");
-SAXS=("25");
+SAXS=("10");
 
 #MIN_SPATIAL_FREQS=("100" "75" "50" "25");
 #MIN_SPATIAL_FREQS=("100" "50" "25");
-MIN_SPATIAL_FREQS=("25");
+MIN_SPATIAL_FREQS=("75");
 
 #MIN_BLOCK_FREQS=("50" "25" "5");
 MIN_BLOCK_FREQS=("5");
@@ -72,7 +72,7 @@ do
 
                         JSON_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/json";
                         LOG_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/log";
-                        STATS_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/stats";
+                        STATS_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/stats/spatial-"$MIN_SPATIAL_FREQ"/block-"$MIN_BLOCK_FREQ"/stretch-"$MAX_STRETCH;
                         IMG_OUTPUT_FOLDER=$SPEC_OUTPUT_FOLDER"/img/spatial-"$MIN_SPATIAL_FREQ"/block-"$MIN_BLOCK_FREQ"/stretch-"$MAX_STRETCH;
                         OUTPUT_FILE=$JSON_OUTPUT_FOLDER"/"$BASE_FILENAME".json";
                         LOG_FILE=$LOG_OUTPUT_FOLDER"/"$BASE_FILENAME".log";
@@ -94,9 +94,7 @@ do
                         fi;
 
                         # Produce Stacked Bar data and images only if was not already done
-                        if test ! -f $IMG_OUTPUT_FOLDER"/complete"
-                        # if test "1" == "0"
-                        # if test "1" == "1"
+                        if test ! -f $STATS_OUTPUT_FOLDER"/complete" -o ! -f  $IMG_OUTPUT_FOLDER"/complete"
                         then
                             if test -f $OUTPUT_FILE.gz
                             then
@@ -105,11 +103,17 @@ do
                             fi;
                             if test -f $OUTPUT_FILE
                             then
-                                echo " * Producing Stacked Bar data" 2>&1 | tee -a $RUN_LOG;
-                                # "${TIMECMD[@]}" R --vanilla --slave --file=R/stacked_bar_data.r --args $OUTPUT_FILE $STATS_OUTPUT_FOLDER $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH;
+                                if test ! -f $STATS_OUTPUT_FOLDER"/complete"
+                                then
+                                    echo " * Producing Stacked Bar data" 2>&1 | tee -a $RUN_LOG;
+                                    "${TIMECMD[@]}" R --vanilla --slave --file=R/stacked_bar_data.r --args $OUTPUT_FILE $STATS_OUTPUT_FOLDER $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH;
+                                fi;
 
-                                echo " * Plotting data $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" 2>&1 | tee -a $RUN_LOG;
-                                "${TIMECMD[@]}" R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE $IMG_OUTPUT_FOLDER $INPUT_FOLDER"/inline_"$INLINE"_"$BASE_IMG_NAME;
+                                if test ! -f $IMG_OUTPUT_FOLDER"/complete"
+                                then
+                                    echo " * Plotting data $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" 2>&1 | tee -a $RUN_LOG;
+                                    "${TIMECMD[@]}" R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE $IMG_OUTPUT_FOLDER $INPUT_FOLDER"/inline_"$INLINE"_"$BASE_IMG_NAME;
+                                fi;
                             fi;
                         fi;
 

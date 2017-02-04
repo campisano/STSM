@@ -22,7 +22,7 @@ args = commandArgs(TRUE);
 # examples:
 #args = c();
 #args[1] = "results/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB100_MS0.json";
-#args[2] = "results/inline-100_orientation-original/sax-25/stats";
+#args[2] = "results/inline-100_orientation-original/sax-25/stats/spatial-100/block-100/stretch-0";
 #args[3] = 100;
 #args[4] = 100;
 #args[5] = 0;
@@ -631,7 +631,10 @@ gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
 gg = gg + geom_bar(
-    data=pos_by_len_frame, aes_string("length", "num_pos"), stat="identity");
+    data=pos_by_len_frame,
+    aes_string(x="length", y="num_pos"),
+    position="identity",
+    stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
     x="Sequence lengths",
@@ -650,7 +653,10 @@ gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
 gg = gg + geom_bar(
-    data=pos_by_len_frame, aes_string("length", "num_ranges"), stat="identity");
+    data=pos_by_len_frame,
+    aes_string(x="length", y="num_ranges"),
+    position="identity",
+    stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
     x="Sequence lengths",
@@ -676,7 +682,10 @@ gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_continuous(labels=comma);
 gg = gg + geom_bar(
-    data=pos_by_len_frame, aes_string("length", "num_pos"), stat="identity");
+    data=pos_by_len_frame,
+    aes_string(x="length", y="num_pos"),
+    position="identity",
+    stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
     x="Sequence lengths",
@@ -696,7 +705,9 @@ gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_continuous(labels=comma);
 gg = gg + geom_bar(
     data=pos_by_len_frame,
-    aes_string("length", "num_ranges"), stat="identity");
+    aes_string(x="length", y="num_ranges"),
+    position="identity",
+    stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
     x="Sequence lengths",
@@ -717,7 +728,10 @@ gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
 gg = gg + geom_bar(
-    data=seq_by_len_frame, aes_string("length", "sequences"), stat="identity");
+    data=seq_by_len_frame,
+    aes_string(x="length", y="sequences"),
+    position="identity",
+    stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
     x="Sequence lengths",
@@ -739,10 +753,16 @@ gg = gg + theme_bw();
 gg = gg + scale_x_discrete(breaks=bins, limits=bins);
 gg = gg + scale_y_continuous(labels=comma);
 gg = gg + geom_bar(
-    data=seq_by_len_frame, aes_string("length", "sequences"), stat="identity");
+    data=seq_by_len_frame,
+    aes_string(x="length", y="sequences"),
+    position="identity",
+    stat="identity");
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
     x="Sequence lengths",
     y="Num of sequence patterns");
 plot(gg);
 invisible(dev.off());
+
+# write a file that grants that this plot is complete for this product
+result = file.create(file.path(vars$output_stats_dir, "complete"));
