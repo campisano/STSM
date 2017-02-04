@@ -19,12 +19,13 @@ utils$loadLibs = function(lib_name_and_vers) {
     lib_name = "versions";
 
     if(!require(lib_name, character.only=TRUE, quietly=TRUE)) {
-        install.packages(lib_name, repos=repos, lib=lib,
-                         quiet=FALSE, dependencies = TRUE);
+        install.packages(
+            "https://cran.r-project.org/src/contrib/Archive/versions/versions_0.2.tar.gz",
+            lib=lib, quiet=FALSE, dependencies=TRUE);
         library(lib_name, character.only=TRUE, quietly=TRUE);
     }
 
-    lib_names = c();
+    lib_names = c(lib_name);
 
     # install specific libs
     for(lib_name_and_ver in lib_name_and_vers) {
@@ -34,7 +35,7 @@ utils$loadLibs = function(lib_name_and_vers) {
 
         if(!require(lib_name, character.only=TRUE, quietly=TRUE)) {
             install.versions(lib_name, versions=lib_ver, repos=repos, lib=lib,
-                             quiet=FALSE, dependencies = TRUE);
+                             quiet=FALSE, dependencies=TRUE);
             library(lib_name, character.only=TRUE, quietly=TRUE);
         }
     }
