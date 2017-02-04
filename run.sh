@@ -17,7 +17,8 @@ PATH=./BUILD/release:$PATH;
 INPUT_FOLDER="data";
 OUTPUT_FOLDER="results";
 
-BASE_IMG_NAME="4755x2310.jpg";
+#BASE_IMG_NAME="4755x2310.jpg";
+BASE_IMG_NAME="951x462.jpg";
 
 
 
