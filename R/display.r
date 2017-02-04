@@ -106,7 +106,6 @@ plotSequencePositionsRangesAndIntervals_src = function(
         gg = gg + theme(axis.line=element_blank())
         gg = gg + theme(legend.position="none")
         gg = gg + theme(axis.ticks.length=unit(0, "null"))
-#        gg = gg + theme(axis.ticks.margin=unit(0, "null"))
         gg = gg + theme(legend.margin=unit(0, "null"))
     } else {
         # start from the top to the bottom
@@ -133,10 +132,12 @@ plotSequencePositionsRangesAndIntervals = cmpfun(
 
 # configuring variables
 config = new.env(hash=TRUE, parent=emptyenv());
+config$max_sequence_length_to_plot = Inf;
 config$plot_scale = 5;
 config$max_length_plot_limit = 100000;
-config$per_sequence_plot_requires_a_range_with_min_pos = 10;
-config$per_sequence_plot_requires_a_block_with_min_pixels = 100;
+config$per_sequence_plot_requires_a_range_with_min_pos = 5;
+config$per_sequence_plot_requires_a_block_with_min_area = 5;
+config$per_sequence_plot_block_requires_min_width_to_be_drawn = 5;
 config$per_length_plot_image_type = "png";
 config$per_sequence_plot_image_type = "svg";
 config$background_img_size = "800px";
@@ -179,7 +180,7 @@ args = commandArgs(TRUE);
 #args[1] = "data/100_sax-25_original.csv";
 #args[2] = "results/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB100_MS0.json";
 #args[3] = "results/inline-100_orientation-original/sax-25/img/spatial-100/block-100/stretch-0";
-#args[4] = "data/inline_100_4755x2310.jpg";
+#args[4] = "data/inline_100_951x462.jpg";
 #cat("    args:", args, "\n");
 
 vars = new.env(hash=TRUE, parent=emptyenv());
@@ -257,6 +258,11 @@ for(iteration in 1:length(solid_sequences)) {
 
     sequence_length = sequence_data_by_length$length;
     sequence_data = sequence_data_by_length$sequences;
+
+    # limit sequence plot to a length sample
+    if(sequence_length > config$max_sequence_length_to_plot) {
+        break;
+    }
 
     if(sequence_length == 1) {
         cat("\t[WARN] Skipping sequences data of sequence length == 1.\n")
@@ -345,7 +351,7 @@ for(iteration in 1:length(solid_sequences)) {
         if(! exists(sequence, seq_plotd)) {
             seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
             seq_plotd[[sequence]]$range_with_min_pos = FALSE;
-            seq_plotd[[sequence]]$block_with_min_pixels = FALSE;
+            seq_plotd[[sequence]]$block_with_min_area = FALSE;
             seq_plotd[[sequence]]$xmin_ranges = c();
             seq_plotd[[sequence]]$xmax_ranges = c();
             seq_plotd[[sequence]]$xmin_interval = c();
@@ -405,7 +411,7 @@ for(iteration in 1:length(solid_sequences)) {
                     "Sequence is in a block and is not in a range...\n");
                 seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
                 seq_plotd[[sequence]]$range_with_min_pos = FALSE;
-                seq_plotd[[sequence]]$block_with_min_pixels = FALSE;
+                seq_plotd[[sequence]]$block_with_min_area = FALSE;
                 seq_plotd[[sequence]]$xmin_ranges = c();
                 seq_plotd[[sequence]]$xmax_ranges = c();
                 seq_plotd[[sequence]]$xmin_interval = c();
@@ -421,23 +427,28 @@ for(iteration in 1:length(solid_sequences)) {
             i_start = block_data_item$i_start;
             i_end = block_data_item$i_end;
 
-            # per_sequence_plot_requires_a_block_with_min_pixels condition
+            # per_sequence_plot_requires_a_block_with_min_area condition
             if(
-                (! seq_plotd[[sequence]]$block_with_min_pixels) &&
+                (! seq_plotd[[sequence]]$block_with_min_area) &&
                     (((r_end - r_start + 1) * (i_end - i_start + 1)) >=
-                    config$per_sequence_plot_requires_a_block_with_min_pixels)
+                    config$per_sequence_plot_requires_a_block_with_min_area)
                 ) {
-                seq_plotd[[sequence]]$block_with_min_pixels = TRUE;
+                seq_plotd[[sequence]]$block_with_min_area = TRUE;
             }
 
-            seq_plotd[[sequence]]$xmin_interval = c(
-                seq_plotd[[sequence]]$xmin_interval, r_start);
-            seq_plotd[[sequence]]$xmax_interval = c(
-                seq_plotd[[sequence]]$xmax_interval, r_end);
-            seq_plotd[[sequence]]$ymin_interval = c(
-                seq_plotd[[sequence]]$ymin_interval, i_start);
-            seq_plotd[[sequence]]$ymax_interval = c(
-                seq_plotd[[sequence]]$ymax_interval, i_end);
+            if(
+                (r_end - r_start + 1) >=
+                config$per_sequence_plot_block_requires_min_width_to_be_drawn
+                ) {
+                seq_plotd[[sequence]]$xmin_interval = c(
+                    seq_plotd[[sequence]]$xmin_interval, r_start);
+                seq_plotd[[sequence]]$xmax_interval = c(
+                    seq_plotd[[sequence]]$xmax_interval, r_end);
+                seq_plotd[[sequence]]$ymin_interval = c(
+                    seq_plotd[[sequence]]$ymin_interval, i_start);
+                seq_plotd[[sequence]]$ymax_interval = c(
+                    seq_plotd[[sequence]]$ymax_interval, i_end);
+            }
         }
     }
 
@@ -472,7 +483,7 @@ for(iteration in 1:length(solid_sequences)) {
         k = k + 1;
         if(
             seq_plotd[[key]]$range_with_min_pos &&
-                seq_plotd[[key]]$block_with_min_pixels
+                seq_plotd[[key]]$block_with_min_area
             ) {
             plot(plotSequencePositionsRangesAndIntervals(
                 seq_plotd[[key]]$x_points,
@@ -509,7 +520,7 @@ for(iteration in 1:length(solid_sequences)) {
         for(key in ls(seq_plotd)) {
             if(
                 seq_plotd[[key]]$range_with_min_pos &&
-                    seq_plotd[[key]]$block_with_min_pixels
+                    seq_plotd[[key]]$block_with_min_area
                 ) {
                 k = k + 1;
 
@@ -542,7 +553,7 @@ for(iteration in 1:length(solid_sequences)) {
                             "<img style=\"",
                             "background:url(../../", vars$background_img, ");",
                             "background-size:cover;",
-                            "width:100%;\"",
+                            "width:", config$background_img_size ,";\"",
                             " src=\"",
                             key, ".", config$per_sequence_plot_image_type,
                             "\" alt=\"\" /></div>", sep=""),
