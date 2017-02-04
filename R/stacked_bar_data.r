@@ -52,6 +52,13 @@ if(is.null(json_data) || length(json_data) < 1) {
 }
 
 solid_sequences = json_data$solid_sequences;
+solid_blocks = json_data$solid_blocks;
+
+if(length(solid_sequences) != length(solid_blocks)) {
+    cat("Num of solid sequence lengths",
+        "expected to be equal to num of solid blocks length!\n");
+    quit(status=1);
+}
 
 
 
@@ -161,9 +168,15 @@ pos_by_len = new.env(hash=TRUE, parent=emptyenv());
 # count sequences by length
 seq_by_len = new.env(hash=TRUE, parent=emptyenv());
 
+# histogram of block areas by length
+hist_block_stats = new.env(hash=TRUE, parent=emptyenv());
+
+
 # start the iterations, for each json data grouped by length
 for(iteration in 1:length(solid_sequences)) {
     #cat("Iteration:", iteration);
+
+    # sequences
 
     sequence_data_by_length = solid_sequences[[iteration]];
 
@@ -181,6 +194,7 @@ for(iteration in 1:length(solid_sequences)) {
 
     sequence_length = sequence_data_by_length$length;
     sequence_data = sequence_data_by_length$sequences;
+    len = as.character(sequence_length);
 
     for(j in 1:length(sequence_data)) {
         sequence_data_item = sequence_data[[j]];
@@ -202,8 +216,6 @@ for(iteration in 1:length(solid_sequences)) {
             pos_by_seq[[sequence]]$num_pos =
                 pos_by_seq[[sequence]]$num_pos +
                 length(sequence_data_item$spaces);
-
-            len = as.character(sequence_length);
 
             # count matching postions by length
             if(! exists(len, pos_by_len)) {
@@ -231,11 +243,248 @@ for(iteration in 1:length(solid_sequences)) {
         }
     }
 
-    # correcting count sequences by length
+    # count stored sequences by length
+    seq_by_len[[len]]$sequences = length(seq_by_len[[len]]$sequences);
 
-    seq_by_len[[len]]$sequences =
-        length(seq_by_len[[len]]$sequences);
+
+
+#     # blocks
+#
+#     solid_blocks_data_by_length = solid_blocks[[iteration]];
+#
+#     if(
+#         is.null(solid_blocks_data_by_length$length) ||
+#             is.null(solid_blocks_data_by_length$blocks) ||
+#             length(solid_blocks_data_by_length$blocks) < 1
+#     ) {
+#         cat("\n\tError in block data.\n");
+#     } else if(solid_blocks_data_by_length$length != sequence_length) {
+#         cat("\n\tThe length of sequences in the same index of solid sequences",
+#             "and solid blocks must be the same.\n");
+#     } else {
+#         solid_blocks_data = solid_blocks_data_by_length$blocks;
+#
+#         for(j in 1:length(solid_blocks_data)) {
+#             block_data_item = solid_blocks_data[[j]];
+#             sequence = block_data_item$sequence;
+#
+#             r_start = block_data_item$r_start;
+#             r_end = block_data_item$r_end;
+#             i_start = block_data_item$i_start;
+#             i_end = block_data_item$i_end;
+#
+#             # histogram of block areas and widths by length
+#             if(! exists(len, hist_block_stats)) {
+#                 hist_block_stats[[len]] =
+#                     new.env(hash=TRUE, parent=emptyenv());
+#                 hist_block_stats[[len]]$areas = c();
+#                 hist_block_stats[[len]]$widths = c();
+#             }
+#
+#             hist_block_stats[[len]]$areas = c(
+#                 hist_block_stats[[len]]$areas,
+#                 (r_end - r_start + 1) * (i_end - i_start + 1)
+#             );
+#
+#             hist_block_stats[[len]]$widths = c(
+#                 hist_block_stats[[len]]$widths, (r_end - r_start + 1)
+#             );
+#         }
+#     }
 }
+
+
+
+
+#
+# # block stats
+# #
+# areas = data.frame(hist_block_stats[["3"]]$areas);
+# colnames(areas) = c("areas");
+# widths = data.frame(hist_block_stats[["3"]]$widths);
+# colnames(widths) = c("widths");
+#
+# areas_3000 = data.frame(areas[areas$areas < 3000,]);
+# colnames(areas_3000) = c("areas");
+# utils$dev_open_file("areas_len3_limits-0-3000_linear.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=areas_3000,
+#         aes_string(x="areas"),
+#         binwidth=6,
+#         drop=TRUE);
+# dev.off();
+# utils$dev_open_file("areas_len3_limits-0-3000_log.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=areas_3000,
+#         aes_string(x="areas"),
+#         binwidth=6,
+#         drop=TRUE) +
+#     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
+# dev.off();
+#
+# areas_300 = data.frame(areas[areas$areas < 300,]);
+# colnames(areas_300) = c("areas");
+# utils$dev_open_file("areas_len3_limits-0-300_linear.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=areas_300,
+#         aes_string(x="areas"),
+#         binwidth=6,
+#         drop=TRUE);
+# dev.off();
+# utils$dev_open_file("areas_len3_limits-0-300_log.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=areas_300,
+#         aes_string(x="areas"),
+#         binwidth=6,
+#         drop=TRUE) +
+#     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
+# dev.off();
+#
+# areas_150 = data.frame(areas[areas$areas < 150,]);
+# colnames(areas_150) = c("areas");
+# utils$dev_open_file("areas_len3_limits-0-150_linear.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=areas_150,
+#         aes_string(x="areas"),
+#         binwidth=3,
+#         drop=TRUE);
+# dev.off();
+# utils$dev_open_file("areas_len3_limits-0-150_log.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=areas_150,
+#         aes_string(x="areas"),
+#         binwidth=3,
+#         drop=TRUE) +
+#     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
+# dev.off();
+#
+# areas_20 = data.frame(areas[areas$areas < 20,]);
+# colnames(areas_20) = c("areas");
+# utils$dev_open_file("areas_len3_limits-0-20_linear.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=areas_20,
+#         aes_string(x="areas"),
+#         binwidth=1,
+#         drop=TRUE);
+# dev.off();
+# utils$dev_open_file("areas_len3_limits-0-20_log.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=areas_20,
+#         aes_string(x="areas"),
+#         binwidth=1,
+#         drop=TRUE) +
+#     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
+# dev.off();
+#
+# widths_3000 = data.frame(widths[widths$widths < 3000,]);
+# colnames(widths_3000) = c("widths");
+# utils$dev_open_file("widths_len3_limits-0-3000_linear.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=widths_3000,
+#         aes_string(x="widths"),
+#         binwidth=6,
+#         drop=TRUE);
+# dev.off();
+# utils$dev_open_file("widths_len3_limits-0-3000_log.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=widths_3000,
+#         aes_string(x="widths"),
+#         binwidth=6,
+#         drop=TRUE) +
+#     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
+# dev.off();
+#
+# widths_300 = data.frame(widths[widths$widths < 300,]);
+# colnames(widths_300) = c("widths");
+# utils$dev_open_file("widths_len3_limits-0-300_linear.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=widths_300,
+#         aes_string(x="widths"),
+#         binwidth=6,
+#         drop=TRUE);
+# dev.off();
+# utils$dev_open_file("widths_len3_limits-0-300_log.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=widths_300,
+#         aes_string(x="widths"),
+#         binwidth=6,
+#         drop=TRUE) +
+#     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
+# dev.off();
+#
+# widths_150 = data.frame(widths[widths$widths < 150,]);
+# colnames(widths_150) = c("widths");
+# utils$dev_open_file("widths_len3_limits-0-150_linear.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=widths_150,
+#         aes_string(x="widths"),
+#         binwidth=3,
+#         drop=TRUE);
+# dev.off();
+# utils$dev_open_file("widths_len3_limits-0-150_log.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=widths_150,
+#         aes_string(x="widths"),
+#         binwidth=3,
+#         drop=TRUE) +
+#     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
+# dev.off();
+#
+# widths_20 = data.frame(widths[widths$widths < 20,]);
+# colnames(widths_20) = c("widths");
+# utils$dev_open_file("widths_len3_limits-0-20_linear.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=widths_20,
+#         aes_string(x="widths"),
+#         binwidth=1,
+#         drop=TRUE);
+# dev.off();
+# utils$dev_open_file("widths_len3_limits-0-20_log.png", 640, 480);
+# ggplot() +
+#     theme_bw() +
+#     geom_histogram(
+#         data=widths_20,
+#         aes_string(x="widths"),
+#         binwidth=1,
+#         drop=TRUE) +
+#     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
+# dev.off();
+
+
+
+
+
+
 
 
 
