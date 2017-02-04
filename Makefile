@@ -1,5 +1,5 @@
 # version of this Makefile
-MAKEFILE_VER=		0.5.2
+MAKEFILE_VER=		0.6.0
 
 
 
@@ -17,13 +17,13 @@ MAKEFLAGS+=			-s
 OUT_FILE=			sim
 
 # CUSTOM paths
-#INC_DIR=			inc
 INC_DIR=			src
 SRC_DIR=			src
 LIB_DIR=			lib
 
 # CUSTOM libs
 LIBS_REL=			-l cxxtools
+LIBS_STA=			$(LIBS_REL)
 LIBS_DEB=			$(LIBS_REL)
 LIBS_TES=			$(LIBS_REL) -l cxxtools-unit
 
@@ -32,6 +32,7 @@ LIBS_TES=			$(LIBS_REL) -l cxxtools-unit
 # basic path
 BUILD_DIR=			BUILD
 RELEASE_DIR=		$(BUILD_DIR)/release
+STATIC_DIR=			$(BUILD_DIR)/static
 DEBUG_DIR=			$(BUILD_DIR)/debug
 TEST_DIR=			$(BUILD_DIR)/test
 
@@ -48,7 +49,9 @@ RM=					rm -f
 
 # flags
 PLATFORM_FLAGS=		-m64
+
 RELEASE_FLAGS=		-O3 -s
+STATIC_FLAGS=		-static -static-libgcc -static-libstdc++ -pthread
 DEBUG_FLAGS=		-O0 -ggdb -g3    # no optimization and increase debug level to 3
 TEST_FLAGS=			$(DEBUG_FLAGS)
 
@@ -64,18 +67,23 @@ ifeq ($(MAKECMDGOALS), clean)
 else ifeq ($(MAKECMDGOALS), debug)
 	GOAL=			Debug
 	OUT_DIR=		$(DEBUG_DIR)
-	CC_COMMAND=		$(CC) $(DEBUG_FLAGS) $(CC_FLAGS)
-	LD_COMMAND=		$(LD) $(DEBUG_FLAGS) $(LD_FLAGS) $(LIBS_DEB)
+	CC_CMD_ARGS=	$(DEBUG_FLAGS) $(CC_FLAGS)
+	LD_CMD_ARGS=	$(DEBUG_FLAGS) $(LD_FLAGS) $(LIBS_DEB)
 else ifeq ($(MAKECMDGOALS), test)
 	GOAL=			Test
 	OUT_DIR=		$(TEST_DIR)
-	CC_COMMAND=		$(CC) $(TEST_FLAGS) $(CC_FLAGS)
-	LD_COMMAND=		$(LD) $(TEST_FLAGS) $(LD_FLAGS) $(LIBS_TES)
+	CC_CMD_ARGS=	$(TEST_FLAGS) $(CC_FLAGS)
+	LD_CMD_ARGS=	$(TEST_FLAGS) $(LD_FLAGS) $(LIBS_TES)
+else ifeq ($(MAKECMDGOALS), static)
+	GOAL=			Static
+	OUT_DIR=		$(STATIC_DIR)
+	CC_CMD_ARGS=	$(RELEASE_FLAGS) $(CC_FLAGS)
+	LD_CMD_ARGS=	$(RELEASE_FLAGS) $(STATIC_FLAGS) $(LD_FLAGS) $(LIBS_STA)
 else
 	GOAL=			Release
 	OUT_DIR=		$(RELEASE_DIR)
-	CC_COMMAND=		$(CC) $(RELEASE_FLAGS) $(CC_FLAGS)
-	LD_COMMAND=		$(LD) $(RELEASE_FLAGS) $(LD_FLAGS) $(LIBS_REL)
+	CC_CMD_ARGS=	$(RELEASE_FLAGS) $(CC_FLAGS)
+	LD_CMD_ARGS=	$(RELEASE_FLAGS) $(LD_FLAGS) $(LIBS_REL)
 endif
 
 
@@ -112,6 +120,11 @@ CHECK=				&& echo $(ECHO_DONE) || (echo && echo $(ECHO_SHIT) && exit 1)
 all:				release
 
 release:			INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE INFO_LD CMD_LINK
+	@echo
+	@echo "Hint: run with './$(OUT_DIR)/$(OUT_FILE)'"
+	@echo
+
+static:			INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE INFO_LD CMD_LINK
 	@echo
 	@echo "Hint: run with './$(OUT_DIR)/$(OUT_FILE)'"
 	@echo
@@ -159,17 +172,18 @@ SERIE:				$(INC_DIR)/Serie.h
 #--- redefine the implicit rule to compile
 $(OUT_DIR)/%.o:	$(SRC_DIR)/%.cpp
 	@echo -n ${GREEN}"   + "${WHITE}$(SRC_DIR)/$*.cpp$(NORMAL) -o $(OUT_DIR)/$*.o "... "
-	$(CC_COMMAND) -c $(SRC_DIR)/$*.cpp -o $(OUT_DIR)/$*.o $(CHECK)
+	$(CC) -c $(SRC_DIR)/$*.cpp $(CC_CMD_ARGS) -o $(OUT_DIR)/$*.o $(CHECK)
 
 CMD_LINK:
 	@echo -n ${GREEN}"   + "${WHITE} $(OUT_DIR)"/*.o"$(NORMAL) -o $(OUT_DIR)/$(OUT_FILE) "... "
-	$(LD_COMMAND) $(OUT_DIR)/*.o -o $(OUT_DIR)/$(OUT_FILE) $(CHECK)
+	$(LD) $(OUT_DIR)/*.o $(LD_CMD_ARGS) -o $(OUT_DIR)/$(OUT_FILE) $(CHECK)
 
 
 
 ################################################################################
 CMD_PREREQ:
 	mkdir -p $(RELEASE_DIR)
+	mkdir -p $(STATIC_DIR)
 	mkdir -p $(DEBUG_DIR)
 	mkdir -p $(TEST_DIR)
 
@@ -180,6 +194,8 @@ clean:				INFO_TRG
 	@echo
 	@echo -n ${RED}"   - "${WHITE}$(RM) $(RELEASE_DIR)"/*.o" $(RELEASE_DIR)/$(OUT_FILE)$(NORMAL)
 	$(RM) $(RELEASE_DIR)/*.o $(RELEASE_DIR)/$(OUT_FILE)$(CHECK)
+	@echo -n ${RED}"   - "${WHITE}$(RM) $(STATIC_DIR)"/*.o" $(STATIC_DIR)/$(OUT_FILE)$(NORMAL)
+	$(RM) $(STATIC_DIR)/*.o $(STATIC_DIR)/$(OUT_FILE)$(CHECK)
 	@echo -n ${RED}"   - "${WHITE}$(RM) $(DEBUG_DIR)"/*.o" $(DEBUG_DIR)/$(OUT_FILE)$(NORMAL)
 	$(RM) $(DEBUG_DIR)/*.o $(DEBUG_DIR)/$(OUT_FILE)$(CHECK)
 	@echo -n ${RED}"   - "${WHITE}$(RM) $(TEST_DIR)"/*.o" $(TEST_DIR)/$(OUT_FILE)$(NORMAL)
@@ -201,12 +217,12 @@ INFO_VARS:
 INFO_CC:
 	@echo
 	@echo $(YELLOW)"Command used to build:"$(NORMAL)
-	@echo    $(BLUE)$(CC_COMMAND) -c$(NORMAL)
+	@echo    $(BLUE)$(CC)" <files> "$(CC_CMD_ARGS) -c$(NORMAL)
 
 INFO_LD:
 	@echo
 	@echo $(YELLOW)"Command used to link:"$(NORMAL)
-	@echo    $(BLUE)$(LD_COMMAND)$(NORMAL)
+	@echo    $(BLUE)$(LD)" <files> "$(LD_CMD_ARGS)$(NORMAL)
 
 
 
