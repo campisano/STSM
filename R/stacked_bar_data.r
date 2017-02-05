@@ -1,12 +1,7 @@
 #setwd("/home/shared/develop/projects/CEFET/mestrado/SIM");
 
 # include utility file
-source(file="R/utils.r");
-
-
-
-# configure detailed error outputs
-utils$verbose();
+source(file="R/utils.r", chdir=TRUE);
 
 
 

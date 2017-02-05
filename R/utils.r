@@ -1,31 +1,32 @@
+options(download.file.method = "wget");
+options(warn=2, keep.source=TRUE);
+
 utils = new.env(hash=TRUE, parent=emptyenv());
-
-
-
-utils$verbose = function() {
-    options(warn=2, keep.source=TRUE);
-}
-
-
 
 # defining functions
 utils$loadLibs = function(lib_name_and_vers) {
     repos = "http://cran.r-project.org";
+    options(repos=c(CRAN=repos));
     lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
     dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="2755");
-    .libPaths(c(lib, .libPaths()));
+    .libPaths(c(lib));
 
     # use devtools
-    lib_name = "versions";
+    ; lib_name = "devtools";
 
-    if(!require(lib_name, character.only=TRUE, quietly=TRUE)) {
-        install.packages(
-            "https://cran.r-project.org/src/contrib/Archive/versions/versions_0.2.tar.gz",
-            lib=lib, quiet=FALSE, dependencies=TRUE);
-        library(lib_name, character.only=TRUE, quietly=TRUE);
-    }
+    # if(!suppressWarnings(library(
+    #     package=lib_name,
+    #     character.only=TRUE, logical.return=TRUE, quietly=TRUE))) {
+    #     install.packages(
+    #         pkgs=lib_name, lib=lib, repos=repos,
+    #         quiet=FALSE, dependencies=TRUE);
+    #     library(
+    #         lpackage=lib_name,
+    #         character.only=TRUE, quietly=TRUE);
+    # }
 
-    lib_names = c(lib_name);
+    # lib_names = c(lib_name);
+    lib_names = c();
 
     # install specific libs
     for(lib_name_and_ver in lib_name_and_vers) {
@@ -33,10 +34,22 @@ utils$loadLibs = function(lib_name_and_vers) {
         lib_ver = unlist(strsplit(lib_name_and_ver, ":"))[2];
         lib_names = c(lib_names, lib_name);
 
-        if(!require(lib_name, character.only=TRUE, quietly=TRUE)) {
-            install.versions(lib_name, versions=lib_ver, repos=repos, lib=lib,
-                             quiet=FALSE, dependencies=TRUE);
-            library(lib_name, character.only=TRUE, quietly=TRUE);
+        if(!suppressWarnings(library(
+            package=lib_name,
+            character.only=TRUE, logical.return=TRUE, quietly=TRUE))) {
+            #install.versions(
+            #    lib_name, versions=lib_ver, repos=repos, lib=lib,
+            #    quiet=FALSE, dependencies=TRUE);
+            #install_version(
+            #    lib_name, version=lib_ver, repos=repos, lib=lib,
+            #    quiet=FALSE, dependencies=TRUE);
+            install.packages(
+                pkgs=lib_name, lib=lib,
+                repos=repos,
+                quiet=FALSE, dependencies=TRUE);
+            library(
+                package=lib_name,
+                character.only=TRUE, quietly=TRUE);
         }
     }
 
@@ -45,7 +58,7 @@ utils$loadLibs = function(lib_name_and_vers) {
 
 
 
-utils$loadLibs(c("compiler"));
+utils$loadLibs(c("compiler:3.1.1"));
 
 
 
