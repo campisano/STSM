@@ -12,12 +12,20 @@ utils$verbose();
 
 # loading dependences
 loaded_libs = utils$loadLibs(c(
+    # basic R packages:
+    "datasets:3.1.1",
+    "graphics:3.1.1",
+    "grDevices:3.1.1",
+    "methods:3.1.1",
+    "stats:3.1.1",
+    "utils:3.1.1",
+    # custom packages:
     "compiler:3.1.1",
     "rjson:0.2.15",
     "TSMining:1.0",
     "ggplot2:1.0.0",
     "grid:3.1.1",
-    "scales:3.1.1"));
+    "scales:0.2.4"));
 
 
 
