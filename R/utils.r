@@ -1,5 +1,20 @@
 options(download.file.method = "wget");
-options(warn=2, keep.source=TRUE);
+
+options(warn=2);  # warnings converted to errors
+options(keep.source=TRUE);
+options(error=quote({
+    # from http://stackoverflow.com/a/2000757/846686
+    cat("Environment:\n", file=stderr());
+    dump.frames();
+    n = length(last.dump);
+    calls = names(last.dump);
+    cat(paste("  ", 1L:n, ": ", calls, sep = ""), sep = "\n", file=stderr());
+    cat("\n", file=stderr());
+
+    if (!interactive()) {
+        q();
+    }
+}));
 
 utils = new.env(hash=TRUE, parent=emptyenv());
 
