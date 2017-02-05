@@ -142,8 +142,8 @@ config$max_sequence_length_to_plot = Inf;
 config$min_sequence_length_to_plot = 0;
 config$plot_scale = 5;
 config$max_length_plot_limit = 100000;
-config$per_sequence_plot_requires_a_range_with_min_pos = 5;
-config$per_sequence_plot_requires_a_block_with_min_area = 5;
+#config$per_sequence_plot_requires_a_range_with_min_pos = 5;
+#config$per_sequence_plot_requires_a_block_with_min_area = 5;
 config$per_sequence_plot_block_requires_min_width_to_be_drawn = 5;
 config$per_length_plot_image_type = "png";
 config$per_sequence_plot_image_type = "svg";
@@ -367,8 +367,9 @@ for(iteration in 1:length(solid_sequences)) {
 
         if(! exists(sequence, seq_plotd)) {
             seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
-            seq_plotd[[sequence]]$range_with_min_pos = FALSE;
-            seq_plotd[[sequence]]$block_with_min_area = FALSE;
+#           seq_plotd[[sequence]]$range_with_min_pos = FALSE;
+#           seq_plotd[[sequence]]$block_with_min_area = FALSE;
+            seq_plotd[[sequence]]$min_width_to_be_drawn = FALSE;
             seq_plotd[[sequence]]$xmin_ranges = c();
             seq_plotd[[sequence]]$xmax_ranges = c();
             seq_plotd[[sequence]]$xmin_interval = c();
@@ -385,13 +386,13 @@ for(iteration in 1:length(solid_sequences)) {
         times = sequence_data_item$times;
 
         # per_sequence_plot_requires_a_range_with_min_pos condition
-        if(
-            (! seq_plotd[[sequence]]$range_with_min_pos) &&
-                (length(spaces) >=
-                     config$per_sequence_plot_requires_a_range_with_min_pos)
-            ) {
-            seq_plotd[[sequence]]$range_with_min_pos = TRUE;
-        }
+#         if(
+#             (! seq_plotd[[sequence]]$range_with_min_pos) &&
+#                 (length(spaces) >=
+#                      config$per_sequence_plot_requires_a_range_with_min_pos)
+#             ) {
+#             seq_plotd[[sequence]]$range_with_min_pos = TRUE;
+#         }
 
         seq_plotd[[sequence]]$xmin_ranges = c(
             seq_plotd[[sequence]]$xmin_ranges, start);
@@ -427,8 +428,9 @@ for(iteration in 1:length(solid_sequences)) {
                 cat("\t[WARN] STRANGE!!!",
                     "Sequence is in a block and is not in a range...\n");
                 seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
-                seq_plotd[[sequence]]$range_with_min_pos = FALSE;
-                seq_plotd[[sequence]]$block_with_min_area = FALSE;
+#               seq_plotd[[sequence]]$range_with_min_pos = FALSE;
+#               seq_plotd[[sequence]]$block_with_min_area = FALSE;
+                seq_plotd[[sequence]]$min_width_to_be_drawn = FALSE;
                 seq_plotd[[sequence]]$xmin_ranges = c();
                 seq_plotd[[sequence]]$xmax_ranges = c();
                 seq_plotd[[sequence]]$xmin_interval = c();
@@ -445,18 +447,20 @@ for(iteration in 1:length(solid_sequences)) {
             i_end = block_data_item$i_end;
 
             # per_sequence_plot_requires_a_block_with_min_area condition
-            if(
-                (! seq_plotd[[sequence]]$block_with_min_area) &&
-                    (((r_end - r_start + 1) * (i_end - i_start + 1)) >=
-                    config$per_sequence_plot_requires_a_block_with_min_area)
-                ) {
-                seq_plotd[[sequence]]$block_with_min_area = TRUE;
-            }
+#             if(
+#                 (! seq_plotd[[sequence]]$block_with_min_area) &&
+#                     (((r_end - r_start + 1) * (i_end - i_start + 1)) >=
+#                     config$per_sequence_plot_requires_a_block_with_min_area)
+#                 ) {
+#                 seq_plotd[[sequence]]$block_with_min_area = TRUE;
+#             }
 
             if(
                 (r_end - r_start + 1) >=
                 config$per_sequence_plot_block_requires_min_width_to_be_drawn
                 ) {
+                seq_plotd[[sequence]]$min_width_to_be_drawn = TRUE;
+
                 seq_plotd[[sequence]]$xmin_interval = c(
                     seq_plotd[[sequence]]$xmin_interval, r_start);
                 seq_plotd[[sequence]]$xmax_interval = c(
@@ -499,8 +503,9 @@ for(iteration in 1:length(solid_sequences)) {
     for(key in ls(seq_plotd)) {
         k = k + 1;
         if(
-            seq_plotd[[key]]$range_with_min_pos &&
-                seq_plotd[[key]]$block_with_min_area
+#           seq_plotd[[key]]$range_with_min_pos &&
+#           seq_plotd[[key]]$block_with_min_area &&
+            seq_plotd[[sequence]]$min_width_to_be_drawn
             ) {
             plot(plotSequencePositionsRangesAndIntervals(
                 seq_plotd[[key]]$x_points,
@@ -536,8 +541,9 @@ for(iteration in 1:length(solid_sequences)) {
 
         for(key in ls(seq_plotd)) {
             if(
-                seq_plotd[[key]]$range_with_min_pos &&
-                    seq_plotd[[key]]$block_with_min_area
+#               seq_plotd[[key]]$range_with_min_pos &&
+#               seq_plotd[[key]]$block_with_min_area &&
+                seq_plotd[[sequence]]$min_width_to_be_drawn
                 ) {
                 k = k + 1;
 
