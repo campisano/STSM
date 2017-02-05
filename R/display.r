@@ -139,6 +139,7 @@ plotSequencePositionsRangesAndIntervals = cmpfun(
 # configuring variables
 config = new.env(hash=TRUE, parent=emptyenv());
 config$max_sequence_length_to_plot = Inf;
+config$min_sequence_length_to_plot = 0;
 config$plot_scale = 5;
 config$max_length_plot_limit = 100000;
 config$per_sequence_plot_requires_a_range_with_min_pos = 5;
@@ -147,6 +148,8 @@ config$per_sequence_plot_block_requires_min_width_to_be_drawn = 5;
 config$per_length_plot_image_type = "png";
 config$per_sequence_plot_image_type = "svg";
 config$background_img_size = "800px";
+
+
 
 # configuring html basics
 html = new.env(hash=TRUE, parent=emptyenv());
@@ -266,13 +269,21 @@ for(iteration in 1:length(solid_sequences)) {
     sequence_data = sequence_data_by_length$sequences;
 
     # limit sequence plot to a length sample
-    if(sequence_length > config$max_sequence_length_to_plot) {
-        break;
+
+    if(sequence_length < config$min_sequence_length_to_plot) {
+        cat(
+            "\t[WARN] Skipping sequences data of sequence length <",
+            config$mi_sequence_length_to_plot,
+            ".\n");
+        next;
     }
 
-    if(sequence_length == 1) {
-        cat("\t[WARN] Skipping sequences data of sequence length == 1.\n")
-        next;
+    if(sequence_length > config$max_sequence_length_to_plot) {
+        cat(
+            "\t[WARN] Skipping sequences data of sequence length >",
+            config$max_sequence_length_to_plot,
+            "[BREAK]\n");
+        break;
     }
 
     cat(", length:", sequence_length);
