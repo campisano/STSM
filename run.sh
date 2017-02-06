@@ -29,14 +29,15 @@ INLINES=("100" "401")
 ORIENTATIONS=("original");
 
 #SAXS=("25" "20" "15" "10" "5");
-SAXS=("25" "20" "10");
+SAXS=("25" "10" "5");
 #SAXS=("10");
 
 #MIN_SPATIAL_FREQS=("100" "75" "50" "25");
-MIN_SPATIAL_FREQS=("100" "75" "50");
+MIN_SPATIAL_FREQS=("75" "50");
 #MIN_SPATIAL_FREQS=("75");
 
-MIN_BLOCK_FREQS=("50" "25" "5");
+#MIN_BLOCK_FREQS=("50" "25" "5");
+MIN_BLOCK_FREQS=("25" "5");
 #MIN_BLOCK_FREQS=("5");
 
 #MAX_STRETCHS=("0" "2" "5" "10");
