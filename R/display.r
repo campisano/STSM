@@ -140,7 +140,7 @@ plotSequencePositionsRangesAndBlocks = cmpfun(
 
 # configuring variables
 config = new.env(hash=TRUE, parent=emptyenv());
-config$min_sequence_length_to_plot = 0;
+config$min_sequence_length_to_plot = 2;
 config$max_sequence_length_to_plot = Inf;
 config$plot_scale = 5;
 config$max_length_plot_limit = 100000;
