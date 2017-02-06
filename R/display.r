@@ -274,7 +274,7 @@ for(iteration in 1:length(solid_sequences)) {
     if(sequence_length < config$min_sequence_length_to_plot) {
         cat(
             "\t[WARN] Skipping sequences data of sequence length <",
-            config$mi_sequence_length_to_plot,
+            config$min_sequence_length_to_plot,
             ".\n");
         next;
     }
