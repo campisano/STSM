@@ -22,6 +22,8 @@ loaded_libs = utils$loadLibs(c(
 
 
 
+# TODO change *_interval to _block!!!
+
 # defining a specific plot function
 plotSequencePositionsRangesAndIntervals_src = function(
     x_points, y_points,
@@ -63,16 +65,18 @@ plotSequencePositionsRangesAndIntervals_src = function(
             data=df_rectangles,
             aes_string(
                 xmin="xmin", xmax="xmax",
-                ymin=-Inf, ymax=Inf, inherit.ae=FALSE),
+                ymin=-Inf, ymax=Inf, inherit.aes=FALSE),
             size=0.5 * scale,
             color=alpha("darkgreen", 0.5), fill="darkgreen", alpha=0.1);
     }
 
     # then print the points
-    gg = gg + geom_point(
-        data=df_points,
-        aes_string("x", "y", inherit.ae=FALSE),
-        size=3 * scale, color="darkblue", alpha=0.5);
+    if(length(x_points) > 0 && length(y_points) > 0) {
+        gg = gg + geom_point(
+            data=df_points,
+            aes_string("x", "y", inherit.aes=FALSE),
+            size=3 * scale, color="darkblue", alpha=0.5);
+    }
 
     # finally, if defined, print the blocks
     if(
@@ -83,9 +87,9 @@ plotSequencePositionsRangesAndIntervals_src = function(
             data=df_blocks,
             aes_string(
                 xmin="xmin", xmax="xmax",
-                ymin="ymin", ymax="ymax", inherit.ae=FALSE),
+                ymin="ymin", ymax="ymax", inherit.aes=FALSE),
             size=0.5 * scale,
-            color=alpha("darkred", 1), fill="darkred", alpha=0.5);
+            color=alpha("red", 1), fill="red", alpha=0.5);
     }
 
     # defines the limites
@@ -505,7 +509,7 @@ for(iteration in 1:length(solid_sequences)) {
         if(
 #           seq_plotd[[key]]$range_with_min_pos &&
 #           seq_plotd[[key]]$block_with_min_area &&
-            seq_plotd[[sequence]]$min_width_to_be_drawn
+            seq_plotd[[key]]$min_width_to_be_drawn
             ) {
             plot(plotSequencePositionsRangesAndIntervals(
                 seq_plotd[[key]]$x_points,
@@ -529,9 +533,10 @@ for(iteration in 1:length(solid_sequences)) {
 
     cat(", sequences:", k);
 
+    k = 0;
+
     if(something_plotted) {
         # renaming to have the sequence name
-        k = 0;
 
         per_sequence_index_file = file(file.path(
             vars$output_img_dir, "by_length_and_sequence",
@@ -543,7 +548,7 @@ for(iteration in 1:length(solid_sequences)) {
             if(
 #               seq_plotd[[key]]$range_with_min_pos &&
 #               seq_plotd[[key]]$block_with_min_area &&
-                seq_plotd[[sequence]]$min_width_to_be_drawn
+                seq_plotd[[key]]$min_width_to_be_drawn
                 ) {
                 k = k + 1;
 
@@ -606,8 +611,6 @@ for(iteration in 1:length(solid_sequences)) {
             }
         }
 
-        cat(", plotted:", k);
-
         writeLines(c(per_sequence_index_lines, html$post_container),
                    per_sequence_index_file);
         close(per_sequence_index_file);
@@ -618,6 +621,8 @@ for(iteration in 1:length(solid_sequences)) {
         system(paste('rmdir', file.path(
             vars$output_img_dir, "by_length_and_sequence", sequence_length)));
     }
+
+    cat(", plotted:", k);
 
     cat(" [DONE]\n");
 }
