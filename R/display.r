@@ -22,22 +22,20 @@ loaded_libs = utils$loadLibs(c(
 
 
 
-# TODO change *_interval to _block!!!
-
 # defining a specific plot function
-plotSequencePositionsRangesAndIntervals_src = function(
+plotSequencePositionsRangesAndBlocks_src = function(
     x_points, y_points,
     xmin_ranges=c(), xmax_ranges=c(),
-    xmin_interval=c(), xmax_interval=c(),
-    ymin_interval=c(), ymax_interval=c(),
+    xmin_blocks=c(), xmax_blocks=c(),
+    ymin_blocks=c(), ymax_blocks=c(),
     lim_x_min=NA, lim_x_max=NA, lim_y_min=-NA, lim_y_max=NA,
     clean=TRUE, scale=1) {
 
     df_points = data.frame(x=x_points, y=y_points);
     df_rectangles = data.frame(xmin=xmin_ranges, xmax=xmax_ranges);
     df_blocks = data.frame(
-        xmin=xmin_interval, xmax=xmax_interval,
-        ymin=ymin_interval, ymax=ymax_interval
+        xmin=xmin_blocks, xmax=xmax_blocks,
+        ymin=ymin_blocks, ymax=ymax_blocks
         );
 
     # define limits, if not defined
@@ -80,8 +78,8 @@ plotSequencePositionsRangesAndIntervals_src = function(
 
     # finally, if defined, print the blocks
     if(
-        length(xmin_interval) > 0 && length(xmax_interval) > 0 &&
-            length(ymin_interval) > 0 && length(ymax_interval) > 0
+        length(xmin_blocks) > 0 && length(xmax_blocks) > 0 &&
+            length(ymin_blocks) > 0 && length(ymax_blocks) > 0
     ) {
         gg = gg + geom_rect(
             data=df_blocks,
@@ -124,17 +122,17 @@ plotSequencePositionsRangesAndIntervals_src = function(
 
     return(gg);
 }
-plotSequencePositionsRangesAndIntervals = cmpfun(
-    plotSequencePositionsRangesAndIntervals_src);
+plotSequencePositionsRangesAndBlocks = cmpfun(
+    plotSequencePositionsRangesAndBlocks_src);
 
 
 
 # # test plot function
-# plotSequencePositionsRangesAndIntervals(
+# plotSequencePositionsRangesAndBlocks(
 #     rnorm(100,2), rnorm(100,2),
 #     xmin_ranges=c(1, 2, 3), xmax_ranges=c(1.5, 2.5, 4),
-#     xmin_interval=c(3, 6), xmax_interval=c(4, 8),
-#     ymin_interval=c(2, 4), ymax_interval=c(5, 10),
+#     xmin_blocks=c(3, 6), xmax_blocks=c(4, 8),
+#     ymin_blocks=c(2, 4), ymax_blocks=c(5, 10),
 #     lim_x_min=0, lim_x_max=10, lim_y_min=0, lim_y_max=10,
 #     clean=FALSE, scale=5);
 
@@ -142,12 +140,10 @@ plotSequencePositionsRangesAndIntervals = cmpfun(
 
 # configuring variables
 config = new.env(hash=TRUE, parent=emptyenv());
-config$min_sequence_length_to_plot = 3; #### 0;
-config$max_sequence_length_to_plot = 3; #### Inf;
+config$min_sequence_length_to_plot = 0;
+config$max_sequence_length_to_plot = Inf;
 config$plot_scale = 5;
 config$max_length_plot_limit = 100000;
-#config$per_sequence_plot_requires_a_range_with_min_pos = 5;
-#config$per_sequence_plot_requires_a_block_with_min_area = 5;
 config$per_sequence_plot_block_requires_min_width_to_be_drawn = 5;
 config$plot_only_ranges_that_contains_blocks = TRUE;
 config$per_length_plot_image_type = "png";
@@ -331,7 +327,7 @@ for(iteration in 1:length(solid_sequences)) {
     utils$dev_open_file(
         filename_by_len, vars$database_x_size, vars$database_y_size,
         config$plot_scale);
-    plot(plotSequencePositionsRangesAndIntervals(
+    plot(plotSequencePositionsRangesAndBlocks(
         x_points, y_points,
         xmin_ranges=xmin_ranges, xmax_ranges=xmax_ranges,
         lim_x_min=vars$lim_database_x_min, lim_x_max=vars$lim_database_x_max,
@@ -389,15 +385,13 @@ for(iteration in 1:length(solid_sequences)) {
 
             if(! exists(sequence, seq_plotd)) {
                 seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
-#               seq_plotd[[sequence]]$range_with_min_pos = FALSE;
-#               seq_plotd[[sequence]]$block_with_min_area = FALSE;
                 seq_plotd[[sequence]]$min_width_to_be_drawn = FALSE;
                 seq_plotd[[sequence]]$xmin_ranges = c();
                 seq_plotd[[sequence]]$xmax_ranges = c();
-                seq_plotd[[sequence]]$xmin_interval = c();
-                seq_plotd[[sequence]]$xmax_interval = c();
-                seq_plotd[[sequence]]$ymin_interval = c();
-                seq_plotd[[sequence]]$ymax_interval = c();
+                seq_plotd[[sequence]]$xmin_blocks = c();
+                seq_plotd[[sequence]]$xmax_blocks = c();
+                seq_plotd[[sequence]]$ymin_blocks = c();
+                seq_plotd[[sequence]]$ymax_blocks = c();
                 seq_plotd[[sequence]]$x_points = c();
                 seq_plotd[[sequence]]$y_points = c();
             }
@@ -407,29 +401,20 @@ for(iteration in 1:length(solid_sequences)) {
             i_start = block_data_item$i_start;
             i_end = block_data_item$i_end;
 
-            # per_sequence_plot_requires_a_block_with_min_area condition
-#             if(
-#                 (! seq_plotd[[sequence]]$block_with_min_area) &&
-#                     (((r_end - r_start + 1) * (i_end - i_start + 1)) >=
-#                     config$per_sequence_plot_requires_a_block_with_min_area)
-#                 ) {
-#                 seq_plotd[[sequence]]$block_with_min_area = TRUE;
-#             }
-
             if(
                 (r_end - r_start + 1) >=
                 config$per_sequence_plot_block_requires_min_width_to_be_drawn
                 ) {
                 seq_plotd[[sequence]]$min_width_to_be_drawn = TRUE;
 
-                seq_plotd[[sequence]]$xmin_interval = c(
-                    seq_plotd[[sequence]]$xmin_interval, r_start);
-                seq_plotd[[sequence]]$xmax_interval = c(
-                    seq_plotd[[sequence]]$xmax_interval, r_end);
-                seq_plotd[[sequence]]$ymin_interval = c(
-                    seq_plotd[[sequence]]$ymin_interval, i_start);
-                seq_plotd[[sequence]]$ymax_interval = c(
-                    seq_plotd[[sequence]]$ymax_interval, i_end);
+                seq_plotd[[sequence]]$xmin_blocks = c(
+                    seq_plotd[[sequence]]$xmin_blocks, r_start);
+                seq_plotd[[sequence]]$xmax_blocks = c(
+                    seq_plotd[[sequence]]$xmax_blocks, r_end);
+                seq_plotd[[sequence]]$ymin_blocks = c(
+                    seq_plotd[[sequence]]$ymin_blocks, i_start);
+                seq_plotd[[sequence]]$ymax_blocks = c(
+                    seq_plotd[[sequence]]$ymax_blocks, i_end);
             }
         }
     }
@@ -458,8 +443,8 @@ for(iteration in 1:length(solid_sequences)) {
 
             block_found = FALSE;
 
-            for(idx in which(seq_plotd[[sequence]]$xmin_interval >= start)) {
-                if(seq_plotd[[sequence]]$xmax_interval[[idx]] <= end) {
+            for(idx in which(seq_plotd[[sequence]]$xmin_blocks >= start)) {
+                if(seq_plotd[[sequence]]$xmax_blocks[[idx]] <= end) {
                     block_found = TRUE;
                     break;
                 }
@@ -472,27 +457,16 @@ for(iteration in 1:length(solid_sequences)) {
 
         if(! exists(sequence, seq_plotd)) {
             seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
-            #           seq_plotd[[sequence]]$range_with_min_pos = FALSE;
-            #           seq_plotd[[sequence]]$block_with_min_area = FALSE;
             seq_plotd[[sequence]]$min_width_to_be_drawn = FALSE;
             seq_plotd[[sequence]]$xmin_ranges = c();
             seq_plotd[[sequence]]$xmax_ranges = c();
-            seq_plotd[[sequence]]$xmin_interval = c();
-            seq_plotd[[sequence]]$xmax_interval = c();
-            seq_plotd[[sequence]]$ymin_interval = c();
-            seq_plotd[[sequence]]$ymax_interval = c();
+            seq_plotd[[sequence]]$xmin_blocks = c();
+            seq_plotd[[sequence]]$xmax_blocks = c();
+            seq_plotd[[sequence]]$ymin_blocks = c();
+            seq_plotd[[sequence]]$ymax_blocks = c();
             seq_plotd[[sequence]]$x_points = c();
             seq_plotd[[sequence]]$y_points = c();
         }
-
-        # per_sequence_plot_requires_a_range_with_min_pos condition
-#         if(
-#             (! seq_plotd[[sequence]]$range_with_min_pos) &&
-#                 (length(spaces) >=
-#                      config$per_sequence_plot_requires_a_range_with_min_pos)
-#             ) {
-#             seq_plotd[[sequence]]$range_with_min_pos = TRUE;
-#         }
 
         seq_plotd[[sequence]]$xmin_ranges = c(
             seq_plotd[[sequence]]$xmin_ranges, start);
@@ -534,20 +508,16 @@ for(iteration in 1:length(solid_sequences)) {
 
     for(key in ls(seq_plotd)) {
         k = k + 1;
-        if(
-#           seq_plotd[[key]]$range_with_min_pos &&
-#           seq_plotd[[key]]$block_with_min_area &&
-            seq_plotd[[key]]$min_width_to_be_drawn
-            ) {
-            plot(plotSequencePositionsRangesAndIntervals(
+        if(seq_plotd[[key]]$min_width_to_be_drawn) {
+            plot(plotSequencePositionsRangesAndBlocks(
                 seq_plotd[[key]]$x_points,
                 seq_plotd[[key]]$y_points,
                 xmin_ranges=seq_plotd[[key]]$xmin_ranges,
                 xmax_ranges=seq_plotd[[key]]$xmax_ranges,
-                xmin_interval=seq_plotd[[key]]$xmin_interval,
-                xmax_interval=seq_plotd[[key]]$xmax_interval,
-                ymin_interval=seq_plotd[[key]]$ymin_interval,
-                ymax_interval=seq_plotd[[key]]$ymax_interval,
+                xmin_blocks=seq_plotd[[key]]$xmin_blocks,
+                xmax_blocks=seq_plotd[[key]]$xmax_blocks,
+                ymin_blocks=seq_plotd[[key]]$ymin_blocks,
+                ymax_blocks=seq_plotd[[key]]$ymax_blocks,
                 lim_x_min=vars$lim_database_x_min,
                 lim_x_max=vars$lim_database_x_max,
                 lim_y_min=vars$lim_database_y_min,
@@ -573,11 +543,7 @@ for(iteration in 1:length(solid_sequences)) {
             html$pre_title, sequence_length, html$post_title_pre_container);
 
         for(key in ls(seq_plotd)) {
-            if(
-#               seq_plotd[[key]]$range_with_min_pos &&
-#               seq_plotd[[key]]$block_with_min_area &&
-                seq_plotd[[key]]$min_width_to_be_drawn
-                ) {
+            if(seq_plotd[[key]]$min_width_to_be_drawn) {
                 k = k + 1;
 
                 # rename to final image file
