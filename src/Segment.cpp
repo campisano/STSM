@@ -16,6 +16,16 @@ Segment::Segment(const Segment & _segment):
 {
 }
 
+bool Segment::operator==(const Segment & _other) const
+{
+    return m_start == _other.m_start && m_end == _other.m_end;
+}
+
+bool Segment::operator!=(const Segment & _other) const
+{
+    return ! ((*this) == _other);
+}
+
 const Point & Segment::start() const
 {
     return m_start;

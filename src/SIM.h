@@ -12,6 +12,7 @@
 #include "Frequency.h"
 #include "Item.h"
 #include "Point.h"
+#include "Position.h"
 #include "RangedSequence.h"
 #include "SequenceBlock.h"
 
@@ -72,13 +73,9 @@ private:
 
 protected:
     MapRangedSequencesByLength m_solid_sequences;
-
-    typedef std::pair < Point, Point > Position;    // sensor, time
-    typedef std::list < Position > ListPositions;   // matched positions
     typedef std::map <
         const RangedSequence *, ListPositions
         > MapPositionsBySeq;                        // positions by sequence
-
     MapPositionsBySeq m_ranged_sequence_positions;
 
     MapSequenceBlocksByLength m_solid_sequence_blocks;

@@ -1,10 +1,12 @@
 #include "SIM.h"
 
+#include <algorithm>
 #include <ctime>
 #include <cxxtools/csvdeserializer.h>
 #include <cxxtools/decomposer.h>
 #include <cxxtools/jsonformatter.h>
 #include <cxxtools/utf8codec.h>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -209,7 +211,7 @@ void SIM::run(
     ////////////////////////////////////////////////////////////////////////////
 
     // print solid sequences data and positions
-    printSolidSequences();
+    // printSolidSequences();
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -248,7 +250,7 @@ void SIM::run(
     ////////////////////////////////////////////////////////////////////////////
 
     // print solid blocks data and positions
-    printSolidBlocks();
+    // printSolidBlocks();
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -584,9 +586,13 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                  << _solid_sequence.range().start() << ','
                  << _solid_sequence.range().end() << ')';
 
+    std::set < Position > unique_positions;
+
     // generate a candidate Sequence Block for each sequence match
     // in the Database
     ListSequenceBlocks sb_candidates;
+    bool chk_uniq_add_exists;
+    ListSequenceBlocks::const_iterator chk_uniq_add_it;
 
     ListPositions::const_iterator it_pos;
     const ListPositions & positions =
@@ -595,21 +601,24 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     // for each position
     for(it_pos = positions.begin(); it_pos != positions.end(); ++it_pos)
     {
+        unique_positions.clear();
+        unique_positions.insert(*it_pos);
+
         sb_candidates.push_back(
             SequenceBlock(
                 _solid_sequence.sequence(),
                 Range(it_pos->first, it_pos->first),
                 Interval(it_pos->second,
                          it_pos->second + _solid_sequence.sequence().size() - 1),
-                _solid_sequence.sequence().size()));
+                unique_positions));
     }
 
     m_log_stream << "\tsize: " << sb_candidates.size() << "\t merges: ";
 
     ListSequenceBlocks to_add;
     ListSequenceBlocks::iterator it_sb_add;
-    std::list<ListSequenceBlocks::iterator> to_del;
-    std::list<ListSequenceBlocks::iterator>::iterator it_sb_del;
+    std::list < ListSequenceBlocks::iterator > to_del;
+    std::list < ListSequenceBlocks::iterator > ::iterator it_sb_del;
 
     ListSequenceBlocks::iterator it_sb_q, it_sb_r;
     Support new_support;
@@ -617,7 +626,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     Interval new_interval(0,0);
 
     bool did_any_merge;
-    bool current_q_used_to_merge;
+    ////bool current_q_used_to_merge;
 
     // merge the Sequence Block candidates to obtain Solid Sequence Blocks
     // that respect Θ
@@ -631,7 +640,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             it_sb_q != sb_candidates.end();
             ++it_sb_q)
         {
-            current_q_used_to_merge = false;
+            ////current_q_used_to_merge = false;
 
             // for each other solid sequence r... where r > q
             for(
@@ -641,7 +650,20 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             {
                 it_sb_q->range().unify(it_sb_r->range(), new_range);
                 it_sb_q->interval().unify(it_sb_r->interval(), new_interval);
-                new_support = it_sb_q->support() + it_sb_r->support();
+                ////new_support = it_sb_q->support() + it_sb_r->support();
+                // TODO [CMP] please note
+                // allowing overlapping blocks,
+                // the support must be the sum of unique positions
+                // of the original ranges
+                unique_positions.clear();
+                unique_positions.insert(
+                    it_sb_q->positions().begin(),
+                    it_sb_q->positions().end());
+                unique_positions.insert(
+                    it_sb_r->positions().begin(),
+                    it_sb_r->positions().end());
+                new_support = unique_positions.size()
+                    * _solid_sequence.sequence().size();
 
                 // if num of sequence items in the block divided by
                 // the num of all items in the block is >= Θ
@@ -649,37 +671,65 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                         new_range.size() * new_interval.size()))
                    >= _min_block_freq)
                 {
-                    m_log_stream << '.';
+                    // m_log_stream << it_sb_q->range().start() << '-'
+                    //              << it_sb_q->range().end() << " + "
+                    //              << it_sb_r->range().start() << '-'
+                    //              << it_sb_r->range().end() << " = "
+                    //              << new_range.start() << '-'
+                    //              << new_range.end() << '\t'
+                    //              << it_sb_q->interval().start() << '-'
+                    //              << it_sb_q->interval().end() << " + "
+                    //              << it_sb_r->interval().start() << '-'
+                    //              << it_sb_r->interval().end() << " = "
+                    //              << new_interval.start() << '-'
+                    //              << new_interval.end() << '\n';
 
-                    to_add.push_back(SequenceBlock(
-                                         _solid_sequence.sequence(),
-                                         new_range,
-                                         new_interval,
-                                         new_support));
+                    // TODO [CMP] please note
+                    // allowing overlapping blocks,
+                    // the block to add (merged) should be tested to merge again
+                    // BEFORE the minor block removal
+                    to_add.push_back(
+                        SequenceBlock(
+                            _solid_sequence.sequence(),
+                            new_range,
+                            new_interval,
+                            unique_positions));
 
-                    to_del.push_back(it_sb_q);
-                    to_del.push_back(it_sb_r);
+                    // TODO [CMP] check, this can be very slow
+                    if(
+                        ! (std::find(to_del.begin(), to_del.end(), it_sb_q)
+                           != to_del.end()))
+                    {
+                        to_del.push_back(it_sb_q);
+                    }
+                    if(
+                        ! (std::find(to_del.begin(), to_del.end(), it_sb_r)
+                           != to_del.end()))
+                    {
+                        to_del.push_back(it_sb_r);
+                    }
 
                     did_any_merge = true;
-                    current_q_used_to_merge = true;
+                    ////current_q_used_to_merge = true;
 
                     // the current q was used in a merge,
                     // so it can not be used with any r
-                    break;
+                    ////break;
                 }
             }
 
-            if(current_q_used_to_merge)
-            {
-                // current q was used, we need to continue from q=r+1
-                // because current q and r can not be used anymore
-                it_sb_q = it_sb_r;
-                continue;  // q will be incremented in the for statement
-            }
+            ////if(current_q_used_to_merge)
+            ////{
+            ////    // current q was used, we need to continue from q=r+1
+            ////    // because current q and r can not be used anymore
+            ////    it_sb_q = it_sb_r;
+            ////    continue;  // q will be incremented in the for statement
+            ////}
         }
 
         for(it_sb_del = to_del.begin(); it_sb_del != to_del.end(); ++it_sb_del)
         {
+            m_log_stream << '-';
             sb_candidates.erase(*it_sb_del);
         }
 
@@ -687,7 +737,31 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
         for(it_sb_add = to_add.begin(); it_sb_add != to_add.end(); ++it_sb_add)
         {
-            sb_candidates.push_back(*it_sb_add);
+            // add if not exists
+            chk_uniq_add_exists = false;
+
+            // TODO [CMP] check, this can be very slow
+            for(
+                chk_uniq_add_it = sb_candidates.begin();
+                chk_uniq_add_it != sb_candidates.end();
+                ++chk_uniq_add_it
+                )
+            {
+                if(
+                    chk_uniq_add_it->range() == it_sb_add->range() &&
+                    chk_uniq_add_it->interval() == it_sb_add->interval()
+                    )
+                {
+                    chk_uniq_add_exists = true;
+                    break;
+                }
+            }
+
+            if(!chk_uniq_add_exists)
+            {
+                m_log_stream << '+';
+                sb_candidates.push_back(*it_sb_add);
+            }
         }
 
         to_add.clear();

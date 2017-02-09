@@ -4,11 +4,11 @@ SequenceBlock::SequenceBlock(
     const Sequence & _sequence,
     const Range & _range,
     const Interval & _interval,
-    const Support & _support):
+    const SetPositions & _positions):
     m_sequence(_sequence),
     m_range(_range),
     m_interval(_interval),
-    m_support(_support)
+    m_positions(_positions)
 {
 }
 
@@ -27,12 +27,17 @@ const Interval & SequenceBlock::interval() const
     return m_interval;
 }
 
-const Support & SequenceBlock::support() const
+Support SequenceBlock::support() const
 {
-    return m_support;
+    return m_positions.size() * m_sequence.size();
 }
 
 Frequency SequenceBlock::frequency() const
 {
-    return float(m_support) / (m_range.size() * m_interval.size());
+    return float(support()) / (m_range.size() * m_interval.size());
+}
+
+const SetPositions & SequenceBlock::positions() const
+{
+    return m_positions;
 }

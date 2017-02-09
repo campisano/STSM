@@ -13,6 +13,9 @@ public:
 
     explicit Segment(const Segment & _segment);
 
+    bool operator==(const Segment & _other) const;
+    bool operator!=(const Segment & _other) const;
+
     const Point & start() const;
     void start(const Point & _pos);
 

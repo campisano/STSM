@@ -3,9 +3,11 @@
 
 #include <list>
 #include <map>
+#include <set>
 
 #include "Frequency.h"
 #include "Interval.h"
+#include "Position.h"
 #include "Range.h"
 #include "Sequence.h"
 #include "Size.h"
@@ -18,12 +20,13 @@ public:
         const Sequence & _sequence,
         const Range & _range,
         const Interval & _interval,
-        const Support & _support);
+        const SetPositions & _positions);
 
     const Sequence & sequence() const;
     const Range & range() const;
     const Interval & interval() const;
-    const Support & support() const;
+    Support support() const;
+    const SetPositions & positions() const;
 
     Frequency frequency() const;
 
@@ -31,7 +34,8 @@ private:
     Sequence m_sequence;
     Range m_range;
     Interval m_interval;
-    Support m_support;
+
+    SetPositions m_positions;
 };
 
 typedef std::list < SequenceBlock > ListSequenceBlocks;
