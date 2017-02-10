@@ -27,10 +27,13 @@ public:
     const Sequence & sequence() const;
     const Range & range() const;
     const Interval & interval() const;
+
     Support support() const;
     const SetPositions & positions() const;
 
     Frequency frequency() const;
+
+    bool contains(const SequenceBlock & _other) const;
 
 private:
     Sequence m_sequence;

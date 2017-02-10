@@ -23,6 +23,8 @@ public:
     void end(const Point & _end);
 
     bool contains(const Point & _point) const;
+    bool contains(const Segment & _other) const;
+
     Size size() const;
 
     bool intersects(

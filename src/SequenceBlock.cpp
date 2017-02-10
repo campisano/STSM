@@ -54,3 +54,11 @@ const SetPositions & SequenceBlock::positions() const
 {
     return m_positions;
 }
+
+bool SequenceBlock::contains(const SequenceBlock & _other) const
+{
+    return (
+        m_range.contains(_other.m_range) &&
+        m_interval.contains(_other.m_interval)
+        );
+}

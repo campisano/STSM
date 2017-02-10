@@ -51,6 +51,14 @@ bool Segment::contains(const Point & _point) const
     return _point >= m_start && _point <= m_end;
 }
 
+bool Segment::contains(const Segment & _other) const
+{
+    return (
+        m_start <= _other.m_start &&
+        m_end >= _other.m_end
+        );
+}
+
 Size Segment::size() const
 {
     return m_end - m_start + 1;
