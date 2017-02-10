@@ -33,6 +33,7 @@ private:
     void test_SIMRun_f75_b75_does_get_EFGHI7575_solidBlock();
     void test_SIMRun_f100_b50_does_get_EFGHI10025_solidBlock();
     void test_SIMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock();
+    void test_SIMRun_f100_b50_does_get_ABCD_big_solidBlock();
 };
 
 #endif

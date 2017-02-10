@@ -151,6 +151,11 @@ SIMTest::SIMTest() : cxxtools::unit::TestSuite("SIMTest")
         "test_SIMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock",
         *this,
         &SIMTest::test_SIMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock);
+
+    registerMethod(
+        "test_SIMRun_f100_b50_does_get_ABCD_big_solidBlock",
+        *this,
+        &SIMTest::test_SIMRun_f100_b50_does_get_ABCD_big_solidBlock);
 }
 
 SIMTest::~SIMTest()
@@ -985,6 +990,56 @@ void SIMTest::test_SIMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock()
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().end(), 22);
     CXXTOOLS_UNIT_ASSERT_EQUALS(sb.support(), 15);
     CXXTOOLS_UNIT_ASSERT((sb.frequency() - min_block) < EPSILON);
+
+    // Cleanup
+
+    cleanupTestFolder();
+}
+
+void SIMTest::test_SIMRun_f100_b50_does_get_ABCD_big_solidBlock()
+{
+    // Arrange
+
+    Frequency min_spatial = 1.0;
+    Frequency min_block = 0.5;
+    std::string input_file;
+    std::string log_file;
+
+    std::stringstream ss;
+    ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
+        << "X16,X17,X18,X19,X20,X21,X22,X23,X24,X25" << std::endl
+        << "a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,A,B,C,D,a,a,a,a,a,a" << std::endl
+        << "b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,A,B,C,D,b,b,b,b,b,b" << std::endl
+        << "c,c,c,c,c,c,c,c,c,c,c,c,A,B,C,D,c,c,c,c,c,c,c,c,c" << std::endl
+        << "d,d,d,d,d,d,d,d,d,d,A,B,C,D,d,A,B,C,D,d,d,d,d,d,d" << std::endl
+        << "e,e,e,e,e,e,e,e,e,e,A,B,C,D,e,A,B,C,D,e,e,e,e,e,e" << std::endl
+        << "f,f,f,f,f,f,f,f,f,f,A,B,C,D,f,f,f,f,f,f,f,f,f,f,f" << std::endl
+        << "g,g,g,g,g,g,g,g,g,A,B,C,D,g,g,g,g,g,g,g,g,g,g,g,g" << std::endl
+        << "h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h,h" << std::endl
+        << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
+        << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
+
+    prepareTestFolder(ss.str(), input_file, log_file);
+
+    // Act
+
+    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+
+    // Assert
+
+    // testing number and last expected results
+    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequence_blocks[4].size(), 1);
+
+    SequenceBlock & sb = m_solid_sequence_blocks[4].back();
+
+    // testing synthetic known data
+    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.sequence().toStringOfItems(), "ABCD");
+    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().start(), 0);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().end(), 6);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().start(), 9);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().end(), 18);
+    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.support(), 36);
+    CXXTOOLS_UNIT_ASSERT((sb.frequency() - (36.0/70.0)) < EPSILON);
 
     // Cleanup
 
