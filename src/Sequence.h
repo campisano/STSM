@@ -18,7 +18,9 @@ public:
     explicit Sequence(const std::string & _string_representation);
     virtual ~Sequence();
 
-    bool operator==(const Sequence & _other);
+    bool operator==(const Sequence & _other) const;
+    bool operator!=(const Sequence & _other) const;
+
     void set(const std::string & _string_representation);
 
     void clear();

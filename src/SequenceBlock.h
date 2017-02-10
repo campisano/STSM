@@ -3,7 +3,6 @@
 
 #include <list>
 #include <map>
-#include <set>
 
 #include "Frequency.h"
 #include "Interval.h"
@@ -21,6 +20,9 @@ public:
         const Range & _range,
         const Interval & _interval,
         const SetPositions & _positions);
+
+    bool operator==(const SequenceBlock & _other) const;
+    bool operator!=(const SequenceBlock & _other) const;
 
     const Sequence & sequence() const;
     const Range & range() const;

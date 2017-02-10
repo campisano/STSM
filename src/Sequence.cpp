@@ -26,7 +26,7 @@ Sequence::~Sequence()
 {
 }
 
-bool Sequence::operator==(const Sequence & _other)
+bool Sequence::operator==(const Sequence & _other) const
 {
     if(m_items.size() != _other.m_items.size())
     {
@@ -44,6 +44,11 @@ bool Sequence::operator==(const Sequence & _other)
     }
 
     return true;
+}
+
+bool Sequence::operator!=(const Sequence & _other) const
+{
+    return ! ((*this) == _other);
 }
 
 void Sequence::set(const std::string & _string_representation)

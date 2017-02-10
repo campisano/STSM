@@ -12,6 +12,19 @@ SequenceBlock::SequenceBlock(
 {
 }
 
+bool SequenceBlock::operator==(const SequenceBlock & _other) const
+{
+    return (
+        m_range == _other.m_range &&
+        m_interval == _other.m_interval &&
+        m_sequence == _other.m_sequence);
+}
+
+bool SequenceBlock::operator!=(const SequenceBlock & _other) const
+{
+    return ! ((*this) == _other);
+}
+
 const Sequence & SequenceBlock::sequence() const
 {
     return m_sequence;
