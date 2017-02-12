@@ -569,9 +569,12 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     time_t time;
     std::set < Position > unique_positions;
 
+    typedef std::pair < Size, SequenceBlock > CountedSB;
+    typedef std::multimap < Size, SequenceBlock > MMapSequenceBlocksByCount;
+
     // generate a candidate Sequence Block for each sequence match
     // in the Database
-    ListSequenceBlocks sb_candidates;
+    MMapSequenceBlocksByCount sb_candidates;
 
     {
         ListPositions::const_iterator it_pos;
@@ -584,31 +587,36 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             unique_positions.clear();
             unique_positions.insert(*it_pos);
 
-            sb_candidates.push_back(
-                SequenceBlock(
-                    _solid_sequence.sequence(),
-                    Range(it_pos->first, it_pos->first),
-                    Interval(
-                        it_pos->second, it_pos->second
-                        + sequence_size - 1),
-                    unique_positions));
+            sb_candidates.insert(
+                CountedSB(
+                    1,
+                    SequenceBlock(
+                        _solid_sequence.sequence(),
+                        Range(it_pos->first, it_pos->first),
+                        Interval(it_pos->second, it_pos->second
+                                 + sequence_size - 1),
+                        unique_positions)));
         }
     }
 
     m_log_stream << "\tinit.size: " << sb_candidates.size() << "\t merges:";
     m_log_stream.flush();
 
-    ListSequenceBlocks to_add;
-    ListSequenceBlocks::iterator it_sb_to_add;
+    MMapSequenceBlocksByCount to_add;
+    MMapSequenceBlocksByCount::iterator it_sb_to_add;
 
-    std::list < ListSequenceBlocks::iterator > to_del;
-    std::list < ListSequenceBlocks::iterator > ::iterator it_sb_to_del;
+    typedef std::map <
+        unsigned long int,
+		MMapSequenceBlocksByCount::iterator > MMapDelItByIndex;
+    MMapDelItByIndex to_del;
+    MMapDelItByIndex::iterator it_sb_to_del;
+    unsigned long int idx_q_del, idx_r_del;
 
     unsigned int erased;
     bool is_contained;
-    ListSequenceBlocks::iterator chk_bigger_it;
+    MMapSequenceBlocksByCount::iterator chk_bigger_it;
 
-    ListSequenceBlocks::iterator it_sb_q, it_sb_r;
+    MMapSequenceBlocksByCount::iterator it_sb_q, it_sb_r;
     Range new_range(0, 0);
     Interval new_interval(0,0);
 
@@ -623,29 +631,32 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
         // for each solid sequence q
         for(
-            it_sb_q = sb_candidates.begin();
+            it_sb_q = sb_candidates.begin(), idx_q_del = 0;
             it_sb_q != sb_candidates.end();
-            ++it_sb_q)
+            ++it_sb_q, ++idx_q_del)
         {
             // for each other solid sequence r... where r > q
             for(
-                it_sb_r = it_sb_q, ++it_sb_r; // equal to it_sb_r = it_sb_q + 1
+                // equal to it_sb_r = it_sb_q + 1
+                it_sb_r = it_sb_q, ++it_sb_r, idx_r_del = idx_q_del + 1;
                 it_sb_r != sb_candidates.end();
-                ++it_sb_r)
+                ++it_sb_r, ++idx_r_del)
             {
-                it_sb_q->range().unify(it_sb_r->range(), new_range);
-                it_sb_q->interval().unify(it_sb_r->interval(), new_interval);
+                it_sb_q->second.range().unify(
+                    it_sb_r->second.range(), new_range);
+                it_sb_q->second.interval().unify(
+                    it_sb_r->second.interval(), new_interval);
 
                 // allowing overlapping blocks,
                 // the support must be the sum of unique positions
                 // of the original ranges
                 unique_positions.clear();
                 unique_positions.insert(
-                    it_sb_q->positions().begin(),
-                    it_sb_q->positions().end());
+                    it_sb_q->second.positions().begin(),
+                    it_sb_q->second.positions().end());
                 unique_positions.insert(
-                    it_sb_r->positions().begin(),
-                    it_sb_r->positions().end());
+                    it_sb_r->second.positions().begin(),
+                    it_sb_r->second.positions().end());
 
                 // if num of sequence items in the block divided by
                 // the num of all items in the block is >= Θ
@@ -653,58 +664,48 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                         new_range.size() * new_interval.size()))
                    >= _min_block_freq)
                 {
+
                     SequenceBlock merged(
                         _solid_sequence.sequence(),
                         new_range,
                         new_interval,
                         unique_positions);
 
-                    if(merged.hasSamePositions(* it_sb_q))
+                    if(merged.hasSamePositions(it_sb_q->second))
                     {
-                        if(
-                            ! (std::find(to_del.begin(), to_del.end(), it_sb_r)
-                               != to_del.end()))
-                        {
-                            to_del.push_back(it_sb_r);
-                        }
+						to_del[idx_r_del] = it_sb_r;
                     }
-                    else if(merged.hasSamePositions(* it_sb_r))
+                    else if(merged.hasSamePositions(it_sb_r->second))
                     {
-                        if(
-                            ! (std::find(to_del.begin(), to_del.end(), it_sb_q)
-                               != to_del.end()))
-                        {
-                            to_del.push_back(it_sb_q);
-						}
+						to_del[idx_q_del] = it_sb_q;
                     }
                     else
                     {
-                        if(
-                            ! (std::find(to_del.begin(), to_del.end(), it_sb_q)
-                               != to_del.end()))
-                        {
-                            to_del.push_back(it_sb_q);
-						}
-
-                        if(
-                            ! (std::find(to_del.begin(), to_del.end(), it_sb_r)
-                               != to_del.end()))
-                        {
-                            to_del.push_back(it_sb_r);
-						}
+						to_del[idx_q_del] = it_sb_q;
+						to_del[idx_r_del] = it_sb_r;
 
                         // add only not already contained in the block to_add
                         is_contained = false;
-                        chk_bigger_it = to_add.begin();
+                        chk_bigger_it = to_add.lower_bound(
+                            merged.positions().size());
 
                         while(chk_bigger_it != to_add.end())
                         {
-                            if(chk_bigger_it->contains(merged))
+                            if(
+                                chk_bigger_it->second.positions().size()
+                               < merged.positions().size())
+                            {
+                                throw std::runtime_error("this cannot happen!");
+                            }
+
+
+
+                            if(chk_bigger_it->second.contains(merged))
                             {
                                 is_contained = true;
                                 ++chk_bigger_it;
                             }
-                            else if (merged.contains(* chk_bigger_it))
+                            else if (merged.contains(chk_bigger_it->second))
                             {
                                 to_add.erase(chk_bigger_it++);
                             }
@@ -716,7 +717,9 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
                         if(! is_contained)
                         {
-                            to_add.push_back(merged);
+                            //to_add.push_back(merged);
+                            to_add.insert(
+                                CountedSB(merged.positions().size(), merged));
 
                             did_any_merge = true;
                         }
@@ -734,7 +737,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             it_sb_to_del != to_del.end();
             ++it_sb_to_del)
         {
-            sb_candidates.erase(* it_sb_to_del);
+            sb_candidates.erase(it_sb_to_del->second);
         }
 
         to_del.clear();
@@ -749,16 +752,24 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         {
             // add only not already contained in the block candidates
             is_contained = false;
-            chk_bigger_it = sb_candidates.begin();
+            chk_bigger_it = sb_candidates.lower_bound(
+                it_sb_to_add->second.positions().size());
 
             while(chk_bigger_it != sb_candidates.end())
             {
-                if(chk_bigger_it->contains(* it_sb_to_add))
+                if(
+                    chk_bigger_it->second.positions().size()
+                    < it_sb_to_add->second.positions().size())
+                {
+                    throw std::runtime_error("this cannot happen!");
+                }
+
+                if(chk_bigger_it->second.contains(it_sb_to_add->second))
                 {
                     is_contained = true;
                     ++chk_bigger_it;
                 }
-                else if (it_sb_to_add->contains(* chk_bigger_it))
+                else if (it_sb_to_add->second.contains(chk_bigger_it->second))
                 {
                     sb_candidates.erase(chk_bigger_it++);
                     ++erased;
@@ -771,7 +782,8 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
             if(! is_contained)
             {
-                sb_candidates.push_back(* it_sb_to_add);
+                sb_candidates.insert(
+                    CountedSB(it_sb_to_add->first, it_sb_to_add->second));
             }
         }
 
@@ -785,10 +797,15 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
     m_log_stream << std::endl;
 
-    _sequence_blocks.insert(
-        _sequence_blocks.end(),
-        sb_candidates.begin(),
-        sb_candidates.end());
+    MMapSequenceBlocksByCount::iterator copy_it;
+
+    for(
+        copy_it = sb_candidates.begin();
+        copy_it != sb_candidates.end();
+        ++copy_it)
+    {
+        _sequence_blocks.push_back(copy_it->second);
+    }
 }
 
 void SIM::printSolidSequences()
