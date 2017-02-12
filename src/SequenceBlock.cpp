@@ -55,6 +55,11 @@ const SetPositions & SequenceBlock::positions() const
     return m_positions;
 }
 
+Size SequenceBlock::area() const
+{
+    return m_range.size() * m_interval.size();
+}
+
 bool SequenceBlock::contains(const SequenceBlock & _other) const
 {
     return (
@@ -63,12 +68,10 @@ bool SequenceBlock::contains(const SequenceBlock & _other) const
         );
 }
 
-bool SequenceBlock::area_comparer::operator() (
-    const SequenceBlock & _left,
-    const SequenceBlock & _right) const
+bool SequenceBlock::hasSamePositions(const SequenceBlock & _other) const
 {
     return (
-        _left.range() == _right.range() &&
-        _left.interval() == _right.interval()
+        m_range == _other.range() &&
+        m_interval == _other.interval()
         );
 }

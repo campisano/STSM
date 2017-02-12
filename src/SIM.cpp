@@ -16,6 +16,11 @@ namespace
 {
     unsigned int MIN_RANGE_SIZE = 2;
     unsigned int MIN_SOLID_BLOCK_SEQUENCE_SIZE = 3;
+
+    float getSecs(const time_t _time)
+    {
+        return floor(double(clock() - _time) / CLOCKS_PER_SEC * 10) / 10;
+    }
 }
 
 SIM::SIM()
@@ -44,7 +49,7 @@ void SIM::run(
     setMinSpatialFreq(float(_min_spatial_freq_perc) / 100.0);
     setMinBlockFreq(float(_min_block_freq_perc) / 100.0);
 
-    clock_t start_timer = clock(), timer;
+    clock_t start_time = clock(), time;
 
     // initialize the logger
     m_log_stream.open(_log_filename.c_str());
@@ -59,33 +64,24 @@ void SIM::run(
     m_log_stream << std::endl;
 
     m_log_stream << "Loading database...";
-    timer = clock();
+    time = clock();
     loadDatabase(_input_filename);
-    m_log_stream << " ends in "
-                 << floor(double(clock() - timer)
-                          / CLOCKS_PER_SEC * 1000) / 1000
-                 << " seconds." << std::endl;
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 
     m_log_stream << "Generating a set with all database items...";
-    timer = clock();
+    time = clock();
     SetItems items;
     generateTheSetOfAllDatabaseItems(m_database, items);
-    m_log_stream << " ends in "
-                 << floor(double(clock() - timer)
-                          / CLOCKS_PER_SEC * 1000) / 1000
-                 << " seconds." << std::endl;
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 
     Size seq_size = 1;
     ListCandidates candidates;
     m_log_stream << "Generating 1-size candidates...";
-    timer = clock();
+    time = clock();
     generate1SizeCandidates(items, 0, m_database.size() - 1, candidates);
-    m_log_stream << " ends in "
-                 << floor(double(clock() - timer)
-                          / CLOCKS_PER_SEC * 1000) / 1000
-                 << " seconds." << std::endl;
-    m_log_stream << "(Num of candidates: " <<
-        candidates.size() << ")" << std::endl;
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
+    m_log_stream << "(Num of candidates: "
+                 << candidates.size() << ")" << std::endl;
 
     Database::const_iterator db_it;
     ListCandidates::iterator cand_it;
@@ -102,7 +98,7 @@ void SIM::run(
         ////////////////////////////////////////////////////////////////////////
 
         m_log_stream << " - Updating candidate kernels...";
-        timer = clock();
+        time = clock();
 
         Point db_position = 0;
 
@@ -126,15 +122,12 @@ void SIM::run(
             ++db_position;
         }
 
-        m_log_stream << " ends in "
-                     << floor(double(clock() - timer)
-                              / CLOCKS_PER_SEC * 1000) / 1000
-                     << " seconds." << std::endl;
+        m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 
         ////////////////////////////////////////////////////////////////////////
 
         m_log_stream << " - Merging kernels and creating solid sequences...";
-        timer = clock();
+        time = clock();
 
         // for each candidate
         for(
@@ -160,10 +153,7 @@ void SIM::run(
             }
         }
 
-        m_log_stream << " ends in "
-                     << floor(double(clock() - timer)
-                              / CLOCKS_PER_SEC * 1000) / 1000
-                     << " seconds." << std::endl;
+        m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
         m_log_stream << "   (Num of solid sequences (with range size > 1)"
                      << " for this iteration: "
                      << solid_sequences_k.size() << ")" << std::endl;
@@ -171,34 +161,25 @@ void SIM::run(
         ////////////////////////////////////////////////////////////////////////
 
         m_log_stream << " - Clean up solid sequences with small range size...";
-        timer = clock();
+        time = clock();
         cleanupSolidSequencesWithSmallRangeSize(
             MIN_RANGE_SIZE, solid_sequences_k);
-        m_log_stream << " ends in "
-                     << floor(double(clock() - timer)
-                              / CLOCKS_PER_SEC * 1000) / 1000
-                     << " seconds." << std::endl;
+        m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 
         ////////////////////////////////////////////////////////////////////////
 
         m_log_stream << " - Detecting sequence positions in the database...";
-        timer = clock();
+        time = clock();
         updateMatchingPositions(solid_sequences_k);
-        m_log_stream << " ends in "
-                     << floor(double(clock() - timer)
-                              / CLOCKS_PER_SEC * 1000) / 1000
-                     << " seconds." << std::endl;
+        m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 
         ////////////////////////////////////////////////////////////////////////
 
         m_log_stream << " - Generating candidates...";
-        timer = clock();
+        time = clock();
         candidates.clear();
         generateCandidates(solid_sequences_k, candidates);
-        m_log_stream << " ends in "
-                     << floor(double(clock() - timer)
-                              / CLOCKS_PER_SEC * 1000) / 1000
-                     << " seconds." << std::endl;
+        m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
         m_log_stream << "   (Num of candidates: " <<
             candidates.size() << ")" << std::endl;
 
@@ -216,7 +197,7 @@ void SIM::run(
     ////////////////////////////////////////////////////////////////////////////
 
     m_log_stream << " - Detecting solid sequence blocks..." << std::endl;
-    timer = clock();
+    time = clock();
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
@@ -242,10 +223,7 @@ void SIM::run(
         }
     }
 
-    m_log_stream << " ends in "
-                 << floor(double(clock() - timer)
-                          / CLOCKS_PER_SEC * 1000) / 1000
-                 << " seconds." << std::endl;
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 
     ////////////////////////////////////////////////////////////////////////////
 
@@ -255,9 +233,8 @@ void SIM::run(
     ////////////////////////////////////////////////////////////////////////////
 
     m_log_stream << "* Total run time: "
-                 << floor(double(clock() - start_timer)
-                          / CLOCKS_PER_SEC * 1000) / 1000
-                 << " seconds." << std::endl;
+                 << getSecs(start_time)
+                 << " secs." << std::endl;
 
     // close the logger
     m_log_stream.close();
@@ -571,37 +548,6 @@ void SIM::cleanupSolidSequencesWithSmallRangeSize(
     }
 }
 
-namespace
-{
-    struct sb_less_then_comparer
-    {
-        bool operator() (
-            const SequenceBlock & _left,
-            const SequenceBlock & _right) const
-        {
-            std::stringstream left, right;
-            left << _left.range().start() << '-'
-                 << _left.range().end() << '_'
-                 << _left.interval().start() << '-'
-                 << _left.interval().end();
-            right << _right.range().start() << '-'
-                  << _right.range().end() << '_'
-                  << _right.interval().start() << '-'
-                  << _right.interval().end();
-
-            return (
-                // _left.range().start() < _right.range().start() &&
-                // _left.range().end() < _right.range().end() &&
-                // _left.interval().start() < _right.interval().start() &&
-                // _left.interval().end() < _right.interval().end()
-                left < right
-                );
-        }
-    };
-
-    typedef std::set < SequenceBlock, sb_less_then_comparer > SetSequenceBlocks;
-}
-
 void SIM::detectSolidSequenceBlocksFromSolidSequence(
     const RangedSequence & _solid_sequence,
     const Frequency & _min_block_freq,
@@ -620,37 +566,43 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                  << _solid_sequence.range().end() << ')';
     m_log_stream.flush();
 
+    time_t time;
     std::set < Position > unique_positions;
 
     // generate a candidate Sequence Block for each sequence match
     // in the Database
     ListSequenceBlocks sb_candidates;
 
-    ListPositions::const_iterator it_pos;
-    const ListPositions & positions =
-        m_ranged_sequence_positions.find(& _solid_sequence)->second;
-
-    // for each position
-    for(it_pos = positions.begin(); it_pos != positions.end(); ++it_pos)
     {
-        unique_positions.clear();
-        unique_positions.insert(*it_pos);
+        ListPositions::const_iterator it_pos;
+        const ListPositions & positions =
+            m_ranged_sequence_positions.find(& _solid_sequence)->second;
 
-        sb_candidates.push_back(
-            SequenceBlock(
-                _solid_sequence.sequence(),
-                Range(it_pos->first, it_pos->first),
-                Interval(it_pos->second, it_pos->second + sequence_size - 1),
-                unique_positions));
+        // for each position
+        for(it_pos = positions.begin(); it_pos != positions.end(); ++it_pos)
+        {
+            unique_positions.clear();
+            unique_positions.insert(*it_pos);
+
+            sb_candidates.push_back(
+                SequenceBlock(
+                    _solid_sequence.sequence(),
+                    Range(it_pos->first, it_pos->first),
+                    Interval(
+                        it_pos->second, it_pos->second
+                        + sequence_size - 1),
+                    unique_positions));
+        }
     }
 
     m_log_stream << "\tinit.size: " << sb_candidates.size() << "\t merges:";
     m_log_stream.flush();
 
     ListSequenceBlocks to_add;
-    ListSequenceBlocks::iterator it_sb_add;
+    ListSequenceBlocks::iterator it_sb_to_add;
+
     std::list < ListSequenceBlocks::iterator > to_del;
-    std::list < ListSequenceBlocks::iterator > ::iterator it_sb_del;
+    std::list < ListSequenceBlocks::iterator > ::iterator it_sb_to_del;
 
     unsigned int erased;
     bool is_contained;
@@ -667,6 +619,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     do
     {
         did_any_merge = false;
+        time = clock();
 
         // for each solid sequence q
         for(
@@ -700,14 +653,13 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                         new_range.size() * new_interval.size()))
                    >= _min_block_freq)
                 {
-
                     SequenceBlock merged(
                         _solid_sequence.sequence(),
                         new_range,
                         new_interval,
                         unique_positions);
 
-                    if(SequenceBlock::area_comparer()(merged, (*it_sb_q)))
+                    if(merged.hasSamePositions(* it_sb_q))
                     {
                         if(
                             ! (std::find(to_del.begin(), to_del.end(), it_sb_r)
@@ -716,7 +668,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                             to_del.push_back(it_sb_r);
                         }
                     }
-                    else if(SequenceBlock::area_comparer()(merged, (*it_sb_r)))
+                    else if(merged.hasSamePositions(* it_sb_r))
                     {
                         if(
                             ! (std::find(to_del.begin(), to_del.end(), it_sb_q)
@@ -733,6 +685,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                         {
                             to_del.push_back(it_sb_q);
 						}
+
                         if(
                             ! (std::find(to_del.begin(), to_del.end(), it_sb_r)
                                != to_del.end()))
@@ -772,19 +725,27 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             }
         }
 
-        m_log_stream << " +" << to_add.size() << " -" << to_del.size();
+        m_log_stream << " +" << to_add.size() << " -" << to_del.size()
+                     << " (" << getSecs(time) << "s)";
         m_log_stream.flush();
 
-        for(it_sb_del = to_del.begin(); it_sb_del != to_del.end(); ++it_sb_del)
+        for(
+            it_sb_to_del = to_del.begin();
+            it_sb_to_del != to_del.end();
+            ++it_sb_to_del)
         {
-            sb_candidates.erase(*it_sb_del);
+            sb_candidates.erase(* it_sb_to_del);
         }
 
         to_del.clear();
 
+        time = clock();
         erased = 0;
 
-        for(it_sb_add = to_add.begin(); it_sb_add != to_add.end(); ++it_sb_add)
+        for(
+            it_sb_to_add = to_add.begin();
+            it_sb_to_add != to_add.end();
+            ++it_sb_to_add)
         {
             // add only not already contained in the block candidates
             is_contained = false;
@@ -792,12 +753,12 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
             while(chk_bigger_it != sb_candidates.end())
             {
-                if(chk_bigger_it->contains(* it_sb_add))
+                if(chk_bigger_it->contains(* it_sb_to_add))
                 {
                     is_contained = true;
                     ++chk_bigger_it;
                 }
-                else if (it_sb_add->contains(* chk_bigger_it))
+                else if (it_sb_to_add->contains(* chk_bigger_it))
                 {
                     sb_candidates.erase(chk_bigger_it++);
                     ++erased;
@@ -810,11 +771,12 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
             if(! is_contained)
             {
-                sb_candidates.push_back(*it_sb_add);
+                sb_candidates.push_back(* it_sb_to_add);
             }
         }
 
-        m_log_stream << " -" << erased << "\t|\t";
+        m_log_stream << " -" << erased << " ("
+                     << getSecs(time) << "s) |";
         m_log_stream.flush();
 
         to_add.clear();
@@ -826,8 +788,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     _sequence_blocks.insert(
         _sequence_blocks.end(),
         sb_candidates.begin(),
-        sb_candidates.end()
-        );
+        sb_candidates.end());
 }
 
 void SIM::printSolidSequences()

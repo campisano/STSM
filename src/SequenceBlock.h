@@ -29,18 +29,13 @@ public:
     const Interval & interval() const;
 
     Support support() const;
-    const SetPositions & positions() const;
-
     Frequency frequency() const;
 
-    bool contains(const SequenceBlock & _other) const;
+    const SetPositions & positions() const;
+    Size area() const;
 
-    struct area_comparer
-    {
-        bool operator() (
-            const SequenceBlock & _left,
-            const SequenceBlock & _right) const;
-    };
+    bool contains(const SequenceBlock & _other) const;
+    bool hasSamePositions(const SequenceBlock & _other) const;
 
 private:
     Sequence m_sequence;
