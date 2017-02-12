@@ -62,3 +62,13 @@ bool SequenceBlock::contains(const SequenceBlock & _other) const
         m_interval.contains(_other.m_interval)
         );
 }
+
+bool SequenceBlock::area_comparer::operator() (
+    const SequenceBlock & _left,
+    const SequenceBlock & _right) const
+{
+    return (
+        _left.range() == _right.range() &&
+        _left.interval() == _right.interval()
+        );
+}

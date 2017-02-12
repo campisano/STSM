@@ -35,6 +35,13 @@ public:
 
     bool contains(const SequenceBlock & _other) const;
 
+    struct area_comparer
+    {
+        bool operator() (
+            const SequenceBlock & _left,
+            const SequenceBlock & _right) const;
+    };
+
 private:
     Sequence m_sequence;
     Range m_range;

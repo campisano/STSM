@@ -15,7 +15,7 @@
 namespace
 {
     unsigned int MIN_RANGE_SIZE = 2;
-    unsigned int MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2;
+    unsigned int MIN_SOLID_BLOCK_SEQUENCE_SIZE = 3;
 }
 
 SIM::SIM()
@@ -215,7 +215,7 @@ void SIM::run(
 
     ////////////////////////////////////////////////////////////////////////////
 
-    m_log_stream << " - Detecting solid sequence blocks...";
+    m_log_stream << " - Detecting solid sequence blocks..." << std::endl;
     timer = clock();
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
@@ -571,28 +571,60 @@ void SIM::cleanupSolidSequencesWithSmallRangeSize(
     }
 }
 
+namespace
+{
+    struct sb_less_then_comparer
+    {
+        bool operator() (
+            const SequenceBlock & _left,
+            const SequenceBlock & _right) const
+        {
+            std::stringstream left, right;
+            left << _left.range().start() << '-'
+                 << _left.range().end() << '_'
+                 << _left.interval().start() << '-'
+                 << _left.interval().end();
+            right << _right.range().start() << '-'
+                  << _right.range().end() << '_'
+                  << _right.interval().start() << '-'
+                  << _right.interval().end();
+
+            return (
+                // _left.range().start() < _right.range().start() &&
+                // _left.range().end() < _right.range().end() &&
+                // _left.interval().start() < _right.interval().start() &&
+                // _left.interval().end() < _right.interval().end()
+                left < right
+                );
+        }
+    };
+
+    typedef std::set < SequenceBlock, sb_less_then_comparer > SetSequenceBlocks;
+}
+
 void SIM::detectSolidSequenceBlocksFromSolidSequence(
     const RangedSequence & _solid_sequence,
     const Frequency & _min_block_freq,
     ListSequenceBlocks & _sequence_blocks)
 {
-    if(_solid_sequence.sequence().size() < MIN_SOLID_BLOCK_SEQUENCE_SIZE)
+    const Size sequence_size =  _solid_sequence.sequence().size();
+
+    if(sequence_size < MIN_SOLID_BLOCK_SEQUENCE_SIZE)
     {
         return;
     }
 
-    m_log_stream << std::endl << '\t'
+    m_log_stream << '\t'
                  << _solid_sequence.sequence().toStringOfItems() << '('
                  << _solid_sequence.range().start() << ','
                  << _solid_sequence.range().end() << ')';
+    m_log_stream.flush();
 
     std::set < Position > unique_positions;
 
     // generate a candidate Sequence Block for each sequence match
     // in the Database
     ListSequenceBlocks sb_candidates;
-    bool chk_uniq_add_exists;
-    ListSequenceBlocks::const_iterator chk_uniq_add_it;
 
     ListPositions::const_iterator it_pos;
     const ListPositions & positions =
@@ -608,25 +640,27 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             SequenceBlock(
                 _solid_sequence.sequence(),
                 Range(it_pos->first, it_pos->first),
-                Interval(it_pos->second,
-                         it_pos->second + _solid_sequence.sequence().size() - 1),
+                Interval(it_pos->second, it_pos->second + sequence_size - 1),
                 unique_positions));
     }
 
-    m_log_stream << "\tsize: " << sb_candidates.size() << "\t merges: ";
+    m_log_stream << "\tinit.size: " << sb_candidates.size() << "\t merges:";
+    m_log_stream.flush();
 
     ListSequenceBlocks to_add;
     ListSequenceBlocks::iterator it_sb_add;
     std::list < ListSequenceBlocks::iterator > to_del;
     std::list < ListSequenceBlocks::iterator > ::iterator it_sb_del;
 
+    unsigned int erased;
+    bool is_contained;
+    ListSequenceBlocks::iterator chk_bigger_it;
+
     ListSequenceBlocks::iterator it_sb_q, it_sb_r;
-    Support new_support;
     Range new_range(0, 0);
     Interval new_interval(0,0);
 
     bool did_any_merge;
-    ////bool current_q_used_to_merge;
 
     // merge the Sequence Block candidates to obtain Solid Sequence Blocks
     // that respect Θ
@@ -640,8 +674,6 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             it_sb_q != sb_candidates.end();
             ++it_sb_q)
         {
-            ////current_q_used_to_merge = false;
-
             // for each other solid sequence r... where r > q
             for(
                 it_sb_r = it_sb_q, ++it_sb_r; // equal to it_sb_r = it_sb_q + 1
@@ -650,8 +682,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             {
                 it_sb_q->range().unify(it_sb_r->range(), new_range);
                 it_sb_q->interval().unify(it_sb_r->interval(), new_interval);
-                ////new_support = it_sb_q->support() + it_sb_r->support();
-                // TODO [CMP] please note
+
                 // allowing overlapping blocks,
                 // the support must be the sum of unique positions
                 // of the original ranges
@@ -662,107 +693,129 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                 unique_positions.insert(
                     it_sb_r->positions().begin(),
                     it_sb_r->positions().end());
-                new_support = unique_positions.size()
-                    * _solid_sequence.sequence().size();
 
                 // if num of sequence items in the block divided by
                 // the num of all items in the block is >= Θ
-                if((float(new_support) / (
+                if((float(unique_positions.size() * sequence_size) / (
                         new_range.size() * new_interval.size()))
                    >= _min_block_freq)
                 {
-                    // m_log_stream << it_sb_q->range().start() << '-'
-                    //              << it_sb_q->range().end() << " + "
-                    //              << it_sb_r->range().start() << '-'
-                    //              << it_sb_r->range().end() << " = "
-                    //              << new_range.start() << '-'
-                    //              << new_range.end() << '\t'
-                    //              << it_sb_q->interval().start() << '-'
-                    //              << it_sb_q->interval().end() << " + "
-                    //              << it_sb_r->interval().start() << '-'
-                    //              << it_sb_r->interval().end() << " = "
-                    //              << new_interval.start() << '-'
-                    //              << new_interval.end() << '\n';
 
-                    // TODO [CMP] please note
-                    // allowing overlapping blocks,
-                    // the block to add (merged) should be tested to merge again
-                    // BEFORE the minor block removal
-                    to_add.push_back(
-                        SequenceBlock(
-                            _solid_sequence.sequence(),
-                            new_range,
-                            new_interval,
-                            unique_positions));
+                    SequenceBlock merged(
+                        _solid_sequence.sequence(),
+                        new_range,
+                        new_interval,
+                        unique_positions);
 
-                    // TODO [CMP] check, this can be very slow
-                    if(
-                        ! (std::find(to_del.begin(), to_del.end(), it_sb_q)
-                           != to_del.end()))
+                    if(SequenceBlock::area_comparer()(merged, (*it_sb_q)))
                     {
-                        to_del.push_back(it_sb_q);
+                        if(
+                            ! (std::find(to_del.begin(), to_del.end(), it_sb_r)
+                               != to_del.end()))
+                        {
+                            to_del.push_back(it_sb_r);
+                        }
                     }
-                    if(
-                        ! (std::find(to_del.begin(), to_del.end(), it_sb_r)
-                           != to_del.end()))
+                    else if(SequenceBlock::area_comparer()(merged, (*it_sb_r)))
                     {
-                        to_del.push_back(it_sb_r);
+                        if(
+                            ! (std::find(to_del.begin(), to_del.end(), it_sb_q)
+                               != to_del.end()))
+                        {
+                            to_del.push_back(it_sb_q);
+						}
                     }
+                    else
+                    {
+                        if(
+                            ! (std::find(to_del.begin(), to_del.end(), it_sb_q)
+                               != to_del.end()))
+                        {
+                            to_del.push_back(it_sb_q);
+						}
+                        if(
+                            ! (std::find(to_del.begin(), to_del.end(), it_sb_r)
+                               != to_del.end()))
+                        {
+                            to_del.push_back(it_sb_r);
+						}
 
-                    did_any_merge = true;
-                    ////current_q_used_to_merge = true;
+                        // add only not already contained in the block to_add
+                        is_contained = false;
+                        chk_bigger_it = to_add.begin();
 
-                    // the current q was used in a merge,
-                    // so it can not be used with any r
-                    ////break;
+                        while(chk_bigger_it != to_add.end())
+                        {
+                            if(chk_bigger_it->contains(merged))
+                            {
+                                is_contained = true;
+                                ++chk_bigger_it;
+                            }
+                            else if (merged.contains(* chk_bigger_it))
+                            {
+                                to_add.erase(chk_bigger_it++);
+                            }
+                            else
+                            {
+                                ++chk_bigger_it;
+                            }
+                        }
+
+                        if(! is_contained)
+                        {
+                            to_add.push_back(merged);
+
+                            did_any_merge = true;
+                        }
+                    }
                 }
             }
-
-            ////if(current_q_used_to_merge)
-            ////{
-            ////    // current q was used, we need to continue from q=r+1
-            ////    // because current q and r can not be used anymore
-            ////    it_sb_q = it_sb_r;
-            ////    continue;  // q will be incremented in the for statement
-            ////}
         }
+
+        m_log_stream << " +" << to_add.size() << " -" << to_del.size();
+        m_log_stream.flush();
 
         for(it_sb_del = to_del.begin(); it_sb_del != to_del.end(); ++it_sb_del)
         {
-            m_log_stream << '-';
             sb_candidates.erase(*it_sb_del);
         }
 
         to_del.clear();
 
+        erased = 0;
+
         for(it_sb_add = to_add.begin(); it_sb_add != to_add.end(); ++it_sb_add)
         {
-            // add if not exists
-            chk_uniq_add_exists = false;
+            // add only not already contained in the block candidates
+            is_contained = false;
+            chk_bigger_it = sb_candidates.begin();
 
-            // TODO [CMP] check, this can be very slow
-            for(
-                chk_uniq_add_it = sb_candidates.begin();
-                chk_uniq_add_it != sb_candidates.end();
-                ++chk_uniq_add_it
-                )
+            while(chk_bigger_it != sb_candidates.end())
             {
-                if(
-                    chk_uniq_add_it->range() == it_sb_add->range() &&
-                    chk_uniq_add_it->interval() == it_sb_add->interval()
-                    )
+                if(chk_bigger_it->contains(* it_sb_add))
                 {
-                    chk_uniq_add_exists = true;
-                    break;
+                    is_contained = true;
+                    ++chk_bigger_it;
+                }
+                else if (it_sb_add->contains(* chk_bigger_it))
+                {
+                    sb_candidates.erase(chk_bigger_it++);
+                    ++erased;
+                }
+                else
+                {
+                    ++chk_bigger_it;
                 }
             }
 
-            if(!chk_uniq_add_exists)
+            if(! is_contained)
             {
-                m_log_stream << '+';
                 sb_candidates.push_back(*it_sb_add);
             }
         }
+
+        m_log_stream << " -" << erased << "\t|\t";
+        m_log_stream.flush();
 
         to_add.clear();
     }
