@@ -1,5 +1,5 @@
 # version of this Makefile
-MAKEFILE_VER=		0.6.0
+MAKEFILE_VER=		0.6.1
 
 
 
@@ -50,14 +50,14 @@ RM=					rm -f
 # flags
 PLATFORM_FLAGS=		-m64
 
-RELEASE_FLAGS=		-O3 -s
-STATIC_FLAGS=		-static -static-libgcc -static-libstdc++ -pthread
-DEBUG_FLAGS=		-O0 -ggdb -g3    # no optimization and increase debug level to 3
-TEST_FLAGS=			$(DEBUG_FLAGS)
-
-CFLAGS=				-pipe -ansi -pedantic -Wall -Wextra $(PLATFORM_FLAGS)
-CC_FLAGS=			$(CFLAGS) -I$(INC_DIR)
+CC_FLAGS=			-pipe -ansi -pedantic -Wall -Wextra $(PLATFORM_FLAGS) -I$(INC_DIR)
 LD_FLAGS=			-L$(LIB_DIR) $(PLATFORM_FLAGS)
+
+RELEASE_FLAGS=		-O3 -s				# optimization and remove all symbol table
+#RELEASE_FLAGS=		-O3 -ggdb -g3		# keep debug information but optimize so that the code is fast like a release
+STATIC_LD_FLAGS=	-static -static-libgcc -static-libstdc++ -pthread
+DEBUG_FLAGS=		-Og -ggdb -g3    	# some debug optimization and increase debug level to 3
+TEST_FLAGS=			$(DEBUG_FLAGS)
 
 
 
@@ -78,7 +78,7 @@ else ifeq ($(MAKECMDGOALS), static)
 	GOAL=			Static
 	OUT_DIR=		$(STATIC_DIR)
 	CC_CMD_ARGS=	$(RELEASE_FLAGS) $(CC_FLAGS)
-	LD_CMD_ARGS=	$(RELEASE_FLAGS) $(STATIC_FLAGS) $(LD_FLAGS) $(LIBS_STA)
+	LD_CMD_ARGS=	$(RELEASE_FLAGS) $(STATIC_LD_FLAGS) $(LD_FLAGS) $(LIBS_STA)
 else
 	GOAL=			Release
 	OUT_DIR=		$(RELEASE_DIR)
