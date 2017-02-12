@@ -589,7 +589,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
             sb_candidates.insert(
                 CountedSB(
-                    1,
+                    1 * sequence_size,
                     SequenceBlock(
                         _solid_sequence.sequence(),
                         Range(it_pos->first, it_pos->first),
@@ -682,18 +682,19 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                     else
                     {
 						to_del[idx_q_del] = it_sb_q;
+
 						to_del[idx_r_del] = it_sb_r;
 
                         // add only not already contained in the block to_add
                         is_contained = false;
                         chk_bigger_it = to_add.lower_bound(
-                            merged.positions().size());
+                            merged.area());
 
                         while(chk_bigger_it != to_add.end())
                         {
                             if(
-                                chk_bigger_it->second.positions().size()
-                               < merged.positions().size())
+                                chk_bigger_it->second.area()
+                               < merged.area())
                             {
                                 throw std::runtime_error("this cannot happen!");
                             }
@@ -719,7 +720,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                         {
                             //to_add.push_back(merged);
                             to_add.insert(
-                                CountedSB(merged.positions().size(), merged));
+                                CountedSB(merged.area(), merged));
 
                             did_any_merge = true;
                         }
@@ -753,13 +754,13 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             // add only not already contained in the block candidates
             is_contained = false;
             chk_bigger_it = sb_candidates.lower_bound(
-                it_sb_to_add->second.positions().size());
+                it_sb_to_add->second.area());
 
             while(chk_bigger_it != sb_candidates.end())
             {
                 if(
-                    chk_bigger_it->second.positions().size()
-                    < it_sb_to_add->second.positions().size())
+                    chk_bigger_it->second.area()
+                    < it_sb_to_add->second.area())
                 {
                     throw std::runtime_error("this cannot happen!");
                 }
