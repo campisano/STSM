@@ -152,35 +152,6 @@ config$background_img_size = "800px";
 
 
 
-# configuring html basics
-html = new.env(hash=TRUE, parent=emptyenv());
-html$pre_title = c(
-    "<!DOCTYPE html>",
-    "<html>",
-    "  <head>",
-    "    <title>");
-html$post_title_pre_container = c(
-    "    </title>",
-    "    <style type=\"text/css\">",
-    "      .container {margin: 0 auto; padding: 3px;}",
-    "      .content {float: left; margin: 3px;}",
-    "      .content.first {clear: left;}",
-    "      .clearfix:after {",
-    "          content: \".\"; display: block; height: 0;",
-    "          clear: both; visibility: hidden;}",
-    "    </style>",
-    "  </head>",
-    "  <body>",
-    "    <div class=\"container\">",
-    "      <div class=\"clearfix\">");
-html$post_container = c(
-    "      </div>",
-    "    </div>",
-    "  </body>",
-    "</html>");
-
-
-
 # evaluating arguments
 args = commandArgs(TRUE);
 #cat("Arguments:\n");
@@ -246,7 +217,7 @@ system(paste("cp -f", vars$background_img_src, vars$output_img_dir));
 per_length_index_file = file(file.path(
     vars$output_img_dir, "index.html"));
 per_length_index_lines = c(
-    html$pre_title, vars$base_filename, html$post_title_pre_container);
+    utils$html.getHTMLpreContentCode(vars$base_filename));
 
 # start the iterations, for each json data grouped by length
 for(iteration in 1:length(solid_sequences)) {
@@ -386,6 +357,8 @@ for(iteration in 1:length(solid_sequences)) {
             if(! exists(sequence, seq_plotd)) {
                 seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
                 seq_plotd[[sequence]]$min_width_to_be_drawn = FALSE;
+                seq_plotd[[sequence]]$area = 0.0;
+                seq_plotd[[sequence]]$count = 0;
                 seq_plotd[[sequence]]$xmin_ranges = c();
                 seq_plotd[[sequence]]$xmax_ranges = c();
                 seq_plotd[[sequence]]$xmin_blocks = c();
@@ -415,6 +388,12 @@ for(iteration in 1:length(solid_sequences)) {
                     seq_plotd[[sequence]]$ymin_blocks, i_start);
                 seq_plotd[[sequence]]$ymax_blocks = c(
                     seq_plotd[[sequence]]$ymax_blocks, i_end);
+
+                seq_plotd[[sequence]]$area =
+                    seq_plotd[[sequence]]$area +
+                        (r_end - r_start + 1) * (i_end - i_start + 1);
+                seq_plotd[[sequence]]$count =
+                    seq_plotd[[sequence]]$count + 1;
             }
         }
     }
@@ -458,6 +437,8 @@ for(iteration in 1:length(solid_sequences)) {
         if(! exists(sequence, seq_plotd)) {
             seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
             seq_plotd[[sequence]]$min_width_to_be_drawn = FALSE;
+            seq_plotd[[sequence]]$area = 0.0;
+            seq_plotd[[sequence]]$count = 0;
             seq_plotd[[sequence]]$xmin_ranges = c();
             seq_plotd[[sequence]]$xmax_ranges = c();
             seq_plotd[[sequence]]$xmin_blocks = c();
@@ -501,7 +482,7 @@ for(iteration in 1:length(solid_sequences)) {
     something_plotted = FALSE;
 
     # producing the entire bunch of plots at one time,
-    # a img with all the points and ranges for each sequence
+    # any image with all the points, ranges and block for the related sequence
     utils$dev_open_file(
         filename_by_seq, vars$database_x_size, vars$database_y_size,
         config$plot_scale);
@@ -540,13 +521,13 @@ for(iteration in 1:length(solid_sequences)) {
             vars$output_img_dir, "by_length_and_sequence",
             paste(sequence_length, ".html", sep="")));
         per_sequence_index_lines = c(
-            html$pre_title, sequence_length, html$post_title_pre_container);
+            utils$html.getHTMLpreContentCode(sequence_length));
 
         for(key in ls(seq_plotd)) {
             if(seq_plotd[[key]]$min_width_to_be_drawn) {
                 k = k + 1;
 
-                # rename to final image file
+                # rename to final sequence image file
                 file.rename(
                     file.path(
                         vars$output_img_dir, "by_length_and_sequence",
@@ -559,14 +540,13 @@ for(iteration in 1:length(solid_sequences)) {
                         paste(key, ".",
                               config$per_sequence_plot_image_type, sep="")));
 
-                # create a separated html
+                # create a separated html for this sequence image
                 per_len_sequence_index_file = file(file.path(
                     vars$output_img_dir, "by_length_and_sequence",
                     paste(sequence_length, "/", key, ".html", sep="")));
                 writeLines(
                     c(
-                        html$pre_title, key,
-                        html$post_title_pre_container,
+                        utils$html.getHTMLpreContentCode(key),
                         paste(
                             "        <div class=\"content first\">",
                             key, "</div>"),
@@ -579,7 +559,7 @@ for(iteration in 1:length(solid_sequences)) {
                             " src=\"",
                             key, ".", config$per_sequence_plot_image_type,
                             "\" alt=\"\" /></div>", sep=""),
-                        html$post_container),
+                        utils$html.getHTMLpostContentCode()),
                     per_len_sequence_index_file);
                 close(per_len_sequence_index_file);
 
@@ -605,9 +585,70 @@ for(iteration in 1:length(solid_sequences)) {
             }
         }
 
-        writeLines(c(per_sequence_index_lines, html$post_container),
-                   per_sequence_index_file);
+        writeLines(
+            c(
+                per_sequence_index_lines,
+                utils$html.getHTMLpostContentCode()),
+            per_sequence_index_file);
         close(per_sequence_index_file);
+
+        # write an html with link of sequence images ranked by mean_area
+        {
+            sequences = c();
+            mean_areas = c();
+
+            for(key in ls(seq_plotd)) {
+                if(seq_plotd[[key]]$min_width_to_be_drawn) {
+                    sequences = c(sequences, key);
+                    mean_areas = c(
+                        mean_areas,
+                            seq_plotd[[key]]$area / seq_plotd[[key]]$count);
+                }
+            }
+
+            data_frame = data.frame(sequences, mean_areas);
+            colnames(data_frame) = c("sequences", "mean_areas");
+            data_frame = data_frame[with(data_frame, order(-mean_areas)), ];
+
+            # create the html file
+            per_sequence_ranked_index_file = file(file.path(
+                vars$output_img_dir, "by_length_and_sequence",
+                paste(sequence_length, "_ranked.html", sep="")));
+            per_sequence_ranked_index_lines = c(
+                utils$html.getHTMLpreContentCode(sequence_length));
+
+            for(i in 1:nrow(data_frame)) {
+                sequence = data_frame[i,]$sequences;
+                mean_area = data_frame[i,]$mean_areas;
+
+                # add an entry to the per-length html
+                per_sequence_ranked_index_lines = c(
+                    per_sequence_ranked_index_lines,
+                    "        <div class=\"content first\">",
+                    paste(
+                        "          <a href=\"", sequence_length, "/",
+                        sequence, ".html\">", sep=""),
+                    paste(
+                        "            <img style=\"",
+                        "background:url(../", vars$background_img, ");",
+                        "background-size:cover;",
+                        "width:800px;\"",
+                        " src=\"", sequence_length, "/",
+                        sequence, ".", config$per_sequence_plot_image_type,
+                        "\" alt=\"\" />", sep=""),
+                    "          </a>",
+                    "        </div>",
+                    paste("        <div class=\"content\">",
+                          sequence, " - ", mean_area, "</div>", sep=""));
+            }
+
+            writeLines(
+                c(
+                    per_sequence_ranked_index_lines,
+                    utils$html.getHTMLpostContentCode()),
+                per_sequence_ranked_index_file);
+            close(per_sequence_ranked_index_file);
+        }
 
     } else {
         # removing unuseful directory
@@ -622,8 +663,11 @@ for(iteration in 1:length(solid_sequences)) {
 }
 
 # completing html file
-writeLines(c(per_length_index_lines, html$post_container),
-           per_length_index_file);
+writeLines(
+    c(
+        per_length_index_lines,
+        utils$html.getHTMLpostContentCode()),
+    per_length_index_file);
 close(per_length_index_file);
 
 # write a file that grants that this plot is complete for this product

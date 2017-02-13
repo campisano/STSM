@@ -1,5 +1,5 @@
+# defining common starting options
 options(download.file.method = "wget");
-
 options(warn=2);  # warnings converted to errors
 options(keep.source=TRUE);
 options(error=quote({
@@ -16,9 +16,13 @@ options(error=quote({
     }
 }));
 
+
+
+# defining common functions
 utils = new.env(hash=TRUE, parent=emptyenv());
 
-# defining functions
+
+
 utils$loadLibs = function(lib_name_and_vers) {
     repos = "http://cran.r-project.org";
     options(repos=c(CRAN=repos));
@@ -73,11 +77,7 @@ utils$loadLibs = function(lib_name_and_vers) {
 
 
 
-utils$loadLibs(c("compiler:3.1.1"));
-
-
-
-dev_open_file_src = function(file_name, width=480, height=480, scale=1) {
+utils$dev_open_file = function(file_name, width=480, height=480, scale=1) {
     ext = strsplit(file_name, "\\.")[[1]][[-1]];
 
     dpi = 72
@@ -94,5 +94,37 @@ dev_open_file_src = function(file_name, width=480, height=480, scale=1) {
             width=(width / dpi) * scale, height=(height / dpi) * scale);
     }
 }
-utils$dev_open_file = cmpfun(dev_open_file_src);
-rm(dev_open_file_src);
+
+
+
+utils$html.getHTMLpreContentCode = function(title="") {
+    return(paste(
+        "<!DOCTYPE html>",
+        "<html>",
+        "  <head>",
+        paste("    <title>", title, "</title>", sep=""),
+        "    <style type=\"text/css\">",
+        "      .container {margin: 0 auto; padding: 3px;}",
+        "      .content {float: left; margin: 3px;}",
+        "      .content.first {clear: left;}",
+        "      .clearfix:after {",
+        "          content: \".\"; display: block; height: 0;",
+        "          clear: both; visibility: hidden;}",
+        "    </style>",
+        "  </head>",
+        "  <body>",
+        "    <div class=\"container\">",
+        "      <div class=\"clearfix\">",
+        sep="\n"));
+}
+
+
+
+utils$html.getHTMLpostContentCode = function() {
+    return(paste(
+        "      </div>",
+        "    </div>",
+        "  </body>",
+        "</html>",
+        sep="\n"));
+}
