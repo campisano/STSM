@@ -14,8 +14,9 @@
 // TODO [CMP] put in a good place
 namespace
 {
-    unsigned int MIN_RANGE_SIZE = 2;
-    unsigned int MIN_SOLID_BLOCK_SEQUENCE_SIZE = 3;
+    const unsigned int MIN_RANGE_SIZE = 2;
+    const unsigned int MIN_SOLID_BLOCK_SEQUENCE_SIZE = 3;
+    const unsigned long MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 15000;
 
     float getSecs(const time_t _time)
     {
@@ -578,6 +579,13 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         const ListPositions & positions =
             m_ranged_sequence_positions.find(& _solid_sequence)->second;
 
+        if(positions.size() > MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
+        {
+            m_log_stream << " [WARN] max blocks per sequence exceeded: "
+                         << positions.size() << ". Skip." << std::endl;
+            return;
+        }
+
         // for each position
         for(it_pos = positions.begin(); it_pos != positions.end(); ++it_pos)
         {
@@ -764,6 +772,13 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         }
 
         to_add.clear();
+
+        if(sb_candidates.size() > MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
+        {
+            m_log_stream << " [WARN] max blocks per sequence exceeded: "
+                         << sb_candidates.size() << ". Skip." << std::endl;
+            return;
+        }
 
         m_log_stream << " -" << additional_erased << " ("
                      << getSecs(time) << "s) |";
