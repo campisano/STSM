@@ -609,12 +609,10 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     ListSequenceBlocks to_add;
     ListSequenceBlocks::iterator it_sb_to_add;
 
-    typedef std::map <
-        unsigned long int,
-		ListSequenceBlocks::iterator > DelItByIndex;
-    DelItByIndex to_del;
-    DelItByIndex::iterator it_sb_to_del;
-    unsigned long int idx_q_del, idx_r_del;
+    typedef std::set <
+        ListSequenceBlocks::iterator, SequenceBlock::Comparer > DelIt;
+    DelIt to_del;
+    DelIt::iterator it_sb_to_del;
 
     unsigned int additional_erased;
     bool is_contained;
@@ -637,16 +635,16 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
         // for each solid block q
         for(
-            it_sb_q = sb_candidates.begin(), idx_q_del = 0;
+            it_sb_q = sb_candidates.begin();
             it_sb_q != sb_candidates.end();
-            ++it_sb_q, ++idx_q_del)
+            ++it_sb_q)
         {
             // for each other solid block r... where r > q
             for(
                 // equal to it_sb_r = it_sb_q + 1
-                it_sb_r = it_sb_q, ++it_sb_r, idx_r_del = idx_q_del + 1;
+                it_sb_r = it_sb_q, ++it_sb_r;
                 it_sb_r != sb_candidates.end();
-                ++it_sb_r, ++idx_r_del)
+                ++it_sb_r)
             {
                 it_sb_q->range().unify(it_sb_r->range(), new_range);
                 it_sb_q->interval().unify(it_sb_r->interval(), new_interval);
@@ -677,16 +675,16 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
                     if(merged.hasSamePositions(* it_sb_q))
                     {
-                        to_del[idx_r_del] = it_sb_r;
+                        to_del.insert(it_sb_r);
                     }
                     else if(merged.hasSamePositions(* it_sb_r))
                     {
-                        to_del[idx_q_del] = it_sb_q;
+                        to_del.insert(it_sb_q);
                     }
                     else
                     {
-                        to_del[idx_q_del] = it_sb_q;
-                        to_del[idx_r_del] = it_sb_r;
+                        to_del.insert(it_sb_q);
+                        to_del.insert(it_sb_r);
 
                         // add only merges
                         // not already contained in the block to_add
@@ -729,7 +727,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             it_sb_to_del != to_del.end();
             ++it_sb_to_del)
         {
-            sb_candidates.erase(it_sb_to_del->second);
+            sb_candidates.erase(* it_sb_to_del);
         }
 
         to_del.clear();

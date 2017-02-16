@@ -75,3 +75,37 @@ bool SequenceBlock::hasSamePositions(const SequenceBlock & _other) const
         m_interval == _other.interval()
         );
 }
+
+bool SequenceBlock::Comparer::operator() (
+    const ListSequenceBlocks::iterator & _left,
+    const ListSequenceBlocks::iterator & _right) const
+{
+    if(_left->range().start() == _right->range().start())
+    {
+        if(_left->interval().start() == _right->interval().start())
+        {
+            if(_left->range().end() == _right->range().end())
+            {
+                return (
+                    _left->interval().end()
+                    < _right->interval().end());
+            }
+            else
+            {
+                return (
+                    _left->range().end()
+                    < _right->range().end());
+            }
+        }
+        else
+        {
+            return (
+                _left->interval().start()
+                < _right->interval().start());
+        }
+    }
+    else
+    {
+        return _left->range().start() < _right->range().start();
+    }
+}

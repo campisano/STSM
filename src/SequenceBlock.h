@@ -12,6 +12,10 @@
 #include "Size.h"
 #include "Support.h"
 
+class SequenceBlock;
+typedef std::list < SequenceBlock > ListSequenceBlocks;
+typedef std::map < Size, ListSequenceBlocks > MapSequenceBlocksByLength;
+
 class SequenceBlock
 {
 public:
@@ -37,6 +41,13 @@ public:
     bool contains(const SequenceBlock & _other) const;
     bool hasSamePositions(const SequenceBlock & _other) const;
 
+    struct Comparer
+    {
+        bool operator() (
+            const ListSequenceBlocks::iterator & _left,
+            const ListSequenceBlocks::iterator & _right) const;
+    };
+
 private:
     Sequence m_sequence;
     Range m_range;
@@ -44,8 +55,5 @@ private:
 
     SetPositions m_positions;
 };
-
-typedef std::list < SequenceBlock > ListSequenceBlocks;
-typedef std::map < Size, ListSequenceBlocks > MapSequenceBlocksByLength;
 
 #endif
