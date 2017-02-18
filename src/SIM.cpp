@@ -580,44 +580,28 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                  << _solid_sequence.range().end() << ')';
     m_log_stream.flush();
 
-    time_t time;
-    std::set < Position > unique_positions;
+    const ListPositions & positions = m_ranged_sequence_positions.find(
+        & _solid_sequence)->second;
 
-    // generate a candidate Sequence Block for each sequence match
-    // in the Database
-    ListSequenceBlocks sb_candidates;
-
+    if(positions.size() > MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
     {
-        ListPositions::const_iterator it_pos;
-        const ListPositions & positions =
-            m_ranged_sequence_positions.find(& _solid_sequence)->second;
-
-        if(positions.size() > MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
-        {
-            m_log_stream << " [WARN] max blocks per sequence exceeded: "
-                         << positions.size() << ". Skip." << std::endl;
-            return;
-        }
-
-        // for each position
-        for(it_pos = positions.begin(); it_pos != positions.end(); ++it_pos)
-        {
-            unique_positions.clear();
-            unique_positions.insert(*it_pos);
-
-            sb_candidates.push_back(
-                SequenceBlock(
-                    _solid_sequence.sequence(),
-                    Range(it_pos->first, it_pos->first),
-                    Interval(
-                        it_pos->second, it_pos->second
-                        + sequence_size - 1),
-                    unique_positions));
-        }
+        m_log_stream << " [WARN] max blocks per sequence exceeded: "
+                     << positions.size() << ". Skip." << std::endl;
+        return;
     }
+
+    ListSequenceBlocks sb_candidates;
+    generate1SizeBlockCandidatesForEachSequenceOccurrence(
+        positions,
+        _solid_sequence,
+        sb_candidates);
 
     m_log_stream << "\tinit.size: " << sb_candidates.size() << "\t merges:";
     m_log_stream.flush();
+
+    time_t time;
+
+    std::set < Position > unique_positions;
 
     ListSequenceBlocks to_add;
     ListSequenceBlocks::iterator it_sb_to_add;
@@ -803,6 +787,33 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         _sequence_blocks.end(),
         sb_candidates.begin(),
         sb_candidates.end());
+}
+
+void SIM::generate1SizeBlockCandidatesForEachSequenceOccurrence(
+    const ListPositions & _positions,
+    const RangedSequence & _solid_sequence,
+    ListSequenceBlocks & _sb_candidates) const
+{
+    std::set < Position > unique_positions;
+
+    ListPositions::const_iterator it_pos;
+
+    const Size sequence_size =  _solid_sequence.sequence().size();
+
+    for(it_pos = _positions.begin(); it_pos != _positions.end(); ++it_pos)
+    {
+        unique_positions.clear();
+        unique_positions.insert(*it_pos);
+
+        _sb_candidates.push_back(
+            SequenceBlock(
+                _solid_sequence.sequence(),
+                Range(it_pos->first, it_pos->first),
+                Interval(
+                    it_pos->second, it_pos->second
+                    + sequence_size - 1),
+                unique_positions));
+    }
 }
 
 void SIM::printSolidSequences()

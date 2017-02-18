@@ -69,6 +69,11 @@ protected:
         const Frequency & _min_block_freq,
         ListSequenceBlocks & _sequence_blocks);
 
+    void generate1SizeBlockCandidatesForEachSequenceOccurrence(
+        const ListPositions & _positions,
+        const RangedSequence & _solid_sequence,
+        ListSequenceBlocks & _sb_candidates) const;
+
     void printSolidSequences();
     void printSolidBlocks();
 
