@@ -22,6 +22,8 @@ public:
     explicit SIM();
     virtual ~SIM();
 
+    void clear();
+
     void run(
         const std::string & _input_filename,
         const std::string & _log_filename,
@@ -38,22 +40,29 @@ protected:
 
     void generateTheSetOfAllDatabaseItems(
         const Database & _database,
-        SetItems & _items) const;
+        SetItems & _items);
 
     void generate1SizeCandidates(
         const SetItems & _items,
         const Point & _start,
         const Point & _end,
-        ListCandidates & _candidates) const;
+        ListCandidates & _candidates);
+
+    void updateKernelsOfAllCandidates(ListCandidates & _candidates);
+    void mergeKernelsOfAllCandidates(
+        ListCandidates & _candidates,
+        ListRangedSequence & _solid_sequences_k);
 
     void updateMatchingPositions(const ListRangedSequence & _solid_sequences);
 
     void generateCandidates(
         const ListRangedSequence & _solid_sequences,
-        ListCandidates & _candidates) const;
+        ListCandidates & _candidates);
 
     void cleanupSolidSequencesWithSmallRangeSize(
-        const Size & _min_size, ListRangedSequence & _solid_sequences) const;
+        const Size & _min_size, ListRangedSequence & _solid_sequences);
+
+    void detectBlocksOfAllSolidSequences();
 
     void detectSolidSequenceBlocksFromSolidSequence(
         const RangedSequence & _solid_sequence,

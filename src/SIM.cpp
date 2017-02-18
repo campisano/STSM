@@ -26,8 +26,6 @@ namespace
 
 SIM::SIM()
 {
-    //TODO [CMP] the loadDatabase() can be performed there
-    // or the run() can be this!
     m_min_spatial_freq = 0.0;
     m_min_block_freq = 0.0;
 }
@@ -36,21 +34,26 @@ SIM::~SIM()
 {
 }
 
+void SIM::clear()
+{
+    m_database.clear();
+    m_solid_sequences.clear();
+    m_ranged_sequence_positions.clear();
+    m_solid_sequence_blocks.clear();
+}
+
 void SIM::run(
     const std::string & _input_filename,
     const std::string & _log_filename,
     const unsigned int & _min_spatial_freq_perc,
     const unsigned int & _min_block_freq_perc)
 {
-    m_database.clear();
-    m_solid_sequences.clear();
-    m_ranged_sequence_positions.clear();
-    m_solid_sequence_blocks.clear();
+    clear();
 
     setMinSpatialFreq(float(_min_spatial_freq_perc) / 100.0);
     setMinBlockFreq(float(_min_block_freq_perc) / 100.0);
 
-    clock_t start_time = clock(), time;
+    clock_t start_time = clock();
 
     // initialize the logger
     m_log_stream.open(_log_filename.c_str());
@@ -64,29 +67,15 @@ void SIM::run(
                  << m_min_block_freq << std::endl;
     m_log_stream << std::endl;
 
-    m_log_stream << "Loading database...";
-    time = clock();
     loadDatabase(_input_filename);
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 
-    m_log_stream << "Generating a set with all database items...";
-    time = clock();
     SetItems items;
     generateTheSetOfAllDatabaseItems(m_database, items);
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
+
+    ListCandidates candidates;
+    generate1SizeCandidates(items, 0, m_database.size() - 1, candidates);
 
     Size seq_size = 1;
-    ListCandidates candidates;
-    m_log_stream << "Generating 1-size candidates...";
-    time = clock();
-    generate1SizeCandidates(items, 0, m_database.size() - 1, candidates);
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
-    m_log_stream << "(Num of candidates: "
-                 << candidates.size() << ")" << std::endl;
-
-    Database::const_iterator db_it;
-    ListCandidates::iterator cand_it;
-    ListKernels::const_iterator kern_it;
 
     do
     {
@@ -96,109 +85,113 @@ void SIM::run(
         ListRangedSequence & solid_sequences_k =
             m_solid_sequences[seq_size] = ListRangedSequence();
 
-        ////////////////////////////////////////////////////////////////////////
+        updateKernelsOfAllCandidates(candidates);
+        mergeKernelsOfAllCandidates(candidates, solid_sequences_k);
 
-        m_log_stream << " - Updating candidate kernels...";
-        time = clock();
-
-        Point db_position = 0;
-
-        // for each Database series
-        for(db_it = m_database.begin(); db_it != m_database.end(); ++db_it)
-        {
-            // for each candidate...
-            for(cand_it = candidates.begin();
-                cand_it != candidates.end(); ++cand_it)
-            {
-                // ... having range containing the current series
-                if(cand_it->range().contains(db_position))
-                {
-                    // update the current candidate kernels
-                    // for the current series
-                    cand_it->updateCandidateKernels(
-                        *db_it, db_position, m_min_spatial_freq);
-                }
-            }
-
-            ++db_position;
-        }
-
-        m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
-
-        ////////////////////////////////////////////////////////////////////////
-
-        m_log_stream << " - Merging kernels and creating solid sequences...";
-        time = clock();
-
-        // for each candidate
-        for(
-            cand_it = candidates.begin();
-            cand_it != candidates.end(); ++cand_it)
-        {
-            // find optimal spatial ranges for the current candidate
-            cand_it->mergeKernels(m_min_spatial_freq);
-
-            // for each optimal range
-            for(
-                kern_it = cand_it->kernels().begin();
-                kern_it != cand_it->kernels().end();
-                ++ kern_it)
-            {
-                // defining a new Ranged Sequence
-                // that is also a Solid Sequence for this kernel range
-                solid_sequences_k.push_back(
-                    RangedSequence(
-                        cand_it->sequence(),
-                        Range(kern_it->start(), kern_it->end()),
-                        kern_it->support()));
-            }
-        }
-
-        m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
-        m_log_stream << "   (Num of solid sequences (with range size > 1)"
-                     << " for this iteration: "
-                     << solid_sequences_k.size() << ")" << std::endl;
-
-        ////////////////////////////////////////////////////////////////////////
-
-        m_log_stream << " - Clean up solid sequences with small range size...";
-        time = clock();
         cleanupSolidSequencesWithSmallRangeSize(
             MIN_RANGE_SIZE, solid_sequences_k);
-        m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 
-        ////////////////////////////////////////////////////////////////////////
-
-        m_log_stream << " - Detecting sequence positions in the database...";
-        time = clock();
         updateMatchingPositions(solid_sequences_k);
-        m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 
-        ////////////////////////////////////////////////////////////////////////
-
-        m_log_stream << " - Generating candidates...";
-        time = clock();
         candidates.clear();
         generateCandidates(solid_sequences_k, candidates);
-        m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
-        m_log_stream << "   (Num of candidates: " <<
-            candidates.size() << ")" << std::endl;
-
-        ////////////////////////////////////////////////////////////////////////
 
         ++seq_size;
     }
     while(candidates.size() > 0);
 
-    ////////////////////////////////////////////////////////////////////////////
-
     // print solid sequences data and positions
     // printSolidSequences();
 
-    ////////////////////////////////////////////////////////////////////////////
+    detectBlocksOfAllSolidSequences();
 
+    // print solid blocks data and positions
+    // printSolidBlocks();
+
+    m_log_stream << "* Total run time: "
+                 << getSecs(start_time)
+                 << " secs." << std::endl;
+
+    // close the logger
+    m_log_stream.close();
+}
+
+void SIM::updateKernelsOfAllCandidates(ListCandidates & _candidates)
+{
+    clock_t time = clock();
+    m_log_stream << " - Updating candidate kernels...";
+
+    Point db_position = 0;
+    Database::const_iterator db_it;
+    ListCandidates::iterator cand_it;
+
+    // for each Database series
+    for(db_it = m_database.begin(); db_it != m_database.end(); ++db_it)
+    {
+        // for each candidate...
+        for(cand_it = _candidates.begin();
+            cand_it != _candidates.end(); ++cand_it)
+        {
+            // ... having range containing the current series
+            if(cand_it->range().contains(db_position))
+            {
+                // update the current candidate kernels
+                // for the current series
+                cand_it->updateCandidateKernels(
+                    *db_it, db_position, m_min_spatial_freq);
+            }
+        }
+
+        ++db_position;
+    }
+
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
+}
+
+void SIM::mergeKernelsOfAllCandidates(
+    ListCandidates & _candidates,
+    ListRangedSequence & _solid_sequences_k)
+{
+    clock_t time = clock();
+    m_log_stream << " - Merging kernels and creating solid sequences...";
+
+    ListKernels::const_iterator kern_it;
+    ListCandidates::iterator cand_it;
+
+    // for each candidate
+    for(
+        cand_it = _candidates.begin();
+        cand_it != _candidates.end(); ++cand_it)
+    {
+        // find optimal spatial ranges for the current candidate
+        cand_it->mergeKernels(m_min_spatial_freq);
+
+        // for each optimal range
+        for(
+            kern_it = cand_it->kernels().begin();
+            kern_it != cand_it->kernels().end();
+            ++ kern_it)
+        {
+            // defining a new Ranged Sequence
+            // that is also a Solid Sequence for this kernel range
+            _solid_sequences_k.push_back(
+                RangedSequence(
+                    cand_it->sequence(),
+                    Range(kern_it->start(), kern_it->end()),
+                    kern_it->support()));
+        }
+    }
+
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
+    m_log_stream << "   (Num of solid sequences (with range size > 1)"
+                 << " for this iteration: "
+                 << _solid_sequences_k.size() << ")" << std::endl;
+}
+
+void SIM::detectBlocksOfAllSolidSequences()
+{
+    clock_t time = clock();
     m_log_stream << " - Detecting solid sequence blocks..." << std::endl;
-    time = clock();
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
@@ -225,24 +218,13 @@ void SIM::run(
     }
 
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
-
-    ////////////////////////////////////////////////////////////////////////////
-
-    // print solid blocks data and positions
-    // printSolidBlocks();
-
-    ////////////////////////////////////////////////////////////////////////////
-
-    m_log_stream << "* Total run time: "
-                 << getSecs(start_time)
-                 << " secs." << std::endl;
-
-    // close the logger
-    m_log_stream.close();
 }
 
 void SIM::loadDatabase(const std::string & _input_filename)
 {
+    clock_t time = clock();
+    m_log_stream << "Loading database...";
+
     std::ifstream file_stream;
     file_stream.open(_input_filename.c_str(), std::ifstream::in);
 
@@ -251,12 +233,17 @@ void SIM::loadDatabase(const std::string & _input_filename)
     deserializer.deserialize(m_database);
 
     file_stream.close();
+
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
 void SIM::generateTheSetOfAllDatabaseItems(
     const Database & _database,
-    SetItems & _items) const
+    SetItems & _items)
 {
+    clock_t time = clock();
+    m_log_stream << "Generating a set with all database items...";
+
     // from http://stackoverflow.com/a/1041939/846686
     // and http://stackoverflow.com/a/24477023/846686
     Database::const_iterator db_it;
@@ -269,14 +256,19 @@ void SIM::generateTheSetOfAllDatabaseItems(
             _items.insert(*sr_it);
         }
     }
+
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
 void SIM::generate1SizeCandidates(
     const SetItems & _items,
     const Point & _start,
     const Point & _end,
-    ListCandidates & _candidates) const
+    ListCandidates & _candidates)
 {
+    clock_t time = clock();
+    m_log_stream << "Generating 1-size candidates...";
+
     SetItems::const_iterator it;
 
     // for each item in the Database
@@ -290,12 +282,19 @@ void SIM::generate1SizeCandidates(
                 ListKernels()
                 ));
     }
+
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
+    m_log_stream << "(Num of candidates: "
+                 << _candidates.size() << ")" << std::endl;
 }
 
 void SIM::generateCandidates(
     const ListRangedSequence & _solid_sequences,
-    ListCandidates & _candidates) const
+    ListCandidates & _candidates)
 {
+    clock_t time = clock();
+    m_log_stream << " - Generating candidates...";
+
     ListRangedSequence::const_iterator x_it, y_it;
     Sequence seq1_without_first_item;
     Sequence seq2_without_last_item;
@@ -355,6 +354,10 @@ void SIM::generateCandidates(
             }
         }
     }
+
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
+    m_log_stream << "   (Num of candidates: " <<
+        _candidates.size() << ")" << std::endl;
 }
 
 void SIM::setMinSpatialFreq(const Frequency & _min_spatial_freq)
@@ -405,6 +408,9 @@ void SIM::setMinBlockFreq(const Frequency & _min_block_freq)
 
 void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
 {
+    clock_t time = clock();
+    m_log_stream << " - Detecting sequence positions in the database...";
+
     ListRangedSequence::const_iterator it_seq;
     unsigned int str_seq_size;
     std::string str_seq_rep;
@@ -529,11 +535,16 @@ void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
             }
         }
     }
+
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
 void SIM::cleanupSolidSequencesWithSmallRangeSize(
-    const Size & _min_size, ListRangedSequence & _solid_sequences) const
+    const Size & _min_size, ListRangedSequence & _solid_sequences)
 {
+    clock_t time = clock();
+    m_log_stream << " - Clean up solid sequences with small range size...";
+
     ListRangedSequence::iterator it = _solid_sequences.begin();
 
     while(it != _solid_sequences.end())
@@ -547,6 +558,8 @@ void SIM::cleanupSolidSequencesWithSmallRangeSize(
             ++it;
         }
     }
+
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
 void SIM::detectSolidSequenceBlocksFromSolidSequence(
