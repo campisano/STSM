@@ -6,7 +6,6 @@
 
 #include "Frequency.h"
 #include "Interval.h"
-#include "Position.h"
 #include "Range.h"
 #include "Sequence.h"
 #include "Size.h"
@@ -23,7 +22,7 @@ public:
         const Sequence & _sequence,
         const Range & _range,
         const Interval & _interval,
-        const SetPositions & _positions);
+        const Support & _support);
 
     bool operator==(const SequenceBlock & _other) const;
     bool operator!=(const SequenceBlock & _other) const;
@@ -34,26 +33,34 @@ public:
 
     Support support() const;
     Frequency frequency() const;
-
-    const SetPositions & positions() const;
     Size area() const;
 
     bool contains(const SequenceBlock & _other) const;
-    bool hasSamePositions(const SequenceBlock & _other) const;
+    bool contains(
+        const Range & _other_range,
+        const Interval & _other_interval) const;
 
-    struct Comparer
+    bool hasSameCoordinates(const SequenceBlock & _other) const;
+
+    struct LessThanComparer
     {
         bool operator() (
             const ListSequenceBlocks::iterator & _left,
             const ListSequenceBlocks::iterator & _right) const;
     };
 
+    struct PositionComparer
+    {
+        bool operator() (
+            const SequenceBlock & _left,
+            const SequenceBlock & _right) const;
+    };
+
 private:
     Sequence m_sequence;
     Range m_range;
     Interval m_interval;
-
-    SetPositions m_positions;
+    Support m_support;
 };
 
 #endif

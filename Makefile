@@ -1,5 +1,5 @@
 # version of this Makefile
-MAKEFILE_VER=		0.6.1
+MAKEFILE_VER=		0.6.2
 
 
 
@@ -124,7 +124,7 @@ release:			INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE INFO_LD CMD_LINK
 	@echo "Hint: run with './$(OUT_DIR)/$(OUT_FILE)'"
 	@echo
 
-static:			INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE INFO_LD CMD_LINK
+static:				INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE INFO_LD CMD_LINK
 	@echo
 	@echo "Hint: run with './$(OUT_DIR)/$(OUT_FILE)'"
 	@echo
@@ -149,13 +149,15 @@ CMD_COMPILE_TEST:	MAIN_TEST
 
 MAIN:				SIM $(OUT_DIR)/main.o
 MAIN_TEST:			SIM $(INC_DIR)/SIMTest.h $(OUT_DIR)/SIMTest.o
-SIM:				POSITION DATABASE SERIE SEQUENCEBLOCK RANGEDSEQUENCE KERNEL SEQUENCE CANDIDATE $(INC_DIR)/SIM.h $(OUT_DIR)/SIM.o
+
+SIM:				OCCURRMATRIX POSITION DATABASE SERIE SEQUENCEBLOCK RANGEDSEQUENCE KERNEL SEQUENCE CANDIDATE $(INC_DIR)/SIM.h $(OUT_DIR)/SIM.o
 CANDIDATE:			SEQUENCE KERNEL RANGE $(INC_DIR)/Candidate.h $(OUT_DIR)/Candidate.o
 SEQUENCE:			ITEM SIZE $(INC_DIR)/Sequence.h $(OUT_DIR)/Sequence.o
 ITEM:				$(INC_DIR)/Item.h
 KERNEL:				SEGMENT RANGE SUPPORT FREQUENCY $(INC_DIR)/Kernel.h $(OUT_DIR)/Kernel.o
 RANGEDSEQUENCE:		SEQUENCE SIZE RANGE FREQUENCY $(INC_DIR)/RangedSequence.h $(OUT_DIR)/RangedSequence.o
-SEQUENCEBLOCK:      POSITION SEQUENCE SIZE INTERVAL RANGE FREQUENCY $(INC_DIR)/SequenceBlock.h $(OUT_DIR)/SequenceBlock.o
+SEQUENCEBLOCK:      SEQUENCE SIZE INTERVAL RANGE FREQUENCY $(INC_DIR)/SequenceBlock.h $(OUT_DIR)/SequenceBlock.o
+OCCURRMATRIX:		RANGE INTERVAL $(INC_DIR)/OccurrenceMatrix.h $(OUT_DIR)/OccurrenceMatrix.o
 RANGE:				SEGMENT $(INC_DIR)/Range.h $(OUT_DIR)/Range.o
 INTERVAL:			SEGMENT $(INC_DIR)/Interval.h $(OUT_DIR)/Interval.o
 SEGMENT:			POINT SIZE $(INC_DIR)/Segment.h $(OUT_DIR)/Segment.o
@@ -171,7 +173,7 @@ SERIE:				$(INC_DIR)/Serie.h
 
 ################################################################################
 #--- redefine the implicit rule to compile
-$(OUT_DIR)/%.o:	$(SRC_DIR)/%.cpp
+$(OUT_DIR)/%.o:		$(SRC_DIR)/%.cpp
 	@echo -n ${GREEN}"   + "${WHITE}$(SRC_DIR)/$*.cpp$(NORMAL) -o $(OUT_DIR)/$*.o "... "
 	$(CC) -c $(SRC_DIR)/$*.cpp $(CC_CMD_ARGS) -o $(OUT_DIR)/$*.o $(CHECK)
 

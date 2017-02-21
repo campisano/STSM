@@ -11,12 +11,14 @@
 #include <stdexcept>
 #include <string>
 
+#include "OccurrenceMatrix.h"
+
 // TODO [CMP] put in a good place
 namespace
 {
     const unsigned int MIN_RANGE_SIZE = 2;
-    const unsigned int MIN_SOLID_BLOCK_SEQUENCE_SIZE = 3;
-    const unsigned long MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 15000;
+    const unsigned int MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2;
+    const unsigned long MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 5000;
 
     float getSecs(const time_t _time)
     {
@@ -567,9 +569,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     const Frequency & _min_block_freq,
     ListSequenceBlocks & _sequence_blocks)
 {
-    const Size sequence_size =  _solid_sequence.sequence().size();
-
-    if(sequence_size < MIN_SOLID_BLOCK_SEQUENCE_SIZE)
+    if(_solid_sequence.sequence().size() < MIN_SOLID_BLOCK_SEQUENCE_SIZE)
     {
         return;
     }
@@ -590,6 +590,10 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         return;
     }
 
+    OccurrenceMatrix occurr_matrix(
+        _solid_sequence,
+        positions);
+
     ListSequenceBlocks sb_candidates;
     generate1SizeBlockCandidatesForEachSequenceOccurrence(
         positions,
@@ -601,13 +605,11 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
     time_t time;
 
-    std::set < Position > unique_positions;
-
     ListSequenceBlocks to_add;
     ListSequenceBlocks::iterator it_sb_to_add;
 
     typedef std::set <
-        ListSequenceBlocks::iterator, SequenceBlock::Comparer > DelIt;
+        ListSequenceBlocks::iterator, SequenceBlock::LessThanComparer > DelIt;
     DelIt to_del;
     DelIt::iterator it_sb_to_del;
 
@@ -630,6 +632,14 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         did_any_merge = false;
         time = clock();
 
+        sb_candidates.sort(
+            SequenceBlock::PositionComparer());
+
+        m_log_stream << " sort"<< " (" << getSecs(time) << "s)";
+        m_log_stream.flush();
+
+        time = clock();
+
         // for each solid block q
         for(
             it_sb_q = sb_candidates.begin();
@@ -638,26 +648,13 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         {
             // for each other solid block r... where r > q
             for(
-                // equal to it_sb_r = it_sb_q + 1
-                it_sb_r = it_sb_q, ++it_sb_r;
-                it_sb_r != sb_candidates.end();
-                ++it_sb_r)
+                it_sb_r = sb_candidates.end(), --it_sb_r;
+                it_sb_r != it_sb_q;
+                --it_sb_r)
             {
                 it_sb_q->range().unify(it_sb_r->range(), new_range);
                 it_sb_q->interval().unify(it_sb_r->interval(), new_interval);
-
-                // allowing overlapping blocks,
-                // the support must be the sum of unique positions
-                // of the original ranges
-                unique_positions.clear();
-                unique_positions.insert(
-                    it_sb_q->positions().begin(),
-                    it_sb_q->positions().end());
-                unique_positions.insert(
-                    it_sb_r->positions().begin(),
-                    it_sb_r->positions().end());
-
-                new_support = unique_positions.size() * sequence_size;
+                new_support = occurr_matrix.getSupport(new_range, new_interval);
                 new_area = new_range.size() * new_interval.size();
 
                 // if num of sequence items in the block divided by
@@ -668,14 +665,16 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                         _solid_sequence.sequence(),
                         new_range,
                         new_interval,
-                        unique_positions);
+                        new_support);
 
-                    if(merged.hasSamePositions(* it_sb_q))
+                    if(merged.hasSameCoordinates(* it_sb_q))
                     {
+                        m_log_stream << "=";
                         to_del.insert(it_sb_r);
                     }
-                    else if(merged.hasSamePositions(* it_sb_r))
+                    else if(merged.hasSameCoordinates(* it_sb_r))
                     {
+                        m_log_stream << "=";
                         to_del.insert(it_sb_q);
                     }
                     else
@@ -775,7 +774,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             return;
         }
 
-        m_log_stream << " -" << additional_erased << " ("
+        m_log_stream << " --" << additional_erased << " ("
                      << getSecs(time) << "s) |";
         m_log_stream.flush();
     }
@@ -794,25 +793,17 @@ void SIM::generate1SizeBlockCandidatesForEachSequenceOccurrence(
     const RangedSequence & _solid_sequence,
     ListSequenceBlocks & _sb_candidates) const
 {
-    std::set < Position > unique_positions;
-
+    const Size seq_size =  _solid_sequence.sequence().size();
     ListPositions::const_iterator it_pos;
-
-    const Size sequence_size =  _solid_sequence.sequence().size();
 
     for(it_pos = _positions.begin(); it_pos != _positions.end(); ++it_pos)
     {
-        unique_positions.clear();
-        unique_positions.insert(*it_pos);
-
         _sb_candidates.push_back(
             SequenceBlock(
                 _solid_sequence.sequence(),
                 Range(it_pos->first, it_pos->first),
-                Interval(
-                    it_pos->second, it_pos->second
-                    + sequence_size - 1),
-                unique_positions));
+                Interval(it_pos->second, it_pos->second + seq_size - 1),
+                seq_size));
     }
 }
 
