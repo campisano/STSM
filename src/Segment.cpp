@@ -68,16 +68,16 @@ bool Segment::intersects(
     const Segment & _segment,
     Segment & _resulting_segment) const
 {
-    Point max_start = std::max(m_start, _segment.start());
-    Point min_end = std::min(m_end, _segment.end());
+    Point max_start = std::max(m_start, _segment.m_start);
+    Point min_end = std::min(m_end, _segment.m_end);
 
     if(max_start > min_end)
     {
         return false;
     }
 
-    _resulting_segment.start(max_start);
-    _resulting_segment.end(min_end);
+    _resulting_segment.m_start = max_start;
+    _resulting_segment.m_end = min_end;
 
     return true;
 }
@@ -86,6 +86,6 @@ void Segment::unify(
     const Segment & _segment,
     Segment & _resulting_segment) const
 {
-    _resulting_segment.start(std::min(m_start, _segment.start()));
-    _resulting_segment.end(std::max(m_end, _segment.end()));
+    _resulting_segment.m_start = std::min(m_start, _segment.m_start);
+    _resulting_segment.m_end = std::max(m_end, _segment.m_end);
 }
