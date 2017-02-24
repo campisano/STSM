@@ -655,60 +655,82 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             {
                 it_sb_q->range().unify(it_sb_r->range(), new_range);
                 it_sb_q->interval().unify(it_sb_r->interval(), new_interval);
-                new_support = occurr_matrix.getSupport(new_range, new_interval);
-                new_area = new_range.size() * new_interval.size();
 
-                // if num of sequence items in the block divided by
-                // the num of all items in the block is >= Θ
-                if((float(new_support) / new_area) >= _min_block_freq)
+
+                is_contained = false;
+
+                // the check is done only for to_add
+				// because it is very slow to do for sb_candidates too
+                for(
+                    chk_bigger_it = to_add.begin();
+                    chk_bigger_it != to_add.end();
+                    ++chk_bigger_it)
                 {
-                    SequenceBlock merged(
-                        _solid_sequence.sequence(),
-                        new_range,
-                        new_interval,
-                        new_support);
-
-                    if(merged.hasSameCoordinates(* it_sb_q))
+                    if(chk_bigger_it->contains(new_range, new_interval))
                     {
-                        m_log_stream << "=";
-                        to_del.insert(it_sb_r);
+                        is_contained = true;
+                        break;
                     }
-                    else if(merged.hasSameCoordinates(* it_sb_r))
-                    {
-                        m_log_stream << "=";
-                        to_del.insert(it_sb_q);
-                    }
-                    else
-                    {
-                        to_del.insert(it_sb_q);
-                        to_del.insert(it_sb_r);
+                }
 
-                        // add only merges
-                        // not already contained in the block to_add
-                        is_contained = false;
-                        chk_bigger_it = to_add.begin();
+                if(! is_contained)
+                {
+                    new_support = occurr_matrix.getSupport(
+                        new_range, new_interval);
+                    new_area = new_range.size() * new_interval.size();
 
-                        while(chk_bigger_it != to_add.end())
+                    // if num of sequence items in the block divided by
+                    // the num of all items in the block is >= Θ
+                    if((float(new_support) / new_area) >= _min_block_freq)
+                    {
+                        SequenceBlock merged(
+                            _solid_sequence.sequence(),
+                            new_range,
+                            new_interval,
+                            new_support);
+
+                        if(merged.hasSameCoordinates(* it_sb_q))
                         {
-                            if(chk_bigger_it->contains(merged))
-                            {
-                                is_contained = true;
-                                ++chk_bigger_it;
-                            }
-                            else if (merged.contains(* chk_bigger_it))
-                            {
-                                to_add.erase(chk_bigger_it++);
-                            }
-                            else
-                            {
-                                ++chk_bigger_it;
-                            }
+                            m_log_stream << "=";
+                            to_del.insert(it_sb_r);
                         }
-
-                        if(! is_contained)
+                        else if(merged.hasSameCoordinates(* it_sb_r))
                         {
-                            to_add.push_back(merged);
-                            did_any_merge = true;
+                            m_log_stream << "=";
+                            to_del.insert(it_sb_q);
+                        }
+                        else
+                        {
+                            to_del.insert(it_sb_q);
+                            to_del.insert(it_sb_r);
+
+                            // add only merges
+                            // not already contained in the block to_add
+                            is_contained = false;
+                            chk_bigger_it = to_add.begin();
+
+                            while(chk_bigger_it != to_add.end())
+                            {
+                                if(chk_bigger_it->contains(merged))
+                                {
+                                    is_contained = true;
+                                    ++chk_bigger_it;
+                                }
+                                else if (merged.contains(* chk_bigger_it))
+                                {
+                                    to_add.erase(chk_bigger_it++);
+                                }
+                                else
+                                {
+                                    ++chk_bigger_it;
+                                }
+                            }
+
+                            if(! is_contained)
+                            {
+                                to_add.push_back(merged);
+                                did_any_merge = true;
+                            }
                         }
                     }
                 }
