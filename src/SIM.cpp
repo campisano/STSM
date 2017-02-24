@@ -22,7 +22,7 @@ namespace
 
     float getSecs(const time_t _time)
     {
-        return floor(double(clock() - _time) / CLOCKS_PER_SEC * 10) / 10;
+        return floor(double(clock() - _time) / CLOCKS_PER_SEC * 100) / 100;
     }
 }
 
@@ -613,7 +613,8 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     DelIt to_del;
     DelIt::iterator it_sb_to_del;
 
-    unsigned int additional_erased;
+    size_t additional_erased;
+    size_t skipped;
     bool is_contained;
     ListSequenceBlocks::iterator chk_bigger_it;
 
@@ -730,6 +731,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
         time = clock();
         additional_erased = 0;
+        skipped = 0;
 
         for(
             it_sb_to_add = to_add.begin();
@@ -746,12 +748,13 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                 {
                     is_contained = true;
                     ++chk_bigger_it;
+                    ++skipped;
                 }
                 else if (it_sb_to_add->contains(* chk_bigger_it))
                 {
                     // this correctly not happen
                     sb_candidates.erase(chk_bigger_it++);
-                    ++additional_erased; // and this is ever 0
+                    ++additional_erased;
                 }
                 else
                 {
@@ -774,7 +777,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             return;
         }
 
-        m_log_stream << " --" << additional_erased << " ("
+        m_log_stream << " --" << additional_erased << " #" << skipped << " ("
                      << getSecs(time) << "s) |";
         m_log_stream.flush();
     }
