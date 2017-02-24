@@ -634,7 +634,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         time = clock();
 
         sb_candidates.sort(
-            SequenceBlock::PositionComparer());
+            SequenceBlock::PositionComparer(0, 0));
 
         m_log_stream << " sort"<< " (" << getSecs(time) << "s)";
         m_log_stream.flush();

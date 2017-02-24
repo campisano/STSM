@@ -51,9 +51,14 @@ public:
 
     struct PositionComparer
     {
+        explicit PositionComparer(size_t _x_start, size_t _y_start);
+
         bool operator() (
             const SequenceBlock & _left,
             const SequenceBlock & _right) const;
+
+        size_t m_x_start;
+        size_t m_y_start;
     };
 
 private:

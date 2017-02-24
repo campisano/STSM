@@ -112,12 +112,23 @@ bool SequenceBlock::LessThanComparer::operator() (
     }
 }
 
+
+SequenceBlock::PositionComparer::PositionComparer(
+    size_t _x_start, size_t _y_start):
+    m_x_start(_x_start), m_y_start(_y_start)
+{
+}
+
 bool SequenceBlock::PositionComparer::operator() (
     const SequenceBlock & _left,
     const SequenceBlock & _right) const
 {
-    size_t left_distance = _left.m_range.start() + _left.m_interval.start();
-    size_t right_distance = _right.m_range.start() + _right.m_interval.start();
+    size_t left_distance =
+        - m_x_start - m_y_start
+        + _left.m_range.start() + _left.m_interval.start();
+    size_t right_distance =
+        - m_x_start - m_y_start
+        + _right.m_range.start() + _right.m_interval.start();
 
     return left_distance < right_distance;
 }
