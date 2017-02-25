@@ -17,31 +17,19 @@ PATH=./BUILD/release:$PATH;
 INPUT_FOLDER="data";
 OUTPUT_FOLDER="results";
 
-#BASE_IMG_NAME="4755x2310.jpg";
 BASE_IMG_NAME="951x462.jpg";
 
 
 
 INLINES=("100" "401")
-#INLINES=("100")
 
 #ORIENTATIONS=("original" "transposed");
 ORIENTATIONS=("original");
 
-#SAXS=("25" "20" "15" "10" "5");
-SAXS=("25" "10" "5");
-#SAXS=("10");
+SAXS=("10" "15" "20" "25");
 
-#MIN_SPATIAL_FREQS=("100" "75" "50" "25");
 MIN_SPATIAL_FREQS=("75" "50");
-#MIN_SPATIAL_FREQS=("75");
-
-#MIN_BLOCK_FREQS=("50" "25" "15" "5");
-MIN_BLOCK_FREQS=("25" "15" "5");
-#MIN_BLOCK_FREQS=("25");
-
-#MAX_STRETCHS=("0" "2" "5" "10");
-#MAX_STRETCHS=("0" "2" "5");
+MIN_BLOCK_FREQS=("10" "20" "30" "40");
 MAX_STRETCHS=("0");
 
 
