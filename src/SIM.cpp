@@ -19,6 +19,7 @@ namespace
     const unsigned int MIN_RANGE_SIZE = 2;
     const unsigned int MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2;
     const unsigned long MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 5000;
+    const unsigned long MAX_FAST_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 10000;
 
     float getSecs(const time_t _time)
     {
@@ -583,13 +584,6 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     const ListPositions & positions = m_ranged_sequence_positions.find(
         & _solid_sequence)->second;
 
-    if(positions.size() > MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
-    {
-        m_log_stream << " [WARN] max blocks per sequence exceeded: "
-                     << positions.size() << ". Skip." << std::endl;
-        return;
-    }
-
     OccurrenceMatrix occurr_matrix(
         _solid_sequence,
         positions);
@@ -600,7 +594,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         _solid_sequence,
         sb_candidates);
 
-    m_log_stream << "\tinit.size: " << sb_candidates.size() << "\t merges:";
+    m_log_stream << "\tinit.size: " << sb_candidates.size();
     m_log_stream.flush();
 
     time_t time;
@@ -613,16 +607,6 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     DelIt to_del;
     DelIt::iterator it_sb_to_del;
 
-    size_t additional_erased;
-    size_t skipped;
-    bool is_contained;
-    ListSequenceBlocks::iterator chk_cand_bigger_it;
-    ListSequenceBlocks::iterator chk_toadd_bigger_it;
-
-    // TODO [CMP] sort disabled: is wrost
-    // ListSequenceBlocks sb_sub_sort;
-    // ListSequenceBlocks::iterator it_sort_start, it_sort_end;
-
     ListSequenceBlocks::iterator it_sb_q, it_sb_r;
 
     Range new_range(0, 0);
@@ -631,87 +615,272 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     Size new_area;
 
     bool did_any_merge;
+    bool is_contained;
+    ListSequenceBlocks::iterator chk_toadd_bigger_it;
 
-    // merge the Sequence Block candidates to obtain Solid Sequence Blocks
-    // that respect Θ
-    do
+	if(sb_candidates.size() < MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
     {
-        did_any_merge = false;
+        m_log_stream << "\t full merges:";
+        m_log_stream.flush();
+
+        size_t additional_erased;
+        size_t skipped;
+        ListSequenceBlocks::iterator chk_cand_bigger_it;
 
         // TODO [CMP] sort disabled: is wrost
-        // time = clock();
+        // ListSequenceBlocks sb_sub_sort;
+        // ListSequenceBlocks::iterator it_sort_start, it_sort_end;
 
-        // sort candidates to be ordered by Manhattan distance from 0,0 point
-        // sb_candidates.sort(
-        //     SequenceBlock::PositionComparer(0, 0));
-
-        // m_log_stream << " sort"<< " (" << getSecs(time) << "s)";
-        // m_log_stream.flush();
-
-        time = clock();
-
-        // for each solid block q
-        for(
-            it_sb_q = sb_candidates.begin();
-            it_sb_q != sb_candidates.end();
-            ++it_sb_q)
+        // merge the Sequence Block candidates to obtain Solid Sequence Blocks
+        // that respect Θ
+        do
         {
+            did_any_merge = false;
+
             // TODO [CMP] sort disabled: is wrost
-            // sort candidates to be ordered by Manhattan distance from 0,0 point
-            // it_sort_start = it_sb_q;
-            // ++it_sort_start;
-            // it_sort_end = sb_candidates.end();
+            // time = clock();
 
-            // // transfer to a temporary list
-            // sb_candidates.splice(
-            //     sb_sub_sort.begin(),
-            //     sb_sub_sort,
-            //     it_sort_start,
-            //     it_sort_end);
+            // sort candidates to be ordered by Manhattan distance
+            // from 0,0 point
+            // sb_candidates.sort(
+            //     SequenceBlock::PositionComparer(0, 0));
 
-            // // sort
-            // sb_sub_sort.sort(
-            //     SequenceBlock::PositionComparer(
-            //         it_sb_q->range().start(),
-            //         it_sb_q->interval().start()));
+            // m_log_stream << " sort"<< " (" << getSecs(time) << "s)";
+            // m_log_stream.flush();
 
-            // // transfer back
-            // sb_sub_sort.splice(
-            //     sb_candidates.end(),
-            //     sb_candidates,
-            //     sb_sub_sort.begin(),
-            //     sb_sub_sort.end());
+            time = clock();
 
-            // for each other solid block r... where r > q
+            // for each solid block q
             for(
-                it_sb_r = sb_candidates.end(), --it_sb_r;
-                it_sb_r != it_sb_q;
-                --it_sb_r)
+                it_sb_q = sb_candidates.begin();
+                it_sb_q != sb_candidates.end();
+                ++it_sb_q)
             {
-                it_sb_q->range().unify(it_sb_r->range(), new_range);
-                it_sb_q->interval().unify(it_sb_r->interval(), new_interval);
+                // TODO [CMP] sort disabled: is wrost
+                // sort candidates to be ordered by Manhattan distance
+                // from 0,0 point
+                // it_sort_start = it_sb_q;
+                // ++it_sort_start;
+                // it_sort_end = sb_candidates.end();
 
+                // // transfer to a temporary list
+                // sb_candidates.splice(
+                //     sb_sub_sort.begin(),
+                //     sb_sub_sort,
+                //     it_sort_start,
+                //     it_sort_end);
 
-                is_contained = false;
+                // // sort
+                // sb_sub_sort.sort(
+                //     SequenceBlock::PositionComparer(
+                //         it_sb_q->range().start(),
+                //         it_sb_q->interval().start()));
 
-                // the check is done only for to_add
-				// because it is very slow to do for sb_candidates too
+                // // transfer back
+                // sb_sub_sort.splice(
+                //     sb_candidates.end(),
+                //     sb_candidates,
+                //     sb_sub_sort.begin(),
+                //     sb_sub_sort.end());
+
+                // for each other solid block r... where r > q
                 for(
-                    chk_toadd_bigger_it = to_add.begin();
-                    chk_toadd_bigger_it != to_add.end();
-                    ++chk_toadd_bigger_it)
+                    it_sb_r = sb_candidates.end(), --it_sb_r;
+                    it_sb_r != it_sb_q;
+                    --it_sb_r)
                 {
-                    if(chk_toadd_bigger_it->contains(new_range, new_interval))
+                    it_sb_q->range().unify(it_sb_r->range(), new_range);
+                    it_sb_q->interval().unify(
+                        it_sb_r->interval(), new_interval);
+
+                    is_contained = false;
+
+                    // the check is done only for to_add
+                    // because it is very slow to do for sb_candidates too
+                    for(
+                        chk_toadd_bigger_it = to_add.begin();
+                        chk_toadd_bigger_it != to_add.end();
+                        ++chk_toadd_bigger_it)
+                    {
+                        if(chk_toadd_bigger_it->contains(
+                               new_range, new_interval))
+                        {
+                            is_contained = true;
+                            break;
+                        }
+                    }
+
+                    if(! is_contained)
+                    {
+                        new_support = occurr_matrix.getSupport(
+                            new_range, new_interval);
+                        new_area = new_range.size() * new_interval.size();
+
+                        // if num of sequence items in the block divided by
+                        // the num of all items in the block is >= Θ
+                        if((float(new_support) / new_area) >= _min_block_freq)
+                        {
+                            SequenceBlock merged(
+                                _solid_sequence.sequence(),
+                                new_range,
+                                new_interval,
+                                new_support);
+
+                            if(merged.hasSameCoordinates(* it_sb_q))
+                            {
+                                m_log_stream << "=";
+                                to_del.insert(it_sb_r);
+                            }
+                            else if(merged.hasSameCoordinates(* it_sb_r))
+                            {
+                                m_log_stream << "=";
+                                to_del.insert(it_sb_q);
+                            }
+                            else
+                            {
+                                to_del.insert(it_sb_q);
+                                to_del.insert(it_sb_r);
+
+                                // add only merges
+                                // not already contained in the block to_add
+                                is_contained = false;
+                                chk_toadd_bigger_it = to_add.begin();
+
+                                while(chk_toadd_bigger_it != to_add.end())
+                                {
+                                    if(chk_toadd_bigger_it->contains(merged))
+                                    {
+                                        is_contained = true;
+                                        ++chk_toadd_bigger_it;
+                                    }
+                                    else if (merged.contains(
+                                                 * chk_toadd_bigger_it))
+                                    {
+                                        to_add.erase(chk_toadd_bigger_it++);
+                                    }
+                                    else
+                                    {
+                                        ++chk_toadd_bigger_it;
+                                    }
+                                }
+
+                                if(! is_contained)
+                                {
+                                    to_add.push_back(merged);
+                                    did_any_merge = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            m_log_stream << " +" << to_add.size() << " -" << to_del.size()
+                         << " (" << getSecs(time) << "s)";
+            m_log_stream.flush();
+
+            for(
+                it_sb_to_del = to_del.begin();
+                it_sb_to_del != to_del.end();
+                ++it_sb_to_del)
+            {
+                sb_candidates.erase(* it_sb_to_del);
+            }
+
+            to_del.clear();
+
+            time = clock();
+            additional_erased = 0;
+            skipped = 0;
+
+            for(
+                it_sb_to_add = to_add.begin();
+                it_sb_to_add != to_add.end();
+                ++it_sb_to_add)
+            {
+                // add only not already contained in the block candidates
+                is_contained = false;
+                chk_cand_bigger_it = sb_candidates.begin();
+
+                while(chk_cand_bigger_it != sb_candidates.end())
+                {
+                    if(chk_cand_bigger_it->contains(* it_sb_to_add))
                     {
                         is_contained = true;
-                        break;
+                        ++chk_cand_bigger_it;
+                        ++skipped;
+                    }
+                    else if (it_sb_to_add->contains(* chk_cand_bigger_it))
+                    {
+                        sb_candidates.erase(chk_cand_bigger_it++);
+                        ++additional_erased;
+                    }
+                    else
+                    {
+                        ++chk_cand_bigger_it;
                     }
                 }
 
                 if(! is_contained)
                 {
-                    new_support = occurr_matrix.getSupport(
-                        new_range, new_interval);
+                    sb_candidates.push_back(* it_sb_to_add);
+                }
+            }
+
+            to_add.clear();
+
+            if(sb_candidates.size() > MAX_FAST_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
+            {
+                m_log_stream << " [WARN] max fast blocks per sequence "
+                             << "exceeded: " << sb_candidates.size()
+                             << ". Skip." << std::endl;
+                return;
+            }
+
+            m_log_stream << " --" << additional_erased << " #"
+                         << skipped << " (" << getSecs(time) << "s) |";
+            m_log_stream.flush();
+        }
+        while(did_any_merge);
+	}
+	else
+	{
+        m_log_stream << "\t fast merges:";
+        m_log_stream.flush();
+
+        Size add_count;
+        Size del_count;
+
+        bool current_q_used_to_merge;
+
+        // merge the Sequence Block candidates to obtain Solid Sequence Blocks
+        // that respect Θ
+        do
+        {
+            did_any_merge = false;
+
+            add_count = 0;
+            del_count = 0;
+
+            time = clock();
+
+            // for each solid block q
+            for(
+                it_sb_q = sb_candidates.begin();
+                it_sb_q != sb_candidates.end();
+                ++it_sb_q)
+            {
+                current_q_used_to_merge = false;
+
+                // for each other solid sequence r... where r > q
+                for(
+                    it_sb_r = sb_candidates.end(), --it_sb_r;
+                    it_sb_r != it_sb_q;
+                    --it_sb_r)
+                {
+                    it_sb_q->range().unify(it_sb_r->range(), new_range);
+                    it_sb_q->interval().unify(it_sb_r->interval(), new_interval);
+                    new_support = it_sb_q->support() + it_sb_r->support();
                     new_area = new_range.size() * new_interval.size();
 
                     // if num of sequence items in the block divided by
@@ -726,12 +895,10 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
                         if(merged.hasSameCoordinates(* it_sb_q))
                         {
-                            m_log_stream << "=";
                             to_del.insert(it_sb_r);
                         }
                         else if(merged.hasSameCoordinates(* it_sb_r))
                         {
-                            m_log_stream << "=";
                             to_del.insert(it_sb_q);
                         }
                         else
@@ -751,7 +918,8 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                                     is_contained = true;
                                     ++chk_toadd_bigger_it;
                                 }
-                                else if (merged.contains(* chk_toadd_bigger_it))
+                                else if (merged.contains(
+                                             * chk_toadd_bigger_it))
                                 {
                                     to_add.erase(chk_toadd_bigger_it++);
                                 }
@@ -765,79 +933,54 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                             {
                                 to_add.push_back(merged);
                                 did_any_merge = true;
+                                current_q_used_to_merge = true;
+
+                                // the current q was used in a merge,
+                                // so it can not be used with any r
+                                break;
                             }
                         }
                     }
                 }
+
+                if(current_q_used_to_merge)
+                {
+                    // current q was used, we need to continue from q=r+1
+                    // because current q and r can not be used anymore
+                    it_sb_q = it_sb_r;
+                    continue;  // q will be incremented in the for statement
+                }
+
+                add_count += to_add.size();
+                del_count += to_del.size();
             }
-        }
 
-        m_log_stream << " +" << to_add.size() << " -" << to_del.size()
-                     << " (" << getSecs(time) << "s)";
-        m_log_stream.flush();
-
-        for(
-            it_sb_to_del = to_del.begin();
-            it_sb_to_del != to_del.end();
-            ++it_sb_to_del)
-        {
-            sb_candidates.erase(* it_sb_to_del);
-        }
-
-        to_del.clear();
-
-        time = clock();
-        additional_erased = 0;
-        skipped = 0;
-
-        for(
-            it_sb_to_add = to_add.begin();
-            it_sb_to_add != to_add.end();
-            ++it_sb_to_add)
-        {
-            // add only not already contained in the block candidates
-            is_contained = false;
-            chk_cand_bigger_it = sb_candidates.begin();
-
-            while(chk_cand_bigger_it != sb_candidates.end())
+            for(
+                it_sb_to_del = to_del.begin();
+                it_sb_to_del != to_del.end();
+                ++it_sb_to_del)
             {
-                if(chk_cand_bigger_it->contains(* it_sb_to_add))
-                {
-                    is_contained = true;
-                    ++chk_cand_bigger_it;
-                    ++skipped;
-                }
-                else if (it_sb_to_add->contains(* chk_cand_bigger_it))
-                {
-                    sb_candidates.erase(chk_cand_bigger_it++);
-                    ++additional_erased;
-                }
-                else
-                {
-                    ++chk_cand_bigger_it;
-                }
+                sb_candidates.erase(* it_sb_to_del);
             }
 
-            if(! is_contained)
+            to_del.clear();
+
+            for(
+                it_sb_to_add = to_add.begin();
+                it_sb_to_add != to_add.end();
+                ++it_sb_to_add)
             {
                 sb_candidates.push_back(* it_sb_to_add);
             }
+
+            to_add.clear();
+
+            m_log_stream << " +" << add_count << " -" << del_count
+                         << " (" << getSecs(time) << "s) |";
+            m_log_stream.flush();
         }
-
-        to_add.clear();
-
-        if(sb_candidates.size() > MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
-        {
-            m_log_stream << " [WARN] max blocks per sequence exceeded: "
-                         << sb_candidates.size() << ". Skip." << std::endl;
-            return;
-        }
-
-        m_log_stream << " --" << additional_erased << " #" << skipped << " ("
-                     << getSecs(time) << "s) |";
-        m_log_stream.flush();
-    }
-    while(did_any_merge);
+        while(did_any_merge);
+	}
 
     m_log_stream << std::endl;
 
