@@ -616,7 +616,8 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     size_t additional_erased;
     size_t skipped;
     bool is_contained;
-    ListSequenceBlocks::iterator chk_bigger_it;
+    ListSequenceBlocks::iterator chk_cand_bigger_it;
+    ListSequenceBlocks::iterator chk_toadd_bigger_it;
 
     ListSequenceBlocks::iterator it_sb_q, it_sb_r;
     Range new_range(0, 0);
@@ -633,6 +634,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         did_any_merge = false;
         time = clock();
 
+        // sort candidates to be ordered by Manhattan distance from 0,0 point
         sb_candidates.sort(
             SequenceBlock::PositionComparer(0, 0));
 
@@ -662,11 +664,11 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                 // the check is done only for to_add
 				// because it is very slow to do for sb_candidates too
                 for(
-                    chk_bigger_it = to_add.begin();
-                    chk_bigger_it != to_add.end();
-                    ++chk_bigger_it)
+                    chk_toadd_bigger_it = to_add.begin();
+                    chk_toadd_bigger_it != to_add.end();
+                    ++chk_toadd_bigger_it)
                 {
-                    if(chk_bigger_it->contains(new_range, new_interval))
+                    if(chk_toadd_bigger_it->contains(new_range, new_interval))
                     {
                         is_contained = true;
                         break;
@@ -707,22 +709,22 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
                             // add only merges
                             // not already contained in the block to_add
                             is_contained = false;
-                            chk_bigger_it = to_add.begin();
+                            chk_toadd_bigger_it = to_add.begin();
 
-                            while(chk_bigger_it != to_add.end())
+                            while(chk_toadd_bigger_it != to_add.end())
                             {
-                                if(chk_bigger_it->contains(merged))
+                                if(chk_toadd_bigger_it->contains(merged))
                                 {
                                     is_contained = true;
-                                    ++chk_bigger_it;
+                                    ++chk_toadd_bigger_it;
                                 }
-                                else if (merged.contains(* chk_bigger_it))
+                                else if (merged.contains(* chk_toadd_bigger_it))
                                 {
-                                    to_add.erase(chk_bigger_it++);
+                                    to_add.erase(chk_toadd_bigger_it++);
                                 }
                                 else
                                 {
-                                    ++chk_bigger_it;
+                                    ++chk_toadd_bigger_it;
                                 }
                             }
 
@@ -762,25 +764,24 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         {
             // add only not already contained in the block candidates
             is_contained = false;
-            chk_bigger_it = sb_candidates.begin();
+            chk_cand_bigger_it = sb_candidates.begin();
 
-            while(chk_bigger_it != sb_candidates.end())
+            while(chk_cand_bigger_it != sb_candidates.end())
             {
-                if(chk_bigger_it->contains(* it_sb_to_add))
+                if(chk_cand_bigger_it->contains(* it_sb_to_add))
                 {
                     is_contained = true;
-                    ++chk_bigger_it;
+                    ++chk_cand_bigger_it;
                     ++skipped;
                 }
-                else if (it_sb_to_add->contains(* chk_bigger_it))
+                else if (it_sb_to_add->contains(* chk_cand_bigger_it))
                 {
-                    // this correctly not happen
-                    sb_candidates.erase(chk_bigger_it++);
+                    sb_candidates.erase(chk_cand_bigger_it++);
                     ++additional_erased;
                 }
                 else
                 {
-                    ++chk_bigger_it;
+                    ++chk_cand_bigger_it;
                 }
             }
 
