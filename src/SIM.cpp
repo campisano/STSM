@@ -627,7 +627,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
 
     Range new_range(0, 0);
     Interval new_interval(0,0);
-    Size new_support;
+    Support new_support;
     Size new_area;
 
     bool did_any_merge;
@@ -637,15 +637,16 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     do
     {
         did_any_merge = false;
-        time = clock();
 
         // TODO [CMP] sort disabled: is wrost
+        // time = clock();
+
         // sort candidates to be ordered by Manhattan distance from 0,0 point
         // sb_candidates.sort(
         //     SequenceBlock::PositionComparer(0, 0));
 
-        m_log_stream << " sort"<< " (" << getSecs(time) << "s)";
-        m_log_stream.flush();
+        // m_log_stream << " sort"<< " (" << getSecs(time) << "s)";
+        // m_log_stream.flush();
 
         time = clock();
 
