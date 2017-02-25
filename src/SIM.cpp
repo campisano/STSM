@@ -619,7 +619,11 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     ListSequenceBlocks::iterator chk_cand_bigger_it;
     ListSequenceBlocks::iterator chk_toadd_bigger_it;
 
+    ListSequenceBlocks sb_sub_sort;
+    ListSequenceBlocks::iterator it_sort_start, it_sort_end;
+
     ListSequenceBlocks::iterator it_sb_q, it_sb_r;
+
     Range new_range(0, 0);
     Interval new_interval(0,0);
     Size new_support;
@@ -649,6 +653,35 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             it_sb_q != sb_candidates.end();
             ++it_sb_q)
         {
+            // sort candidates to be ordered by Manhattan distance from 0,0 point
+            it_sort_start = it_sb_q;
+            ++it_sort_start;
+            it_sort_end = sb_candidates.end();
+            //            --it_sort_end;
+
+            // transfer to a temporary list
+            sb_candidates.splice(
+                sb_sub_sort.begin(),
+                sb_sub_sort,
+                it_sort_start,
+                it_sort_end);
+
+            // sort
+            sb_sub_sort.sort(
+                SequenceBlock::PositionComparer(
+                    it_sb_q->range().start(),
+                    it_sb_q->interval().start()));
+
+            // transfer back
+            sb_sub_sort.splice(
+                sb_candidates.end(),
+                sb_candidates,
+                sb_sub_sort.begin(),
+                sb_sub_sort.end());
+
+            if(sb_sub_sort.size()>0)
+                throw "0";
+
             // for each other solid block r... where r > q
             for(
                 it_sb_r = sb_candidates.end(), --it_sb_r;
