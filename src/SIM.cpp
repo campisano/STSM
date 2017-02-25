@@ -619,8 +619,9 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
     ListSequenceBlocks::iterator chk_cand_bigger_it;
     ListSequenceBlocks::iterator chk_toadd_bigger_it;
 
-    ListSequenceBlocks sb_sub_sort;
-    ListSequenceBlocks::iterator it_sort_start, it_sort_end;
+    // TODO [CMP] sort disabled: is wrost
+    // ListSequenceBlocks sb_sub_sort;
+    // ListSequenceBlocks::iterator it_sort_start, it_sort_end;
 
     ListSequenceBlocks::iterator it_sb_q, it_sb_r;
 
@@ -638,9 +639,10 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         did_any_merge = false;
         time = clock();
 
+        // TODO [CMP] sort disabled: is wrost
         // sort candidates to be ordered by Manhattan distance from 0,0 point
-        sb_candidates.sort(
-            SequenceBlock::PositionComparer(0, 0));
+        // sb_candidates.sort(
+        //     SequenceBlock::PositionComparer(0, 0));
 
         m_log_stream << " sort"<< " (" << getSecs(time) << "s)";
         m_log_stream.flush();
@@ -653,34 +655,31 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
             it_sb_q != sb_candidates.end();
             ++it_sb_q)
         {
+            // TODO [CMP] sort disabled: is wrost
             // sort candidates to be ordered by Manhattan distance from 0,0 point
-            it_sort_start = it_sb_q;
-            ++it_sort_start;
-            it_sort_end = sb_candidates.end();
-            //            --it_sort_end;
+            // it_sort_start = it_sb_q;
+            // ++it_sort_start;
+            // it_sort_end = sb_candidates.end();
 
-            // transfer to a temporary list
-            sb_candidates.splice(
-                sb_sub_sort.begin(),
-                sb_sub_sort,
-                it_sort_start,
-                it_sort_end);
+            // // transfer to a temporary list
+            // sb_candidates.splice(
+            //     sb_sub_sort.begin(),
+            //     sb_sub_sort,
+            //     it_sort_start,
+            //     it_sort_end);
 
-            // sort
-            sb_sub_sort.sort(
-                SequenceBlock::PositionComparer(
-                    it_sb_q->range().start(),
-                    it_sb_q->interval().start()));
+            // // sort
+            // sb_sub_sort.sort(
+            //     SequenceBlock::PositionComparer(
+            //         it_sb_q->range().start(),
+            //         it_sb_q->interval().start()));
 
-            // transfer back
-            sb_sub_sort.splice(
-                sb_candidates.end(),
-                sb_candidates,
-                sb_sub_sort.begin(),
-                sb_sub_sort.end());
-
-            if(sb_sub_sort.size()>0)
-                throw "0";
+            // // transfer back
+            // sb_sub_sort.splice(
+            //     sb_candidates.end(),
+            //     sb_candidates,
+            //     sb_sub_sort.begin(),
+            //     sb_sub_sort.end());
 
             // for each other solid block r... where r > q
             for(
