@@ -97,10 +97,10 @@ utils$dev_open_file = function(file_name, width=480, height=480, scale=1) {
 
 
 
-utils$html.getHTMLpreContentCode = function(title="") {
+utils$html.getHTMLpreContentCode = function(lang="en", title="") {
     return(paste(
         "<!DOCTYPE html>",
-        "<html>",
+        paste("<html lang=\"", lang, "\">", sep=""),
         "  <head>",
         paste("    <title>", title, "</title>", sep=""),
         "    <style type=\"text/css\">",

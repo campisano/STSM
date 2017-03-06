@@ -217,7 +217,7 @@ system(paste("cp -f", vars$background_img_src, vars$output_img_dir));
 per_length_index_file = file(file.path(
     vars$output_img_dir, "index.html"));
 per_length_index_lines = c(
-    utils$html.getHTMLpreContentCode(vars$base_filename));
+    utils$html.getHTMLpreContentCode(title=vars$base_filename));
 
 # start the iterations, for each json data grouped by length
 for(iteration in 1:length(solid_sequences)) {
@@ -317,9 +317,30 @@ for(iteration in 1:length(solid_sequences)) {
             config$per_length_plot_image_type,
             "\" alt=\"\"/>", sep=""),
         "        </div>",
-        paste("        <div class=\"content\">",
-              "<a href=\"by_length_and_sequence/", sequence_length, ".html\">",
-              "sequences of length ", sequence_length, "</a></div>", sep=""));
+
+        "        <div class=\"content\">",
+        "          <div class=\"content first\">",
+        paste("            <b>Sequences of length ", sequence_length, "</b>", sep=""),
+        "          </div>",
+        "          <div class=\"content first\">",
+        paste("            <a href=\"by_length_and_sequence/", sequence_length, "_ordered.html\">alphabetically ordered</a>", sep=""),
+        "          </div>",
+        "          <div class=\"content first\">",
+        paste("            <a href=\"by_length_and_sequence/", sequence_length, "_ranked.html\">rank ordered</a>", sep=""),
+        "          </div>",
+        "          <div class=\"content first\">",
+        paste("            <a href=\"by_length_and_sequence/", sequence_length, "_ranked_t10.html\">rank top 10</a>", sep=""),
+        "          </div>",
+        "          <div class=\"content first\">",
+        paste("            <a href=\"by_length_and_sequence/", sequence_length, "_ranked_t25.html\">rank top 25</a>", sep=""),
+        "          </div>",
+        "          <div class=\"content first\">",
+        paste("            <a href=\"by_length_and_sequence/", sequence_length, "_ranked_t50.html\">rank top 50</a>", sep=""),
+        "          </div>",
+        "          <div class=\"content first\">",
+        paste("            <a href=\"by_length_and_sequence/", sequence_length, "_ranked_t100.html\">rank top 100</a>", sep=""),
+        "          </div>",
+        "        </div>");
 
     ####
     # plot an image with all ranges and blocks for each sequence
@@ -519,9 +540,9 @@ for(iteration in 1:length(solid_sequences)) {
 
         per_sequence_index_file = file(file.path(
             vars$output_img_dir, "by_length_and_sequence",
-            paste(sequence_length, ".html", sep="")));
+            paste(sequence_length, "_ordered.html", sep="")));
         per_sequence_index_lines = c(
-            utils$html.getHTMLpreContentCode(sequence_length));
+            utils$html.getHTMLpreContentCode(title=sequence_length));
 
         for(key in ls(seq_plotd)) {
             if(seq_plotd[[key]]$min_width_to_be_drawn) {
@@ -546,7 +567,7 @@ for(iteration in 1:length(solid_sequences)) {
                     paste(sequence_length, "/", key, ".html", sep="")));
                 writeLines(
                     c(
-                        utils$html.getHTMLpreContentCode(key),
+                        utils$html.getHTMLpreContentCode(title=key),
                         paste(
                             "        <div class=\"content first\">",
                             key, "</div>"),
@@ -610,14 +631,182 @@ for(iteration in 1:length(solid_sequences)) {
             colnames(data_frame) = c("sequences", "mean_areas");
             data_frame = data_frame[with(data_frame, order(-mean_areas)), ];
 
-            # create the html file
+            # create the html file with all ranks
             per_sequence_ranked_index_file = file(file.path(
                 vars$output_img_dir, "by_length_and_sequence",
                 paste(sequence_length, "_ranked.html", sep="")));
             per_sequence_ranked_index_lines = c(
-                utils$html.getHTMLpreContentCode(sequence_length));
+                utils$html.getHTMLpreContentCode(title=sequence_length));
 
             for(i in 1:nrow(data_frame)) {
+                sequence = data_frame[i,]$sequences;
+                mean_area = data_frame[i,]$mean_areas;
+
+                # add an entry to the per-length html
+                per_sequence_ranked_index_lines = c(
+                    per_sequence_ranked_index_lines,
+                    "        <div class=\"content first\">",
+                    paste(
+                        "          <a href=\"", sequence_length, "/",
+                        sequence, ".html\">", sep=""),
+                    paste(
+                        "            <img style=\"",
+                        "background:url(../", vars$background_img, ");",
+                        "background-size:cover;",
+                        "width:800px;\"",
+                        " src=\"", sequence_length, "/",
+                        sequence, ".", config$per_sequence_plot_image_type,
+                        "\" alt=\"\" />", sep=""),
+                    "          </a>",
+                    "        </div>",
+                    paste("        <div class=\"content\">",
+                          sequence, " - ", mean_area, "</div>", sep=""));
+            }
+
+            writeLines(
+                c(
+                    per_sequence_ranked_index_lines,
+                    utils$html.getHTMLpostContentCode()),
+                per_sequence_ranked_index_file);
+            close(per_sequence_ranked_index_file);
+
+            # create the html file with top 10 ranks
+            per_sequence_ranked_index_file = file(file.path(
+                vars$output_img_dir, "by_length_and_sequence",
+                paste(sequence_length, "_ranked_t10.html", sep="")));
+            per_sequence_ranked_index_lines = c(
+                utils$html.getHTMLpreContentCode(title=sequence_length));
+
+            for(i in 1:nrow(data_frame)) {
+                if(i > 10) {
+                    break;
+                }
+                sequence = data_frame[i,]$sequences;
+                mean_area = data_frame[i,]$mean_areas;
+
+                # add an entry to the per-length html
+                per_sequence_ranked_index_lines = c(
+                    per_sequence_ranked_index_lines,
+                    "        <div class=\"content first\">",
+                    paste(
+                        "          <a href=\"", sequence_length, "/",
+                        sequence, ".html\">", sep=""),
+                    paste(
+                        "            <img style=\"",
+                        "background:url(../", vars$background_img, ");",
+                        "background-size:cover;",
+                        "width:800px;\"",
+                        " src=\"", sequence_length, "/",
+                        sequence, ".", config$per_sequence_plot_image_type,
+                        "\" alt=\"\" />", sep=""),
+                    "          </a>",
+                    "        </div>",
+                    paste("        <div class=\"content\">",
+                          sequence, " - ", mean_area, "</div>", sep=""));
+            }
+
+            writeLines(
+                c(
+                    per_sequence_ranked_index_lines,
+                    utils$html.getHTMLpostContentCode()),
+                per_sequence_ranked_index_file);
+            close(per_sequence_ranked_index_file);
+
+            # create the html file with top 25 ranks
+            per_sequence_ranked_index_file = file(file.path(
+                vars$output_img_dir, "by_length_and_sequence",
+                paste(sequence_length, "_ranked_t25.html", sep="")));
+            per_sequence_ranked_index_lines = c(
+                utils$html.getHTMLpreContentCode(title=sequence_length));
+
+            for(i in 1:nrow(data_frame)) {
+                if(i > 25) {
+                    break;
+                }
+                sequence = data_frame[i,]$sequences;
+                mean_area = data_frame[i,]$mean_areas;
+
+                # add an entry to the per-length html
+                per_sequence_ranked_index_lines = c(
+                    per_sequence_ranked_index_lines,
+                    "        <div class=\"content first\">",
+                    paste(
+                        "          <a href=\"", sequence_length, "/",
+                        sequence, ".html\">", sep=""),
+                    paste(
+                        "            <img style=\"",
+                        "background:url(../", vars$background_img, ");",
+                        "background-size:cover;",
+                        "width:800px;\"",
+                        " src=\"", sequence_length, "/",
+                        sequence, ".", config$per_sequence_plot_image_type,
+                        "\" alt=\"\" />", sep=""),
+                    "          </a>",
+                    "        </div>",
+                    paste("        <div class=\"content\">",
+                          sequence, " - ", mean_area, "</div>", sep=""));
+            }
+
+            writeLines(
+                c(
+                    per_sequence_ranked_index_lines,
+                    utils$html.getHTMLpostContentCode()),
+                per_sequence_ranked_index_file);
+            close(per_sequence_ranked_index_file);
+
+            # create the html file with top 50 ranks
+            per_sequence_ranked_index_file = file(file.path(
+                vars$output_img_dir, "by_length_and_sequence",
+                paste(sequence_length, "_ranked_t50.html", sep="")));
+            per_sequence_ranked_index_lines = c(
+                utils$html.getHTMLpreContentCode(title=sequence_length));
+
+            for(i in 1:nrow(data_frame)) {
+                if(i > 50) {
+                    break;
+                }
+                sequence = data_frame[i,]$sequences;
+                mean_area = data_frame[i,]$mean_areas;
+
+                # add an entry to the per-length html
+                per_sequence_ranked_index_lines = c(
+                    per_sequence_ranked_index_lines,
+                    "        <div class=\"content first\">",
+                    paste(
+                        "          <a href=\"", sequence_length, "/",
+                        sequence, ".html\">", sep=""),
+                    paste(
+                        "            <img style=\"",
+                        "background:url(../", vars$background_img, ");",
+                        "background-size:cover;",
+                        "width:800px;\"",
+                        " src=\"", sequence_length, "/",
+                        sequence, ".", config$per_sequence_plot_image_type,
+                        "\" alt=\"\" />", sep=""),
+                    "          </a>",
+                    "        </div>",
+                    paste("        <div class=\"content\">",
+                          sequence, " - ", mean_area, "</div>", sep=""));
+            }
+
+            writeLines(
+                c(
+                    per_sequence_ranked_index_lines,
+                    utils$html.getHTMLpostContentCode()),
+                per_sequence_ranked_index_file);
+            close(per_sequence_ranked_index_file);
+
+            # create the html file with top 100 ranks
+            per_sequence_ranked_index_file = file(file.path(
+                vars$output_img_dir, "by_length_and_sequence",
+                paste(sequence_length, "_ranked_t100.html", sep="")));
+            per_sequence_ranked_index_lines = c(
+                utils$html.getHTMLpreContentCode(title=sequence_length));
+
+            for(i in 1:nrow(data_frame)) {
+                if(i > 100) {
+                    break;
+                }
                 sequence = data_frame[i,]$sequences;
                 mean_area = data_frame[i,]$mean_areas;
 
