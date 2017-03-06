@@ -63,7 +63,7 @@ plotSequencePositionsRangesAndBlocks_src = function(
             data=df_rectangles,
             aes_string(
                 xmin="xmin", xmax="xmax",
-                ymin=-Inf, ymax=Inf, inherit.aes=FALSE),
+                ymin=-Inf, ymax=Inf),
             size=0.5 * scale,
             color=alpha("green", 0.5), fill="darkgreen", alpha=0.1);
     }
@@ -72,7 +72,7 @@ plotSequencePositionsRangesAndBlocks_src = function(
     if(length(x_points) > 0 && length(y_points) > 0) {
         gg = gg + geom_point(
             data=df_points,
-            aes_string("x", "y", inherit.aes=FALSE),
+            aes_string("x", "y"),
             size=3 * scale, color="darkblue", alpha=0.5);
     }
 
@@ -85,7 +85,7 @@ plotSequencePositionsRangesAndBlocks_src = function(
             data=df_blocks,
             aes_string(
                 xmin="xmin", xmax="xmax",
-                ymin="ymin", ymax="ymax", inherit.aes=FALSE),
+                ymin="ymin", ymax="ymax"),
             size=0.5 * scale,
             color=alpha("red", 1), fill="darkred", alpha=0.5);
     }
@@ -101,20 +101,20 @@ plotSequencePositionsRangesAndBlocks_src = function(
 
         gg = gg + labs(x=NULL, y=NULL, title=NULL);
         gg = gg + theme(panel.background=element_rect(
-            fill="transparent", colour=NA))
+            fill="transparent", colour=NA));
         gg = gg + theme(plot.background=element_rect(
-            fill="transparent", colour=NA))
-        gg = gg + theme(panel.grid=element_blank())
-        gg = gg + theme(panel.border=element_blank())
-        gg = gg + theme(plot.margin=unit(c(0,0,0,0), "null"))
-        gg = gg + theme(panel.margin=unit(c(0,0,0,0), "null"))
-        gg = gg + theme(axis.ticks=element_blank())
-        gg = gg + theme(axis.text=element_blank())
-        gg = gg + theme(axis.title=element_blank())
-        gg = gg + theme(axis.line=element_blank())
-        gg = gg + theme(legend.position="none")
-        gg = gg + theme(axis.ticks.length=unit(0, "null"))
-        gg = gg + theme(legend.margin=unit(0, "null"))
+            fill="transparent", colour=NA));
+        gg = gg + theme(panel.grid=element_blank());
+        gg = gg + theme(panel.border=element_blank());
+        gg = gg + theme(plot.margin=unit(c(0,0,0,0), "null"));
+        #gg = gg + theme(panel.margin=unit(c(0,0,0,0), "null"));
+        gg = gg + theme(axis.ticks=element_blank());
+        gg = gg + theme(axis.text=element_blank());
+        gg = gg + theme(axis.title=element_blank());
+        gg = gg + theme(axis.line=element_blank());
+        gg = gg + theme(legend.position="none");
+        gg = gg + theme(axis.ticks.length=unit(0, "null"));
+        #gg = gg + theme(legend.margin=unit(0, "null"));
     } else {
         # start from the top to the bottom
         gg = gg + scale_y_continuous(trans="reverse");
