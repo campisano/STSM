@@ -88,6 +88,11 @@ utils$dev_open_file = function(file_name, width=480, height=480, scale=1) {
             pointsize=pointsize,
             width=(width / dpi) * scale, height=(height / dpi) * scale);
     }
+    if(ext == "pdf") {
+        pdf(file_name, bg="transparent", onefile=FALSE, title="",
+            pointsize=pointsize,
+            width=(width / dpi) * scale, height=(height / dpi) * scale);
+    }
     if(ext == "png") {
         png(file_name, bg="transparent", antialias="none",
             pointsize=pointsize, units="in", res=dpi,
