@@ -71,9 +71,12 @@ plotSequencePositionsRangesAndBlocks_src = function(
     # then print the points
     if(length(x_points) > 0 && length(y_points) > 0) {
         gg = gg + geom_point(
+            # shape=15,  # square
+            shape=17,  # triangle
+            # shape=18,  # diamond
             data=df_points,
             aes_string("x", "y"),
-            size=3 * scale, color="darkblue", alpha=0.5);
+            size=2 * scale, color="darkblue");
     }
 
     # finally, if defined, print the blocks
