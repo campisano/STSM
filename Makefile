@@ -1,5 +1,5 @@
 # version of this Makefile
-MAKEFILE_VER=		0.6.3
+MAKEFILE_VER=		0.6.4
 
 
 
@@ -144,14 +144,11 @@ test:				INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE_TEST INFO_LD CMD_LINK
 ################################################################################
 #--- CUSTOM dependence files
 
-CMD_COMPILE:		MAIN
-CMD_COMPILE_TEST:	MAIN_TEST
-
-MAIN:				SIM $(OUT_DIR)/main.o
-MAIN_TEST:			SIM SIMTest
+CMD_COMPILE:		SIM $(OUT_DIR)/main.o
+CMD_COMPILE_TEST:	SIMTest
 
 SIM:				OCCURRMATRIX POSITION DATABASE SERIE SEQUENCEBLOCK RANGEDSEQUENCE KERNEL SEQUENCE CANDIDATE $(INC_DIR)/SIM.h $(OUT_DIR)/SIM.o
-SIMTest:			$(INC_DIR)/SIMTest.h $(OUT_DIR)/SIMTest.o
+SIMTest:			SIM $(INC_DIR)/SIMTest.h $(OUT_DIR)/SIMTest.o
 CANDIDATE:			SEQUENCE KERNEL RANGE $(INC_DIR)/Candidate.h $(OUT_DIR)/Candidate.o
 SEQUENCE:			ITEM SIZE $(INC_DIR)/Sequence.h $(OUT_DIR)/Sequence.o
 ITEM:				$(INC_DIR)/Item.h
