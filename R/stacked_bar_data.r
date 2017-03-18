@@ -624,7 +624,7 @@ write.table(
 # gg = gg + theme(plot.margin=unit(c(0,0,0,0), "null"));
 # gg = gg + theme(panel.margin=unit(c(0,0,0,0), "null"));
 # gg = gg + labs(
-#     title=paste("Frequency:", vars$min_spatial_freq),
+#     title=paste("Range frequency:", vars$min_spatial_freq, "- Block frequency:", vars$min_block_freq),
 #     x="Sequence value",
 #     y="Num of occurrences");
 # plot(gg);
@@ -649,7 +649,7 @@ write.table(
 # gg = gg + theme(plot.margin=unit(c(0,0,0,0), "null"));
 # gg = gg + theme(panel.margin=unit(c(0,0,0,0), "null"));
 # gg = gg + labs(
-#     title=paste("Frequency:", vars$min_spatial_freq),
+#     title=paste("Range frequency:", vars$min_spatial_freq, "- Block frequency:", vars$min_block_freq),
 #     x="Sequence value",
 #     y="Num of ranges");
 # plot(gg);
@@ -679,7 +679,9 @@ gg = gg + geom_bar(
     position="identity",
     stat="identity");
 gg = gg + labs(
-    title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
+    title=paste(
+        "Range frequency:", vars$min_spatial_freq,
+        "- Block frequency:", vars$min_block_freq),
     x="Sequence lengths",
     y="Num of occurrences");
 plot(gg);
@@ -702,7 +704,9 @@ gg = gg + geom_bar(
     position="identity",
     stat="identity");
 gg = gg + labs(
-    title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
+    title=paste(
+        "Range frequency:", vars$min_spatial_freq,
+        "- Block frequency:", vars$min_block_freq),
     x="Sequence lengths",
     y="Num of ranges");
 plot(gg);
@@ -725,7 +729,9 @@ gg = gg + geom_bar(
     position="identity",
     stat="identity");
 gg = gg + labs(
-    title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
+    title=paste(
+        "Range frequency:", vars$min_spatial_freq,
+        "- Block frequency:", vars$min_block_freq),
     x="Sequence lengths",
     y="Num of blocks");
 plot(gg);
@@ -754,7 +760,7 @@ invisible(dev.off());
 #     position="identity",
 #     stat="identity");
 # gg = gg + labs(
-#     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
+#     title=paste("Range frequency:", vars$min_spatial_freq, "- Block frequency:", vars$min_block_freq),
 #     x="Sequence lengths",
 #     y="Num of occurrences");
 # plot(gg);
@@ -776,7 +782,7 @@ invisible(dev.off());
 #     position="identity",
 #     stat="identity");
 # gg = gg + labs(
-#     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
+#     title=paste("Range frequency:", vars$min_spatial_freq, "- Block frequency:", vars$min_block_freq),
 #     x="Sequence lengths",
 #     y="Num of ranges");
 # plot(gg);
@@ -801,7 +807,9 @@ gg = gg + geom_bar(
     position="identity",
     stat="identity");
 gg = gg + labs(
-    title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
+    title=paste(
+        "Range frequency:", vars$min_spatial_freq,
+        "- Block frequency:", vars$min_block_freq),
     x="Sequence lengths",
     y="Num of sequence patterns");
 plot(gg);
@@ -826,7 +834,7 @@ invisible(dev.off());
 #     position="identity",
 #     stat="identity");
 # gg = gg + labs(
-#     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
+#     title=paste("Range frequency:", vars$min_spatial_freq, "- Block frequency:", vars$min_block_freq),
 #     x="Sequence lengths",
 #     y="Num of sequence patterns");
 # plot(gg);
