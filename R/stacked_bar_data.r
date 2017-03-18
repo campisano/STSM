@@ -20,10 +20,10 @@ args = commandArgs(TRUE);
 #cat(args, "\n");
 # examples:
 #args = c();
-#args[1] = "results/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB100_MS0.json";
-#args[2] = "results/inline-100_orientation-original/sax-25/stats/spatial-100/block-100/stretch-0";
+#args[1] = "results/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB50_MS0.json";
+#args[2] = "results/inline-100_orientation-original/sax-25/stats/spatial-100/block-50/stretch-0";
 #args[3] = 100;
-#args[4] = 100;
+#args[4] = 50;
 #args[5] = 0;
 #cat("    args:", args, "\n");
 
@@ -38,7 +38,7 @@ vars$base_filename = sub(
     file.path(dirname(vars$input_file_json), ""), "", vars$input_file_json);
 vars$base_filename = sub("[.][^.]*$", "", vars$base_filename, perl=TRUE);
 
-
+empty_pattern = "mmmmmmmmmmmmmmmmmmmm";
 
 # loading json data
 #cat("Loading json data", vars$input_file_json, "...");
@@ -164,6 +164,9 @@ pos_by_seq = new.env(hash=TRUE, parent=emptyenv());
 # count matching postions by length
 pos_by_len = new.env(hash=TRUE, parent=emptyenv());
 
+# count blocks by length
+blk_by_len = new.env(hash=TRUE, parent=emptyenv());
+
 # count sequences by length
 seq_by_len = new.env(hash=TRUE, parent=emptyenv());
 
@@ -199,8 +202,8 @@ for(iteration in 1:length(solid_sequences)) {
         sequence_data_item = sequence_data[[j]];
         sequence = sequence_data_item$sequence;
 
-        # skip sequence containing mmmmmmmmmm
-        if(length(grep("mmmmmmmmmm", sequence)) == 0) {
+        # skip sequence containing empty pattern
+        if(length(grep(empty_pattern, sequence)) == 0) {
 
             # count matching postions by sequence
             if(! exists(sequence, pos_by_seq)) {
@@ -233,63 +236,81 @@ for(iteration in 1:length(solid_sequences)) {
             # count sequences by length
             if(! exists(len, seq_by_len)) {
                 seq_by_len[[len]] = new.env(hash=TRUE, parent=emptyenv());
-                seq_by_len[[len]]$sequences =
+                seq_by_len[[len]]$sequences_map =
                     new.env(hash=TRUE, parent=emptyenv());
             }
 
             # using a map to get uniques values
-            seq_by_len[[len]]$sequences[[sequence]] = TRUE;
+            seq_by_len[[len]]$sequences_map[[sequence]] = TRUE;
         }
     }
 
     # count stored sequences by length
-    seq_by_len[[len]]$sequences = length(seq_by_len[[len]]$sequences);
+    if(length(seq_by_len[[len]]$sequences_map) > 0) {
+        seq_by_len[[len]]$sequences = length(seq_by_len[[len]]$sequences_map);
+    }
 
 
 
-#     # blocks
+    # blocks
+    solid_blocks_data_by_length = solid_blocks[[iteration]];
+
+    if(
+        is.null(solid_blocks_data_by_length$length) ||
+            is.null(solid_blocks_data_by_length$blocks) ||
+            length(solid_blocks_data_by_length$blocks) < 1
+    ) {
+        cat(
+            "\n\tError in block data for iteration ",
+            iteration, ".\n", sep="");
+    } else if(solid_blocks_data_by_length$length != sequence_length) {
+        cat("\n\tThe length of sequences in the same index of solid sequences",
+            "and solid blocks must be the same, at iteration ",
+            iteration, ".\n", sep="");
+    } else {
+        solid_blocks_data = solid_blocks_data_by_length$blocks;
+
+        for(j in 1:length(solid_blocks_data)) {
+            block_data_item = solid_blocks_data[[j]];
+            sequence = block_data_item$sequence;
+
+            # skip sequence containing empty pattern
+            if(length(grep(empty_pattern, sequence)) == 0) {
+
+                # histogram of block areas and widths by length
+                if(! exists(len, blk_by_len)) {
+                    blk_by_len[[len]] =
+                        new.env(hash=TRUE, parent=emptyenv());
+                    blk_by_len[[len]]$num_blocks = 0;
+                }
+
+                blk_by_len[[len]]$num_blocks =
+                    blk_by_len[[len]]$num_blocks + 1;
+
+#                 r_start = block_data_item$r_start;
+#                 r_end = block_data_item$r_end;
+#                 i_start = block_data_item$i_start;
+#                 i_end = block_data_item$i_end;
 #
-#     solid_blocks_data_by_length = solid_blocks[[iteration]];
+#                 # histogram of block areas and widths by length
+#                 if(! exists(len, hist_block_stats)) {
+#                     hist_block_stats[[len]] =
+#                         new.env(hash=TRUE, parent=emptyenv());
+#                     hist_block_stats[[len]]$areas = c();
+#                     hist_block_stats[[len]]$widths = c();
+#                 }
 #
-#     if(
-#         is.null(solid_blocks_data_by_length$length) ||
-#             is.null(solid_blocks_data_by_length$blocks) ||
-#             length(solid_blocks_data_by_length$blocks) < 1
-#     ) {
-#         cat("\n\tError in block data.\n");
-#     } else if(solid_blocks_data_by_length$length != sequence_length) {
-#         cat("\n\tThe length of sequences in the same index of solid sequences",
-#             "and solid blocks must be the same.\n");
-#     } else {
-#         solid_blocks_data = solid_blocks_data_by_length$blocks;
+#                 hist_block_stats[[len]]$areas = c(
+#                     hist_block_stats[[len]]$areas,
+#                     (r_end - r_start + 1) * (i_end - i_start + 1)
+#                 );
 #
-#         for(j in 1:length(solid_blocks_data)) {
-#             block_data_item = solid_blocks_data[[j]];
-#             sequence = block_data_item$sequence;
-#
-#             r_start = block_data_item$r_start;
-#             r_end = block_data_item$r_end;
-#             i_start = block_data_item$i_start;
-#             i_end = block_data_item$i_end;
-#
-#             # histogram of block areas and widths by length
-#             if(! exists(len, hist_block_stats)) {
-#                 hist_block_stats[[len]] =
-#                     new.env(hash=TRUE, parent=emptyenv());
-#                 hist_block_stats[[len]]$areas = c();
-#                 hist_block_stats[[len]]$widths = c();
-#             }
-#
-#             hist_block_stats[[len]]$areas = c(
-#                 hist_block_stats[[len]]$areas,
-#                 (r_end - r_start + 1) * (i_end - i_start + 1)
-#             );
-#
-#             hist_block_stats[[len]]$widths = c(
-#                 hist_block_stats[[len]]$widths, (r_end - r_start + 1)
-#             );
-#         }
-#     }
+#                 hist_block_stats[[len]]$widths = c(
+#                     hist_block_stats[[len]]$widths, (r_end - r_start + 1)
+#                 );
+            }
+        }
+    }
 }
 
 
@@ -528,6 +549,9 @@ pos_by_seq_frame = to_data_frame_of_3(
 pos_by_len_frame = to_data_frame_of_3(
     pos_by_len, "length", "num_ranges", "num_pos");
 
+blk_by_len_frame = to_data_frame_of_2(
+    blk_by_len, "length", "num_blocks");
+
 seq_by_len_frame = to_data_frame_of_2(
     seq_by_len, "length", "sequences");
 
@@ -543,6 +567,7 @@ write.table(
     col.names=TRUE,
     quote=FALSE,
     sep=",");
+
 write.table(
     pos_by_len_frame,
     file=file.path(vars$output_stats_dir,
@@ -552,6 +577,17 @@ write.table(
     col.names=TRUE,
     quote=FALSE,
     sep=",");
+
+write.table(
+    blk_by_len_frame,
+    file=file.path(vars$output_stats_dir,
+                   paste(vars$base_filename, "_blocks-by-len.csv", sep="")),
+    append=FALSE,
+    row.names=FALSE,
+    col.names=TRUE,
+    quote=FALSE,
+    sep=",");
+
 write.table(
     seq_by_len_frame,
     file=file.path(vars$output_stats_dir,
@@ -583,7 +619,7 @@ write.table(
 # gg = gg + labs(
 #     title=paste("Frequency:", vars$min_spatial_freq),
 #     x="Sequence value",
-#     y="Num of positions");
+#     y="Num of occurrences");
 # plot(gg);
 # invisible(dev.off());
 #
@@ -637,7 +673,7 @@ gg = gg + geom_bar(
 gg = gg + labs(
     title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
     x="Sequence lengths",
-    y="Num of positions");
+    y="Num of occurrences");
 plot(gg);
 invisible(dev.off());
 
@@ -663,6 +699,28 @@ gg = gg + labs(
 plot(gg);
 invisible(dev.off());
 
+# draw a stacked bar plot of num_blocks by length in log scale
+utils$dev_open_file(
+    file.path(vars$output_stats_dir,
+              paste(vars$base_filename, "_numblocks-by-len_log.png", sep="")),
+    640, 480);
+bins = as.character(sort(as.numeric(unique(blk_by_len_frame$length))));
+gg = ggplot();
+gg = gg + theme_bw();
+gg = gg + scale_x_discrete(breaks=bins, limits=bins);
+gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
+gg = gg + geom_bar(
+    data=blk_by_len_frame,
+    aes_string(x="length", y="num_blocks"),
+    position="identity",
+    stat="identity");
+gg = gg + labs(
+    title=paste("Frequency:", vars$min_spatial_freq, "(log scale)"),
+    x="Sequence lengths",
+    y="Num of blocks");
+plot(gg);
+invisible(dev.off());
+
 
 
 # # cleanup excess of data
@@ -670,53 +728,53 @@ invisible(dev.off());
 # pos_by_len_frame = pos_by_len_frame[(pos_by_len_frame$length > 1),];
 # pos_by_len_frame$length = as.character(pos_by_len_frame$length);
 
-# draw a stacked bar plot of num_pos by length in linear scale
-utils$dev_open_file(
-    file.path(vars$output_stats_dir,
-              paste(vars$base_filename, "_numpos-by-len_linear.png", sep="")),
-    640, 480);
-bins = as.character(sort(as.numeric(unique(pos_by_len_frame$length))));
-gg = ggplot();
-gg = gg + theme_bw();
-gg = gg + scale_x_discrete(breaks=bins, limits=bins);
-gg = gg + scale_y_continuous(labels=comma);
-gg = gg + geom_bar(
-    data=pos_by_len_frame,
-    aes_string(x="length", y="num_pos"),
-    position="identity",
-    stat="identity");
-gg = gg + labs(
-    title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
-    x="Sequence lengths",
-    y="Num of positions");
-plot(gg);
-invisible(dev.off());
+# # draw a stacked bar plot of num_pos by length in linear scale
+# utils$dev_open_file(
+#     file.path(vars$output_stats_dir,
+#               paste(vars$base_filename, "_numpos-by-len_linear.png", sep="")),
+#     640, 480);
+# bins = as.character(sort(as.numeric(unique(pos_by_len_frame$length))));
+# gg = ggplot();
+# gg = gg + theme_bw();
+# gg = gg + scale_x_discrete(breaks=bins, limits=bins);
+# gg = gg + scale_y_continuous(labels=comma);
+# gg = gg + geom_bar(
+#     data=pos_by_len_frame,
+#     aes_string(x="length", y="num_pos"),
+#     position="identity",
+#     stat="identity");
+# gg = gg + labs(
+#     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
+#     x="Sequence lengths",
+#     y="Num of occurrences");
+# plot(gg);
+# invisible(dev.off());
 
-# draw a stacked bar plot of num_ranges by length in linear scale
-utils$dev_open_file(
-    file.path(vars$output_stats_dir, paste(
-        vars$base_filename, "_numranges-by-len_linear.png", sep="")),
-    640, 480);
-bins = as.character(sort(as.numeric(unique(pos_by_len_frame$length))));
-gg = ggplot();
-gg = gg + theme_bw();
-gg = gg + scale_x_discrete(breaks=bins, limits=bins);
-gg = gg + scale_y_continuous(labels=comma);
-gg = gg + geom_bar(
-    data=pos_by_len_frame,
-    aes_string(x="length", y="num_ranges"),
-    position="identity",
-    stat="identity");
-gg = gg + labs(
-    title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
-    x="Sequence lengths",
-    y="Num of ranges");
-plot(gg);
-invisible(dev.off());
+# # draw a stacked bar plot of num_ranges by length in linear scale
+# utils$dev_open_file(
+#     file.path(vars$output_stats_dir, paste(
+#         vars$base_filename, "_numranges-by-len_linear.png", sep="")),
+#     640, 480);
+# bins = as.character(sort(as.numeric(unique(pos_by_len_frame$length))));
+# gg = ggplot();
+# gg = gg + theme_bw();
+# gg = gg + scale_x_discrete(breaks=bins, limits=bins);
+# gg = gg + scale_y_continuous(labels=comma);
+# gg = gg + geom_bar(
+#     data=pos_by_len_frame,
+#     aes_string(x="length", y="num_ranges"),
+#     position="identity",
+#     stat="identity");
+# gg = gg + labs(
+#     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
+#     x="Sequence lengths",
+#     y="Num of ranges");
+# plot(gg);
+# invisible(dev.off());
 
 
 
-# draw a stacked bar plot of sequences by length
+# draw a stacked bar plot of sequences by length in log scale
 utils$dev_open_file(
     file.path(vars$output_stats_dir,
               paste(vars$base_filename, "_sequences-by-len_log.png", sep="")),
@@ -740,28 +798,30 @@ invisible(dev.off());
 
 
 
-# draw a stacked bar plot of sequences by length
-utils$dev_open_file(
-    file.path(
-        vars$output_stats_dir,
-        paste(vars$base_filename, "_sequences-by-len_linear.png", sep="")),
-    640, 480);
-bins = as.character(sort(as.numeric(unique(seq_by_len_frame$length))));
-gg = ggplot();
-gg = gg + theme_bw();
-gg = gg + scale_x_discrete(breaks=bins, limits=bins);
-gg = gg + scale_y_continuous(labels=comma);
-gg = gg + geom_bar(
-    data=seq_by_len_frame,
-    aes_string(x="length", y="sequences"),
-    position="identity",
-    stat="identity");
-gg = gg + labs(
-    title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
-    x="Sequence lengths",
-    y="Num of sequence patterns");
-plot(gg);
-invisible(dev.off());
+# # draw a stacked bar plot of sequences by length in linear scale
+# utils$dev_open_file(
+#     file.path(
+#         vars$output_stats_dir,
+#         paste(vars$base_filename, "_sequences-by-len_linear.png", sep="")),
+#     640, 480);
+# bins = as.character(sort(as.numeric(unique(seq_by_len_frame$length))));
+# gg = ggplot();
+# gg = gg + theme_bw();
+# gg = gg + scale_x_discrete(breaks=bins, limits=bins);
+# gg = gg + scale_y_continuous(labels=comma);
+# gg = gg + geom_bar(
+#     data=seq_by_len_frame,
+#     aes_string(x="length", y="sequences"),
+#     position="identity",
+#     stat="identity");
+# gg = gg + labs(
+#     title=paste("Frequency:", vars$min_spatial_freq, "(linear scale)"),
+#     x="Sequence lengths",
+#     y="Num of sequence patterns");
+# plot(gg);
+# invisible(dev.off());
+
+
 
 # write a file that grants that this plot is complete for this product
 result = file.create(file.path(vars$output_stats_dir, "complete"));
