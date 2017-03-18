@@ -38,7 +38,7 @@ vars$base_filename = sub(
     file.path(dirname(vars$input_file_json), ""), "", vars$input_file_json);
 vars$base_filename = sub("[.][^.]*$", "", vars$base_filename, perl=TRUE);
 
-empty_pattern = "mmmmmmmmmmmmmmmmmmmm";
+
 
 # loading json data
 #cat("Loading json data", vars$input_file_json, "...");
@@ -174,36 +174,41 @@ seq_by_len = new.env(hash=TRUE, parent=emptyenv());
 hist_block_stats = new.env(hash=TRUE, parent=emptyenv());
 
 
+
+# sequences
+
 # start the iterations, for each json data grouped by length
 for(iteration in 1:length(solid_sequences)) {
-    #cat("Iteration:", iteration);
 
-    # sequences
+    if(iteration <= 20)
+    {
+        #cat("Iteration:", iteration);
 
-    sequence_data_by_length = solid_sequences[[iteration]];
+        sequence_data_by_length = solid_sequences[[iteration]];
 
-    if(
-        is.null(sequence_data_by_length$length) ||
-            is.null(sequence_data_by_length$sequences) ||
-            length(sequence_data_by_length$sequences) < 1
-    ) {
-        cat("Empty sequence data iteration", iteration,
-            "of length", sequence_data_by_length$length, "\n");
-        #cat("Data:\n");
-        #dput(sequence_data_by_length);
-        next;
-    }
+        if(
+            is.null(sequence_data_by_length$length) ||
+                is.null(sequence_data_by_length$sequences) ||
+                length(sequence_data_by_length$sequences) < 1
+        ) {
+            cat("Empty sequence data iteration", iteration,
+                "of length", sequence_data_by_length$length, "\n");
+            #cat("Data:\n");
+            #dput(sequence_data_by_length);
+            next;
+        }
 
-    sequence_length = sequence_data_by_length$length;
-    sequence_data = sequence_data_by_length$sequences;
-    len = as.character(sequence_length);
+        sequence_length = sequence_data_by_length$length;
+        sequence_data = sequence_data_by_length$sequences;
 
-    for(j in 1:length(sequence_data)) {
-        sequence_data_item = sequence_data[[j]];
-        sequence = sequence_data_item$sequence;
+        len = as.character(sequence_length);
+        pos_by_len[[len]] = new.env(hash=TRUE, parent=emptyenv());
+        pos_by_len[[len]]$num_ranges = 0;
+        pos_by_len[[len]]$num_pos = 0;
 
-        # skip sequence containing empty pattern
-        if(length(grep(empty_pattern, sequence)) == 0) {
+        for(j in 1:length(sequence_data)) {
+            sequence_data_item = sequence_data[[j]];
+            sequence = sequence_data_item$sequence;
 
             # count matching postions by sequence
             if(! exists(sequence, pos_by_seq)) {
@@ -220,11 +225,6 @@ for(iteration in 1:length(solid_sequences)) {
                 length(sequence_data_item$spaces);
 
             # count matching postions by length
-            if(! exists(len, pos_by_len)) {
-                pos_by_len[[len]] = new.env(hash=TRUE, parent=emptyenv());
-                pos_by_len[[len]]$num_ranges = 0;
-                pos_by_len[[len]]$num_pos = 0;
-            }
 
             pos_by_len[[len]]$num_ranges =
                 pos_by_len[[len]]$num_ranges + 1;
@@ -243,46 +243,55 @@ for(iteration in 1:length(solid_sequences)) {
             # using a map to get uniques values
             seq_by_len[[len]]$sequences_map[[sequence]] = TRUE;
         }
-    }
 
-    # count stored sequences by length
-    if(length(seq_by_len[[len]]$sequences_map) > 0) {
+        # count stored sequences by length
         seq_by_len[[len]]$sequences = length(seq_by_len[[len]]$sequences_map);
     }
+}
 
 
 
-    # blocks
-    solid_blocks_data_by_length = solid_blocks[[iteration]];
+# blocks
 
-    if(
-        is.null(solid_blocks_data_by_length$length) ||
-            is.null(solid_blocks_data_by_length$blocks) ||
-            length(solid_blocks_data_by_length$blocks) < 1
-    ) {
-        cat(
-            "\n\tError in block data for iteration ",
-            iteration, ".\n", sep="");
-    } else if(solid_blocks_data_by_length$length != sequence_length) {
-        cat("\n\tThe length of sequences in the same index of solid sequences",
-            "and solid blocks must be the same, at iteration ",
-            iteration, ".\n", sep="");
-    } else {
-        solid_blocks_data = solid_blocks_data_by_length$blocks;
+# start the iterations, for each json data grouped by length
+for(iteration in 1:length(solid_blocks)) {
 
-        for(j in 1:length(solid_blocks_data)) {
-            block_data_item = solid_blocks_data[[j]];
-            sequence = block_data_item$sequence;
+    if(iteration <= 20)
+    {
+        #cat("Iteration:", iteration);
 
-            # skip sequence containing empty pattern
-            if(length(grep(empty_pattern, sequence)) == 0) {
+        solid_blocks_data_by_length = solid_blocks[[iteration]];
+
+        sequence_length = solid_blocks_data_by_length$length;
+
+        len = as.character(sequence_length);
+        blk_by_len[[len]] = new.env(hash=TRUE, parent=emptyenv());
+        blk_by_len[[len]]$num_blocks = 0;
+
+#         hist_block_stats[[len]] = new.env(hash=TRUE, parent=emptyenv());
+#         hist_block_stats[[len]]$areas = c();
+#         hist_block_stats[[len]]$widths = c();
+
+        if(
+            is.null(solid_blocks_data_by_length$length) ||
+                is.null(solid_blocks_data_by_length$blocks) ||
+                length(solid_blocks_data_by_length$blocks) < 1
+        ) {
+            cat(
+                "\n\tError in block data for iteration ",
+                iteration, ".\n", sep="");
+        } else if(solid_blocks_data_by_length$length != sequence_length) {
+            cat("\n\tThe length of sequences in the same index of solid sequences",
+                "and solid blocks must be the same, at iteration ",
+                iteration, ".\n", sep="");
+        } else {
+            solid_blocks_data = solid_blocks_data_by_length$blocks;
+
+            for(j in 1:length(solid_blocks_data)) {
+                block_data_item = solid_blocks_data[[j]];
+                sequence = block_data_item$sequence;
 
                 # histogram of block areas and widths by length
-                if(! exists(len, blk_by_len)) {
-                    blk_by_len[[len]] =
-                        new.env(hash=TRUE, parent=emptyenv());
-                    blk_by_len[[len]]$num_blocks = 0;
-                }
 
                 blk_by_len[[len]]$num_blocks =
                     blk_by_len[[len]]$num_blocks + 1;
@@ -293,12 +302,6 @@ for(iteration in 1:length(solid_sequences)) {
 #                 i_end = block_data_item$i_end;
 #
 #                 # histogram of block areas and widths by length
-#                 if(! exists(len, hist_block_stats)) {
-#                     hist_block_stats[[len]] =
-#                         new.env(hash=TRUE, parent=emptyenv());
-#                     hist_block_stats[[len]]$areas = c();
-#                     hist_block_stats[[len]]$widths = c();
-#                 }
 #
 #                 hist_block_stats[[len]]$areas = c(
 #                     hist_block_stats[[len]]$areas,
