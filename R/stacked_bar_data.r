@@ -40,6 +40,10 @@ vars$base_filename = sub("[.][^.]*$", "", vars$base_filename, perl=TRUE);
 
 
 
+vars$max_sequence_len = 20;
+
+
+
 # loading json data
 #cat("Loading json data", vars$input_file_json, "...");
 json_data = fromJSON(file=vars$input_file_json, method="C");
@@ -180,7 +184,7 @@ hist_block_stats = new.env(hash=TRUE, parent=emptyenv());
 # start the iterations, for each json data grouped by length
 for(iteration in 1:length(solid_sequences)) {
 
-    if(iteration <= 20)
+    if(iteration <= vars$max_sequence_len)
     {
         #cat("Iteration:", iteration);
 
@@ -256,7 +260,7 @@ for(iteration in 1:length(solid_sequences)) {
 # start the iterations, for each json data grouped by length
 for(iteration in 1:length(solid_blocks)) {
 
-    if(iteration <= 20)
+    if(iteration <= vars$max_sequence_len)
     {
         #cat("Iteration:", iteration);
 
@@ -659,6 +663,7 @@ write.table(
 # pos_by_len_frame$length = as.character(pos_by_len_frame$length);
 
 # draw a stacked bar plot of num_pos by length in log scale
+pos_by_len_frame = pos_by_len_frame[pos_by_len_frame$num_pos != 0,];
 utils$dev_open_file(
     file.path(vars$output_stats_dir,
               paste(vars$base_filename, "_numpos-by-len_log.png", sep="")),
@@ -681,6 +686,7 @@ plot(gg);
 invisible(dev.off());
 
 # draw a stacked bar plot of num_ranges by length in log scale
+pos_by_len_frame = pos_by_len_frame[pos_by_len_frame$num_ranges != 0,];
 utils$dev_open_file(
     file.path(vars$output_stats_dir,
               paste(vars$base_filename, "_numranges-by-len_log.png", sep="")),
@@ -703,6 +709,7 @@ plot(gg);
 invisible(dev.off());
 
 # draw a stacked bar plot of num_blocks by length in log scale
+blk_by_len_frame = blk_by_len_frame[blk_by_len_frame$num_blocks != 0,];
 utils$dev_open_file(
     file.path(vars$output_stats_dir,
               paste(vars$base_filename, "_numblocks-by-len_log.png", sep="")),
@@ -778,6 +785,7 @@ invisible(dev.off());
 
 
 # draw a stacked bar plot of sequences by length in log scale
+seq_by_len_frame = seq_by_len_frame[seq_by_len_frame$sequences != 0,];
 utils$dev_open_file(
     file.path(vars$output_stats_dir,
               paste(vars$base_filename, "_sequences-by-len_log.png", sep="")),
