@@ -145,13 +145,18 @@ plotSequencePositionsRangesAndBlocks = cmpfun(
 config = new.env(hash=TRUE, parent=emptyenv());
 config$min_sequence_length_to_plot = 2;
 config$max_sequence_length_to_plot = Inf;
+config$plot_scale_preview = 1;
 config$plot_scale = 5;
 config$max_length_plot_limit = 100000;
+config$block_area_start_count_from_y_frac = 0.1;   # 10%
+config$block_area_start_count_from_y = 0;  # will be calculated
 config$per_sequence_plot_block_requires_min_width_to_be_drawn = 5;
 config$plot_only_ranges_that_contains_blocks = TRUE;
 config$per_length_plot_image_type = "png";
+config$per_sequence_plot_preview_image_type = "png";
 config$per_sequence_plot_image_type = "svg";
-config$background_img_size = "800px";
+config$preview_img_size = "800px";
+config$full_img_size = "1440px";
 
 
 
@@ -191,7 +196,9 @@ vars$database_x_size = vars$lim_database_x_max - vars$lim_database_x_min;
 vars$lim_database_y_min = 0;
 vars$lim_database_y_max = ncol(vars$database);
 vars$database_y_size = vars$lim_database_y_max - vars$lim_database_y_min;
-
+config$block_area_start_count_from_y =
+    vars$lim_database_y_min + (
+        vars$database_y_size * config$block_area_start_count_from_y_frac);
 
 
 # loading json data
@@ -300,13 +307,13 @@ for(iteration in 1:length(solid_sequences)) {
 
     utils$dev_open_file(
         filename_by_len, vars$database_x_size, vars$database_y_size,
-        config$plot_scale);
+        config$plot_scale_preview);
     plot(plotSequencePositionsRangesAndBlocks(
         x_points, y_points,
         xmin_ranges=xmin_ranges, xmax_ranges=xmax_ranges,
         lim_x_min=vars$lim_database_x_min, lim_x_max=vars$lim_database_x_max,
         lim_y_min=vars$lim_database_y_min, lim_y_max=vars$lim_database_y_max,
-        scale=config$plot_scale));
+        scale=config$plot_scale_preview));
     invisible(dev.off());
 
     per_length_index_lines = c(per_length_index_lines,
@@ -315,7 +322,7 @@ for(iteration in 1:length(solid_sequences)) {
             "          <img style=\"",
             "background:url(", vars$background_img, ");",
             "background-size:cover;",
-            "width:", config$background_img_size ,";\"",
+            "width:", config$preview_img_size ,";\"",
             " src=\"", sequence_length, ".",
             config$per_length_plot_image_type,
             "\" alt=\"\"/>", sep=""),
@@ -381,8 +388,8 @@ for(iteration in 1:length(solid_sequences)) {
             if(! exists(sequence, seq_plotd)) {
                 seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
                 seq_plotd[[sequence]]$min_width_to_be_drawn = FALSE;
-                seq_plotd[[sequence]]$area = 0.0;
-                seq_plotd[[sequence]]$count = 0;
+                seq_plotd[[sequence]]$block_area = 0.0;
+                seq_plotd[[sequence]]$block_count = 0;
                 seq_plotd[[sequence]]$xmin_ranges = c();
                 seq_plotd[[sequence]]$xmax_ranges = c();
                 seq_plotd[[sequence]]$xmin_blocks = c();
@@ -413,11 +420,13 @@ for(iteration in 1:length(solid_sequences)) {
                 seq_plotd[[sequence]]$ymax_blocks = c(
                     seq_plotd[[sequence]]$ymax_blocks, i_end);
 
-                seq_plotd[[sequence]]$area =
-                    seq_plotd[[sequence]]$area +
-                        (r_end - r_start + 1) * (i_end - i_start + 1);
-                seq_plotd[[sequence]]$count =
-                    seq_plotd[[sequence]]$count + 1;
+                if(i_start >= config$block_area_start_count_from_y) {
+                    seq_plotd[[sequence]]$block_area =
+                        seq_plotd[[sequence]]$block_area +
+                            (r_end - r_start + 1) * (i_end - i_start + 1);
+                    seq_plotd[[sequence]]$block_count =
+                        seq_plotd[[sequence]]$block_count + 1;
+                }
             }
         }
     }
@@ -461,8 +470,8 @@ for(iteration in 1:length(solid_sequences)) {
         if(! exists(sequence, seq_plotd)) {
             seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
             seq_plotd[[sequence]]$min_width_to_be_drawn = FALSE;
-            seq_plotd[[sequence]]$area = 0.0;
-            seq_plotd[[sequence]]$count = 0;
+            seq_plotd[[sequence]]$block_area = 0.0;
+            seq_plotd[[sequence]]$block_count = 0;
             seq_plotd[[sequence]]$xmin_ranges = c();
             seq_plotd[[sequence]]$xmax_ranges = c();
             seq_plotd[[sequence]]$xmin_blocks = c();
@@ -496,6 +505,50 @@ for(iteration in 1:length(solid_sequences)) {
         showWarnings=FALSE, recursive=TRUE, mode="2755"
     );
 
+    # producing the entire bunch of plots at one time,
+    # any image with all the points, ranges and block for the related sequence
+    # preview quality images
+
+    filename_by_seq = file.path(
+        vars$output_img_dir, "by_length_and_sequence", sequence_length,
+        paste("%d", ".", config$per_sequence_plot_preview_image_type, sep="")
+    );
+
+    k = 0;
+
+    something_plotted = FALSE;
+
+    utils$dev_open_file(
+        filename_by_seq, vars$database_x_size, vars$database_y_size,
+        config$plot_scale_preview);
+
+    for(key in ls(seq_plotd)) {
+        k = k + 1;
+        if(seq_plotd[[key]]$min_width_to_be_drawn) {
+            plot(plotSequencePositionsRangesAndBlocks(
+                seq_plotd[[key]]$x_points,
+                seq_plotd[[key]]$y_points,
+                xmin_ranges=seq_plotd[[key]]$xmin_ranges,
+                xmax_ranges=seq_plotd[[key]]$xmax_ranges,
+                xmin_blocks=seq_plotd[[key]]$xmin_blocks,
+                xmax_blocks=seq_plotd[[key]]$xmax_blocks,
+                ymin_blocks=seq_plotd[[key]]$ymin_blocks,
+                ymax_blocks=seq_plotd[[key]]$ymax_blocks,
+                lim_x_min=vars$lim_database_x_min,
+                lim_x_max=vars$lim_database_x_max,
+                lim_y_min=vars$lim_database_y_min,
+                lim_y_max=vars$lim_database_y_max,
+                scale=config$plot_scale_preview));
+            something_plotted = TRUE;
+        }
+    }
+
+    invisible(dev.off());
+
+    # producing the entire bunch of plots at one time,
+    # any image with all the points, ranges and block for the related sequence
+    # full quality images
+
     filename_by_seq = file.path(
         vars$output_img_dir, "by_length_and_sequence", sequence_length,
         paste("%d", ".", config$per_sequence_plot_image_type, sep="")
@@ -505,8 +558,6 @@ for(iteration in 1:length(solid_sequences)) {
 
     something_plotted = FALSE;
 
-    # producing the entire bunch of plots at one time,
-    # any image with all the points, ranges and block for the related sequence
     utils$dev_open_file(
         filename_by_seq, vars$database_x_size, vars$database_y_size,
         config$plot_scale);
@@ -551,7 +602,22 @@ for(iteration in 1:length(solid_sequences)) {
             if(seq_plotd[[key]]$min_width_to_be_drawn) {
                 k = k + 1;
 
-                # rename to final sequence image file
+                # rename to final sequence preview image file
+                file.rename(
+                    file.path(
+                        vars$output_img_dir, "by_length_and_sequence",
+                        sequence_length,
+                        paste(k, ".",
+                              config$per_sequence_plot_preview_image_type,
+                              sep="")),
+                    file.path(
+                        vars$output_img_dir, "by_length_and_sequence",
+                        sequence_length,
+                        paste(key, ".",
+                              config$per_sequence_plot_preview_image_type,
+                              sep="")));
+
+                # rename to final sequence full quality image file
                 file.rename(
                     file.path(
                         vars$output_img_dir, "by_length_and_sequence",
@@ -579,7 +645,7 @@ for(iteration in 1:length(solid_sequences)) {
                             "<img style=\"",
                             "background:url(../../", vars$background_img, ");",
                             "background-size:cover;",
-                            "width:", config$background_img_size ,";\"",
+                            "width:", config$full_img_size ,";\"",
                             " src=\"",
                             key, ".", config$per_sequence_plot_image_type,
                             "\" alt=\"\" /></div>", sep=""),
@@ -598,9 +664,9 @@ for(iteration in 1:length(solid_sequences)) {
                         "            <img style=\"",
                         "background:url(../", vars$background_img, ");",
                         "background-size:cover;",
-                        "width:800px;\"",
+                        "width:", config$preview_img_size,";\"",
                         " src=\"", sequence_length, "/",
-                        key, ".", config$per_sequence_plot_image_type,
+                        key, ".", config$per_sequence_plot_preview_image_type,
                         "\" alt=\"\" />", sep=""),
                     "          </a>",
                     "        </div>",
@@ -626,7 +692,8 @@ for(iteration in 1:length(solid_sequences)) {
                     sequences = c(sequences, key);
                     mean_areas = c(
                         mean_areas,
-                            seq_plotd[[key]]$area / seq_plotd[[key]]$count);
+                            seq_plotd[[key]]$block_area
+                            / seq_plotd[[key]]$block_count);
                 }
             }
 
@@ -656,9 +723,10 @@ for(iteration in 1:length(solid_sequences)) {
                         "            <img style=\"",
                         "background:url(../", vars$background_img, ");",
                         "background-size:cover;",
-                        "width:800px;\"",
+                        "width:", config$preview_img_size,";\"",
                         " src=\"", sequence_length, "/",
-                        sequence, ".", config$per_sequence_plot_image_type,
+                        sequence, ".",
+                        config$per_sequence_plot_preview_image_type,
                         "\" alt=\"\" />", sep=""),
                     "          </a>",
                     "        </div>",
@@ -698,9 +766,10 @@ for(iteration in 1:length(solid_sequences)) {
                         "            <img style=\"",
                         "background:url(../", vars$background_img, ");",
                         "background-size:cover;",
-                        "width:800px;\"",
+                        "width:", config$preview_img_size,";\"",
                         " src=\"", sequence_length, "/",
-                        sequence, ".", config$per_sequence_plot_image_type,
+                        sequence, ".",
+                        config$per_sequence_plot_preview_image_type,
                         "\" alt=\"\" />", sep=""),
                     "          </a>",
                     "        </div>",
@@ -740,9 +809,10 @@ for(iteration in 1:length(solid_sequences)) {
                         "            <img style=\"",
                         "background:url(../", vars$background_img, ");",
                         "background-size:cover;",
-                        "width:800px;\"",
+                        "width:", config$preview_img_size,";\"",
                         " src=\"", sequence_length, "/",
-                        sequence, ".", config$per_sequence_plot_image_type,
+                        sequence, ".",
+                        config$per_sequence_plot_preview_image_type,
                         "\" alt=\"\" />", sep=""),
                     "          </a>",
                     "        </div>",
@@ -782,9 +852,10 @@ for(iteration in 1:length(solid_sequences)) {
                         "            <img style=\"",
                         "background:url(../", vars$background_img, ");",
                         "background-size:cover;",
-                        "width:800px;\"",
+                        "width:", config$preview_img_size,";\"",
                         " src=\"", sequence_length, "/",
-                        sequence, ".", config$per_sequence_plot_image_type,
+                        sequence, ".",
+                        config$per_sequence_plot_preview_image_type,
                         "\" alt=\"\" />", sep=""),
                     "          </a>",
                     "        </div>",
@@ -824,9 +895,10 @@ for(iteration in 1:length(solid_sequences)) {
                         "            <img style=\"",
                         "background:url(../", vars$background_img, ");",
                         "background-size:cover;",
-                        "width:800px;\"",
+                        "width:", config$preview_img_size,";\"",
                         " src=\"", sequence_length, "/",
-                        sequence, ".", config$per_sequence_plot_image_type,
+                        sequence, ".",
+                        config$per_sequence_plot_preview_image_type,
                         "\" alt=\"\" />", sep=""),
                     "          </a>",
                     "        </div>",
