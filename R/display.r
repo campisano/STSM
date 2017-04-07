@@ -690,10 +690,15 @@ for(iteration in 1:length(solid_sequences)) {
             for(key in ls(seq_plotd)) {
                 if(seq_plotd[[key]]$min_width_to_be_drawn) {
                     sequences = c(sequences, key);
-                    mean_areas = c(
-                        mean_areas,
-                            seq_plotd[[key]]$block_area
-                            / seq_plotd[[key]]$block_count);
+
+                    if(seq_plotd[[key]]$block_count == 0) {
+                        mean_areas = c(mean_areas, 0);
+                    } else {
+                        mean_areas = c(
+                            mean_areas,
+                                seq_plotd[[key]]$block_area
+                                / seq_plotd[[key]]$block_count);
+                    }
                 }
             }
 
