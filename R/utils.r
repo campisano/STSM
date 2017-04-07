@@ -98,6 +98,11 @@ utils$dev_open_file = function(file_name, width=480, height=480, scale=1) {
             pointsize=pointsize, units="in", res=dpi,
             width=(width / dpi) * scale, height=(height / dpi) * scale);
     }
+    if(ext == "jpg") {
+        jpeg(file_name, bg="white", antialias="none",
+            pointsize=pointsize, units="in", res=dpi, quality=0.33,
+            width=(width / dpi) * scale, height=(height / dpi) * scale);
+    }
 }
 
 
