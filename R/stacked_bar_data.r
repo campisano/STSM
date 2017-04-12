@@ -3,7 +3,7 @@
 # include utility file
 source(file="R/utils.r", chdir=TRUE);
 
-
+utils$setVerbose();
 
 # loading dependences
 loaded_libs = utils$loadLibs(c(
@@ -565,45 +565,21 @@ seq_by_len_frame = to_data_frame_of_2(
 
 
 # write data to a csv
-write.table(
-    pos_by_seq_frame,
-    file=file.path(vars$output_stats_dir,
-                   paste(vars$base_filename, "_matches-by-seq.csv", sep="")),
-    append=FALSE,
-    row.names=FALSE,
-    col.names=TRUE,
-    quote=FALSE,
-    sep=",");
+utils$writeCSV(
+    pos_by_seq_frame, file.path( vars$output_stats_dir, paste(
+        vars$base_filename, "_matches-by-seq.csv", sep="")));
 
-write.table(
-    pos_by_len_frame,
-    file=file.path(vars$output_stats_dir,
-                   paste(vars$base_filename, "_matches-by-len.csv", sep="")),
-    append=FALSE,
-    row.names=FALSE,
-    col.names=TRUE,
-    quote=FALSE,
-    sep=",");
+utils$writeCSV(
+    pos_by_len_frame, file=file.path(vars$output_stats_dir, paste(
+        vars$base_filename, "_matches-by-len.csv", sep="")));
 
-write.table(
-    blk_by_len_frame,
-    file=file.path(vars$output_stats_dir,
-                   paste(vars$base_filename, "_blocks-by-len.csv", sep="")),
-    append=FALSE,
-    row.names=FALSE,
-    col.names=TRUE,
-    quote=FALSE,
-    sep=",");
+utils$writeCSV(
+    blk_by_len_frame, file=file.path(vars$output_stats_dir, paste(
+        vars$base_filename, "_blocks-by-len.csv", sep="")));
 
-write.table(
-    seq_by_len_frame,
-    file=file.path(vars$output_stats_dir,
-                   paste(vars$base_filename, "_sequences-by-len.csv", sep="")),
-    append=FALSE,
-    row.names=FALSE,
-    col.names=TRUE,
-    quote=FALSE,
-    sep=",");
+utils$writeCSV(
+    seq_by_len_frame, file=file.path(vars$output_stats_dir, paste(
+        vars$base_filename, "_sequences-by-len.csv", sep="")));
 
 
 

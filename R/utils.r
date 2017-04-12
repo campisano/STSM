@@ -1,25 +1,28 @@
-# defining common starting options
-options(download.file.method = "wget");
-options(warn=2);  # warnings converted to errors
-options(keep.source=TRUE);
-options(error=quote({
-    # from http://stackoverflow.com/a/2000757/846686
-    cat("Environment:\n", file=stderr());
-    dump.frames();
-    n = length(last.dump);
-    calls = names(last.dump);
-    cat(paste("  ", 1L:n, ": ", calls, sep = ""), sep = "\n", file=stderr());
-    cat("\n", file=stderr());
-
-    if (!interactive()) {
-        q();
-    }
-}));
-
-
-
 # defining common functions
 utils = new.env(hash=TRUE, parent=emptyenv());
+
+
+
+utils$setVerbose = function() {
+    # defining common starting options
+    options(download.file.method = "wget");
+    options(warn=1);  # warnings printed as they occur
+    options(keep.source=TRUE);
+    options(error=quote({
+        # from http://stackoverflow.com/a/2000757/846686
+        cat("Environment:\n", file=stderr());
+        dump.frames();
+        n = length(last.dump);
+        calls = names(last.dump);
+        cat(paste(
+            "  ", 1L:n, ": ", calls, sep = ""), sep = "\n", file=stderr());
+        cat("\n", file=stderr());
+
+        if (!interactive()) {
+            q();
+        }
+    }));
+}
 
 
 
@@ -73,6 +76,24 @@ utils$loadLibs = function(lib_name_and_vers) {
     }
 
     return(lib_names);
+}
+
+
+
+utils$readCSV = function(file_name, header=TRUE) {
+    data = read.table(
+        file=file_name, header=header, fill=TRUE, as.is=TRUE,
+        stringsAsFactors=FALSE, sep=",", quote="");
+
+    return(data);
+}
+
+
+
+utils$writeCSV = function(data_frame, file_name, header=TRUE) {
+    write.table(
+        data_frame, file=file_name, col.names=header,
+        append=FALSE, row.names=FALSE, quote=FALSE, sep=",");
 }
 
 
