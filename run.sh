@@ -21,15 +21,15 @@ BASE_IMG_NAME="951x462.jpg";
 
 
 
-INLINES=("100" "401")
+INLINES=("401" "100")
 
 #ORIENTATIONS=("original" "transposed");
 ORIENTATIONS=("original");
 
-SAXS=("10" "15" "20" "25");
+SAXS=("25" "20" "15" "10" "5");
 
-MIN_SPATIAL_FREQS=("75" "50");
-MIN_BLOCK_FREQS=("10" "20" "30" "40");
+MIN_SPATIAL_FREQS=("100" "90" "80" "70" "60");
+MIN_BLOCK_FREQS=("50" "40" "30" "20" "10");
 MAX_STRETCHS=("0");
 
 
