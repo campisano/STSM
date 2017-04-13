@@ -144,7 +144,7 @@ plotSequencePositionsRangesAndBlocks = cmpfun(
 
 
 # configuring variables
-config = new.env(hash=TRUE, parent=emptyenv());
+config = utils$newDict();
 config$min_sequence_length_to_plot = 2;
 config$max_sequence_length_to_plot = Inf;
 config$plot_scale_preview = 1;
@@ -174,7 +174,7 @@ args = commandArgs(TRUE);
 #args[4] = "data/inline_100_951x462.jpg";
 #cat("    args:", args, "\n");
 
-vars = new.env(hash=TRUE, parent=emptyenv());
+vars = utils$newDict();
 vars$csv_database = args[1];
 vars$input_file_json = args[2];
 vars$output_img_dir = args[3];
@@ -202,7 +202,7 @@ config$block_area_start_count_from_y =
 
 # loading json data
 #cat("Loading json data", vars$input_file_json, "...");
-json_data = fromJSON(file=vars$input_file_json, method="C");
+json_data = utils$readJSON(vars$input_file_json);
 #cat(" [DONE]\n")
 
 if(is.null(json_data) || length(json_data) < 1) {
@@ -359,7 +359,7 @@ for(iteration in 1:length(solid_sequences)) {
 
     cat(", computing per-seq. data...");
 
-    seq_plotd = new.env(hash=TRUE, parent=emptyenv());
+    seq_plotd = utils$newDict();
 
 
 
@@ -385,7 +385,7 @@ for(iteration in 1:length(solid_sequences)) {
             sequence = block_data_item$sequence;
 
             if(! exists(sequence, seq_plotd)) {
-                seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
+                seq_plotd[[sequence]] = utils$newDict();
                 seq_plotd[[sequence]]$min_width_to_be_drawn = FALSE;
                 seq_plotd[[sequence]]$block_area = 0.0;
                 seq_plotd[[sequence]]$block_count = 0;
@@ -467,7 +467,7 @@ for(iteration in 1:length(solid_sequences)) {
         }
 
         if(! exists(sequence, seq_plotd)) {
-            seq_plotd[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
+            seq_plotd[[sequence]] = utils$newDict();
             seq_plotd[[sequence]]$min_width_to_be_drawn = FALSE;
             seq_plotd[[sequence]]$block_area = 0.0;
             seq_plotd[[sequence]]$block_count = 0;

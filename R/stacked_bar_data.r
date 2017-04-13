@@ -27,7 +27,7 @@ args = commandArgs(TRUE);
 #args[5] = 0;
 #cat("    args:", args, "\n");
 
-vars = new.env(hash=TRUE, parent=emptyenv());
+vars = utils$newDict();
 vars$input_file_json = args[1];
 vars$output_stats_dir = args[2];
 vars$min_spatial_freq = args[3];
@@ -46,7 +46,7 @@ vars$max_sequence_len = 20;
 
 # loading json data
 #cat("Loading json data", vars$input_file_json, "...");
-json_data = fromJSON(file=vars$input_file_json, method="C");
+json_data = utils$readJSON(vars$input_file_json);
 #cat(" [DONE]\n")
 
 if(is.null(json_data) || length(json_data) < 1) {
@@ -163,19 +163,19 @@ if(length(solid_sequences) != length(solid_blocks)) {
 # retrieving number of ranges and positions group by sequence
 
 # count matching postions by sequence
-pos_by_seq = new.env(hash=TRUE, parent=emptyenv());
+pos_by_seq = utils$newDict();
 
 # count matching postions by length
-pos_by_len = new.env(hash=TRUE, parent=emptyenv());
+pos_by_len = utils$newDict();
 
 # count blocks by length
-blk_by_len = new.env(hash=TRUE, parent=emptyenv());
+blk_by_len = utils$newDict();
 
 # count sequences by length
-seq_by_len = new.env(hash=TRUE, parent=emptyenv());
+seq_by_len = utils$newDict();
 
 # histogram of block areas by length
-hist_block_stats = new.env(hash=TRUE, parent=emptyenv());
+hist_block_stats = utils$newDict();
 
 
 
@@ -206,7 +206,7 @@ for(iteration in 1:length(solid_sequences)) {
         sequence_data = sequence_data_by_length$sequences;
 
         len = as.character(sequence_length);
-        pos_by_len[[len]] = new.env(hash=TRUE, parent=emptyenv());
+        pos_by_len[[len]] = utils$newDict();
         pos_by_len[[len]]$num_ranges = 0;
         pos_by_len[[len]]$num_pos = 0;
 
@@ -216,7 +216,7 @@ for(iteration in 1:length(solid_sequences)) {
 
             # count matching postions by sequence
             if(! exists(sequence, pos_by_seq)) {
-                pos_by_seq[[sequence]] = new.env(hash=TRUE, parent=emptyenv());
+                pos_by_seq[[sequence]] = utils$newDict();
                 pos_by_seq[[sequence]]$num_ranges = 0;
                 pos_by_seq[[sequence]]$num_pos = 0;
             }
@@ -239,9 +239,8 @@ for(iteration in 1:length(solid_sequences)) {
 
             # count sequences by length
             if(! exists(len, seq_by_len)) {
-                seq_by_len[[len]] = new.env(hash=TRUE, parent=emptyenv());
-                seq_by_len[[len]]$sequences_map =
-                    new.env(hash=TRUE, parent=emptyenv());
+                seq_by_len[[len]] = utils$newDict();
+                seq_by_len[[len]]$sequences_map = utils$newDict();
             }
 
             # using a map to get uniques values
@@ -269,10 +268,10 @@ for(iteration in 1:length(solid_blocks)) {
         sequence_length = solid_blocks_data_by_length$length;
 
         len = as.character(sequence_length);
-        blk_by_len[[len]] = new.env(hash=TRUE, parent=emptyenv());
+        blk_by_len[[len]] = utils$newDict();
         blk_by_len[[len]]$num_blocks = 0;
 
-#         hist_block_stats[[len]] = new.env(hash=TRUE, parent=emptyenv());
+#         hist_block_stats[[len]] = utils$newDict();
 #         hist_block_stats[[len]]$areas = c();
 #         hist_block_stats[[len]]$widths = c();
 

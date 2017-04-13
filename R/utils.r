@@ -3,6 +3,12 @@ utils = new.env(hash=TRUE, parent=emptyenv());
 
 
 
+utils$newDict = function() {
+    return(new.env(hash=TRUE, parent=emptyenv()));
+}
+
+
+
 utils$setVerbose = function() {
     # defining common starting options
     options(download.file.method = "wget");
@@ -94,6 +100,12 @@ utils$writeCSV = function(data_frame, file_name, header=TRUE) {
     write.table(
         data_frame, file=file_name, col.names=header,
         append=FALSE, row.names=FALSE, quote=FALSE, sep=",");
+}
+
+
+
+utils$readJSON = function(file_name) {
+    return(fromJSON(file=file_name, method="C"));
 }
 
 
