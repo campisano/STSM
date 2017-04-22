@@ -3,12 +3,6 @@ utils = new.env(hash=TRUE, parent=emptyenv());
 
 
 
-utils$newDict = function() {
-    return(new.env(hash=TRUE, parent=emptyenv()));
-}
-
-
-
 utils$setVerbose = function() {
     # defining common starting options
     options(download.file.method = "wget");
@@ -86,6 +80,73 @@ utils$loadLibs = function(lib_name_and_vers) {
 
 
 
+# TO TEST
+utils$loadLibsPath = function(lib_paths) {
+    repos = "http://cran.r-project.org";
+    options(repos=c(CRAN=repos));
+    lib = paste(Sys.getenv("HOME"), "R", "library", sep="/");
+    dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="2755");
+    .libPaths(c(lib));
+
+    # install specific libs
+    for(lib_path in lib_paths) {
+        install.packages(
+            pkgs=lib_path, repos=NULL, type="source",
+            quiet=FALSE, dependencies=TRUE);
+    }
+}
+
+
+
+utils$newDict = function() {
+    return(new.env(hash=TRUE, parent=emptyenv()));
+}
+
+
+
+# TO TEST
+utils$dict_to_data_frame = function(dict, col_names) {
+    new_data = list();
+
+    for(col_name in col_names) {
+        new_data[[col_name]] = c();
+    }
+
+    for(key in ls(dict)) {
+        for(col_name in col_names) {
+            new_data[[col_name]] = c(
+                new_data[[col_name]], dict[[key]][[col_name]]);
+        }
+    }
+
+    data_frame = data.frame(col_names);
+    colnames(data_frame) = col_names;
+
+    return(data_frame);
+}
+
+
+
+utils$add_extension = function(path, ext) {
+    return(paste(path, ext, sep="."));
+}
+
+
+
+utils$remove_extension = function(path) {
+    return(sub("[.][^.]*$", "", path, perl=TRUE));
+}
+
+
+
+utils$change_extension = function(path, ext) {
+    return(
+        utils$add_extension(
+            utils$remove_extension(path), ext));
+}
+
+
+
 utils$readCSV = function(file_name, header=TRUE) {
     data = read.table(
         file=file_name, header=header, fill=TRUE, as.is=TRUE,
@@ -136,6 +197,60 @@ utils$dev_open_file = function(file_name, width=480, height=480, scale=1) {
             pointsize=pointsize, units="in", res=dpi, quality=0.33,
             width=(width / dpi) * scale, height=(height / dpi) * scale);
     }
+}
+
+
+
+utils$dev_off = function() {
+    invisible(dev.off());
+}
+
+
+
+utils$bar_plot = function(
+    data_frame, x_col, y_col,
+    log=FALSE, title=NA, x_title=NA, y_title=NA, caption=NA) {
+
+    # ensure to not modify original data
+    data_frame = cbind(data_frame);
+
+    # need to be a string to not considerate
+    # this number as a space for the x axis
+    data_frame[[x_col]] = as.character(data_frame[[x_col]]);
+    bins = as.character(sort(as.numeric(unique(data_frame[[x_col]]))));
+
+    gg = ggplot();
+    gg = gg + theme_bw();
+    gg = gg + scale_x_discrete(breaks=bins, limits=bins);
+
+    if(log) {
+        gg = gg + scale_y_log10(
+            labels=trans_format('log10', math_format(10^.x)));
+    } else {
+        gg = gg + scale_y_continuous(labels=comma);
+    }
+
+    gg = gg + geom_bar(
+        data=data_frame, aes_string(x=x_col, y=y_col),
+        position="identity", stat="identity");
+
+    if(!is.na(title)) {
+        gg = gg + labs(title=title);
+    }
+
+    if(!is.na(x_title)) {
+        gg = gg + labs(x=x_title);
+    }
+
+    if(!is.na(y_title)) {
+        gg = gg + labs(y=y_title);
+    }
+
+    if(!is.na(caption)) {
+        gg = gg + labs(caption=caption);
+    }
+
+    plot(gg);
 }
 
 

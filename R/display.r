@@ -181,9 +181,7 @@ vars$output_img_dir = args[3];
 vars$background_img_src = args[4];
 
 vars$background_img = basename(vars$background_img_src);
-vars$base_filename = sub(
-    file.path(dirname(vars$input_file_json), ""), "", vars$input_file_json);
-vars$base_filename = sub("[.][^.]*$", "", vars$base_filename, perl=TRUE);
+vars$base_filename = utils$remove_extension(basename(vars$input_file_json));
 
 
 
@@ -313,7 +311,7 @@ for(iteration in 1:length(solid_sequences)) {
         lim_x_min=vars$lim_database_x_min, lim_x_max=vars$lim_database_x_max,
         lim_y_min=vars$lim_database_y_min, lim_y_max=vars$lim_database_y_max,
         scale=config$plot_scale_preview));
-    invisible(dev.off());
+    utils$dev_off();
 
     per_length_index_lines = c(per_length_index_lines,
         "        <div class=\"content first\">",
@@ -542,7 +540,7 @@ for(iteration in 1:length(solid_sequences)) {
         }
     }
 
-    invisible(dev.off());
+    utils$dev_off();
 
     # producing the entire bunch of plots at one time,
     # any image with all the points, ranges and block for the related sequence
@@ -582,7 +580,7 @@ for(iteration in 1:length(solid_sequences)) {
         }
     }
 
-    invisible(dev.off());
+    utils$dev_off();
 
     cat(", sequences:", k);
 
@@ -921,7 +919,7 @@ for(iteration in 1:length(solid_sequences)) {
     } else {
         # removing unuseful directory
         #unlink(     # [CMP] unlink won't work
-        system(paste('rmdir', file.path(
+        system(paste('rm -rf', file.path(
             vars$output_img_dir, "by_length_and_sequence", sequence_length)));
     }
 

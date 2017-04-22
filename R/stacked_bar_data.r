@@ -34,11 +34,7 @@ vars$min_spatial_freq = args[3];
 vars$min_block_freq = args[4];
 vars$max_stretch = args[5];
 
-vars$base_filename = sub(
-    file.path(dirname(vars$input_file_json), ""), "", vars$input_file_json);
-vars$base_filename = sub("[.][^.]*$", "", vars$base_filename, perl=TRUE);
-
-
+vars$base_filename = utils$remove_extension(basename(vars$input_file_json));
 
 vars$max_sequence_len = 20;
 
@@ -340,7 +336,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         aes_string(x="areas"),
 #         binwidth=6,
 #         drop=TRUE);
-# dev.off();
+# utils$dev_off();
 # utils$dev_open_file("areas_len3_limits-0-3000_log.png", 640, 480);
 # ggplot() +
 #     theme_bw() +
@@ -350,7 +346,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         binwidth=6,
 #         drop=TRUE) +
 #     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
-# dev.off();
+# utils$dev_off();
 #
 # areas_300 = data.frame(areas[areas$areas < 300,]);
 # colnames(areas_300) = c("areas");
@@ -362,7 +358,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         aes_string(x="areas"),
 #         binwidth=6,
 #         drop=TRUE);
-# dev.off();
+# utils$dev_off();
 # utils$dev_open_file("areas_len3_limits-0-300_log.png", 640, 480);
 # ggplot() +
 #     theme_bw() +
@@ -372,7 +368,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         binwidth=6,
 #         drop=TRUE) +
 #     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
-# dev.off();
+# utils$dev_off();
 #
 # areas_150 = data.frame(areas[areas$areas < 150,]);
 # colnames(areas_150) = c("areas");
@@ -384,7 +380,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         aes_string(x="areas"),
 #         binwidth=3,
 #         drop=TRUE);
-# dev.off();
+# utils$dev_off();
 # utils$dev_open_file("areas_len3_limits-0-150_log.png", 640, 480);
 # ggplot() +
 #     theme_bw() +
@@ -394,7 +390,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         binwidth=3,
 #         drop=TRUE) +
 #     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
-# dev.off();
+# utils$dev_off();
 #
 # areas_20 = data.frame(areas[areas$areas < 20,]);
 # colnames(areas_20) = c("areas");
@@ -406,7 +402,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         aes_string(x="areas"),
 #         binwidth=1,
 #         drop=TRUE);
-# dev.off();
+# utils$dev_off();
 # utils$dev_open_file("areas_len3_limits-0-20_log.png", 640, 480);
 # ggplot() +
 #     theme_bw() +
@@ -416,7 +412,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         binwidth=1,
 #         drop=TRUE) +
 #     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
-# dev.off();
+# utils$dev_off();
 #
 # widths_3000 = data.frame(widths[widths$widths < 3000,]);
 # colnames(widths_3000) = c("widths");
@@ -428,7 +424,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         aes_string(x="widths"),
 #         binwidth=6,
 #         drop=TRUE);
-# dev.off();
+# utils$dev_off();
 # utils$dev_open_file("widths_len3_limits-0-3000_log.png", 640, 480);
 # ggplot() +
 #     theme_bw() +
@@ -438,7 +434,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         binwidth=6,
 #         drop=TRUE) +
 #     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
-# dev.off();
+# utils$dev_off();
 #
 # widths_300 = data.frame(widths[widths$widths < 300,]);
 # colnames(widths_300) = c("widths");
@@ -450,7 +446,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         aes_string(x="widths"),
 #         binwidth=6,
 #         drop=TRUE);
-# dev.off();
+# utils$dev_off();
 # utils$dev_open_file("widths_len3_limits-0-300_log.png", 640, 480);
 # ggplot() +
 #     theme_bw() +
@@ -460,7 +456,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         binwidth=6,
 #         drop=TRUE) +
 #     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
-# dev.off();
+# utils$dev_off();
 #
 # widths_150 = data.frame(widths[widths$widths < 150,]);
 # colnames(widths_150) = c("widths");
@@ -472,7 +468,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         aes_string(x="widths"),
 #         binwidth=3,
 #         drop=TRUE);
-# dev.off();
+# utils$dev_off();
 # utils$dev_open_file("widths_len3_limits-0-150_log.png", 640, 480);
 # ggplot() +
 #     theme_bw() +
@@ -482,7 +478,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         binwidth=3,
 #         drop=TRUE) +
 #     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
-# dev.off();
+# utils$dev_off();
 #
 # widths_20 = data.frame(widths[widths$widths < 20,]);
 # colnames(widths_20) = c("widths");
@@ -494,7 +490,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         aes_string(x="widths"),
 #         binwidth=1,
 #         drop=TRUE);
-# dev.off();
+# utils$dev_off();
 # utils$dev_open_file("widths_len3_limits-0-20_log.png", 640, 480);
 # ggplot() +
 #     theme_bw() +
@@ -504,7 +500,7 @@ for(iteration in 1:length(solid_blocks)) {
 #         binwidth=1,
 #         drop=TRUE) +
 #     scale_y_log10(labels=trans_format('log10',math_format(10^.x)));
-# dev.off();
+# utils$dev_off();
 
 
 
@@ -603,7 +599,7 @@ utils$writeCSV(
 #     x="Sequence value",
 #     y="Num of occurrences");
 # plot(gg);
-# invisible(dev.off());
+# utils$dev_off();
 #
 #
 #
@@ -628,7 +624,7 @@ utils$writeCSV(
 #     x="Sequence value",
 #     y="Num of ranges");
 # plot(gg);
-# invisible(dev.off());
+# utils$dev_off();
 
 
 
@@ -643,24 +639,18 @@ utils$dev_open_file(
     file.path(vars$output_stats_dir,
               paste(vars$base_filename, "_numpos-by-len_log.png", sep="")),
     640, 480);
-bins = as.character(sort(as.numeric(unique(pos_by_len_frame$length))));
-gg = ggplot();
-gg = gg + theme_bw();
-gg = gg + scale_x_discrete(breaks=bins, limits=bins);
-gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
-gg = gg + geom_bar(
-    data=pos_by_len_frame,
-    aes_string(x="length", y="num_pos"),
-    position="identity",
-    stat="identity");
-gg = gg + labs(
+utils$bar_plot(
+    data_frame=pos_by_len_frame,
+    x_col="length",
+    y_col="num_pos",
+    log=TRUE,
     title=paste(
         "Range frequency:", vars$min_spatial_freq,
         "- Block frequency:", vars$min_block_freq),
-    x="Sequence lengths",
-    y="Num of occurrences");
-plot(gg);
-invisible(dev.off());
+    x_title="Sequence lengths",
+    y_title="Num of occurrences"
+);
+utils$dev_off();
 
 # draw a stacked bar plot of num_ranges by length in log scale
 pos_by_len_frame = pos_by_len_frame[pos_by_len_frame$num_ranges != 0,];
@@ -668,24 +658,18 @@ utils$dev_open_file(
     file.path(vars$output_stats_dir,
               paste(vars$base_filename, "_numranges-by-len_log.png", sep="")),
     640, 480);
-bins = as.character(sort(as.numeric(unique(pos_by_len_frame$length))));
-gg = ggplot();
-gg = gg + theme_bw();
-gg = gg + scale_x_discrete(breaks=bins, limits=bins);
-gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
-gg = gg + geom_bar(
-    data=pos_by_len_frame,
-    aes_string(x="length", y="num_ranges"),
-    position="identity",
-    stat="identity");
-gg = gg + labs(
+utils$bar_plot(
+    data_frame=pos_by_len_frame,
+    x_col="length",
+    y_col="num_ranges",
+    log=TRUE,
     title=paste(
         "Range frequency:", vars$min_spatial_freq,
         "- Block frequency:", vars$min_block_freq),
-    x="Sequence lengths",
-    y="Num of ranges");
-plot(gg);
-invisible(dev.off());
+    x_title="Sequence lengths",
+    y_title="Num of ranges"
+);
+utils$dev_off();
 
 # draw a stacked bar plot of num_blocks by length in log scale
 blk_by_len_frame = blk_by_len_frame[blk_by_len_frame$num_blocks != 0,];
@@ -693,24 +677,18 @@ utils$dev_open_file(
     file.path(vars$output_stats_dir,
               paste(vars$base_filename, "_numblocks-by-len_log.png", sep="")),
     640, 480);
-bins = as.character(sort(as.numeric(unique(blk_by_len_frame$length))));
-gg = ggplot();
-gg = gg + theme_bw();
-gg = gg + scale_x_discrete(breaks=bins, limits=bins);
-gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
-gg = gg + geom_bar(
-    data=blk_by_len_frame,
-    aes_string(x="length", y="num_blocks"),
-    position="identity",
-    stat="identity");
-gg = gg + labs(
+utils$bar_plot(
+    data_frame=blk_by_len_frame,
+    x_col="length",
+    y_col="num_blocks",
+    log=TRUE,
     title=paste(
         "Range frequency:", vars$min_spatial_freq,
         "- Block frequency:", vars$min_block_freq),
-    x="Sequence lengths",
-    y="Num of blocks");
-plot(gg);
-invisible(dev.off());
+    x_title="Sequence lengths",
+    y_title="Num of blocks"
+);
+utils$dev_off();
 
 
 
@@ -739,7 +717,7 @@ invisible(dev.off());
 #     x="Sequence lengths",
 #     y="Num of occurrences");
 # plot(gg);
-# invisible(dev.off());
+# utils$dev_off();
 
 # # draw a stacked bar plot of num_ranges by length in linear scale
 # utils$dev_open_file(
@@ -761,7 +739,7 @@ invisible(dev.off());
 #     x="Sequence lengths",
 #     y="Num of ranges");
 # plot(gg);
-# invisible(dev.off());
+# utils$dev_off();
 
 
 
@@ -771,24 +749,18 @@ utils$dev_open_file(
     file.path(vars$output_stats_dir,
               paste(vars$base_filename, "_sequences-by-len_log.png", sep="")),
     640, 480);
-bins = as.character(sort(as.numeric(unique(seq_by_len_frame$length))));
-gg = ggplot();
-gg = gg + theme_bw();
-gg = gg + scale_x_discrete(breaks=bins, limits=bins);
-gg = gg + scale_y_log10(labels=trans_format('log10', math_format(10^.x)));
-gg = gg + geom_bar(
-    data=seq_by_len_frame,
-    aes_string(x="length", y="sequences"),
-    position="identity",
-    stat="identity");
-gg = gg + labs(
+utils$bar_plot(
+    data_frame=seq_by_len_frame,
+    x_col="length",
+    y_col="sequences",
+    log=TRUE,
     title=paste(
         "Range frequency:", vars$min_spatial_freq,
         "- Block frequency:", vars$min_block_freq),
-    x="Sequence lengths",
-    y="Num of sequence patterns");
-plot(gg);
-invisible(dev.off());
+    x_title="Sequence lengths",
+    y_title="Num of sequence patterns"
+);
+utils$dev_off();
 
 
 
@@ -813,7 +785,7 @@ invisible(dev.off());
 #     x="Sequence lengths",
 #     y="Num of sequence patterns");
 # plot(gg);
-# invisible(dev.off());
+# utils$dev_off();
 
 
 
