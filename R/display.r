@@ -169,8 +169,8 @@ args = commandArgs(TRUE);
 # examples:
 #args = c();
 #args[1] = "data/100_sax-25_original.csv";
-#args[2] = "results/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB100_MS0.json";
-#args[3] = "results/inline-100_orientation-original/sax-25/img/spatial-100/block-100/stretch-0";
+#args[2] = "results_test/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB50_MS0.json";
+#args[3] = "results_test/inline-100_orientation-original/sax-25/img/spatial-100/block-50/stretch-0";
 #args[4] = "data/inline_100_951x462.jpg";
 #cat("    args:", args, "\n");
 

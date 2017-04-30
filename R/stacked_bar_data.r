@@ -20,8 +20,8 @@ args = commandArgs(TRUE);
 #cat(args, "\n");
 # examples:
 #args = c();
-#args[1] = "results/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB50_MS0.json";
-#args[2] = "results/inline-100_orientation-original/sax-25/stats/spatial-100/block-50/stretch-0";
+#args[1] = "results_test/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB50_MS0.json";
+#args[2] = "results_test/inline-100_orientation-original/sax-25/stats/spatial-100/block-50/stretch-0";
 #args[3] = 100;
 #args[4] = 50;
 #args[5] = 0;
@@ -164,23 +164,23 @@ if(length(solid_sequences) != length(solid_blocks)) {
 
 # retrieving number of ranges and positions group by sequence
 
-# count matching postions by sequence
+# count matching postions by sequence in ranged_sequences data
 pos_by_seq = utils$newDict();
 
-# count matching postions by length
+# count matching postions by length in ranged_sequences data
 pos_by_len = utils$newDict();
 
-# count blocks by length
+# count blocks by length in blocked sequences data
 blk_by_len = utils$newDict();
 
-# count sequences by length
+# count sequences by length in ranged_sequences data
 seq_by_len = utils$newDict();
 
-# count sequences with blocks by length
+# count sequences with big blocks by length in blocked sequences data
 seq_with_big_blocks_by_len = utils$newDict();
 
 # histogram of block areas by length
-hist_block_stats = utils$newDict();
+# hist_block_stats = utils$newDict();
 
 
 
@@ -304,12 +304,10 @@ for(iteration in 1:length(solid_blocks)) {
                 blk_by_len[[len]]$num_blocks =
                     blk_by_len[[len]]$num_blocks + 1;
 
-
                 r_start = block_data_item$r_start;
                 r_end = block_data_item$r_end;
                 i_start = block_data_item$i_start;
                 i_end = block_data_item$i_end;
-
 
                 if(
                     (r_end - r_start + 1) >=
