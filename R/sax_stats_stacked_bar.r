@@ -27,9 +27,6 @@ args = commandArgs(TRUE);
 #args[4] = "results/sequences_with_big_blocks-by-sax.csv";
 #args[5] = 401;
 #args[6] = "original";
-#args[7] = 80;
-#args[8] = 20;
-#args[9] = 0;
 #cat("    args:", args, "\n");
 
 vars = utils$newDict();
@@ -44,9 +41,6 @@ vars$sequences_with_big_blocks_by_sax_filename =
     utils$change_extension(args[4], "png");
 vars$inline = args[5];
 vars$orientation = args[6];
-vars$min_spatial = args[7];
-vars$min_block = args[8];
-vars$max_stretch = args[9];
 
 vars$width = 200;
 vars$height = 200;
@@ -55,15 +49,18 @@ vars$height = 200;
 
 df = vars$sequences_by_sax;
 df = sqldf(paste(
-    "SELECT sax, SUM(sequences) AS sequences",
+    "SELECT sax, SUM(sequences) AS sequences, spatial, block, stretch",
     "FROM df",
     paste("WHERE inline = ", vars$inline, sep=""),
     paste("AND orientation = '", vars$orientation, "'", sep=""),
-    paste("AND spatial = ", vars$min_spatial, sep=""),
-    paste("AND block = ", vars$min_block, sep=""),
-    paste("AND stretch = ", vars$max_stretch, sep=""),
+    "GROUP BY sax, spatial, block, stretch;"));
+df = sqldf(paste(
+    "SELECT sax, SUM(sequences) / COUNT(*) AS sequences",
+    "FROM df",
     "GROUP BY sax;"));
-utils$dev_open_file(vars$sequences_by_sax_filename, vars$width, vars$height);
+utils$dev_open_file(
+    vars$sequences_by_sax_filename,
+    vars$width, vars$height);
 utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="sequences",
@@ -75,15 +72,18 @@ rm(df);
 
 df = vars$matches_by_sax;
 df = sqldf(paste(
-    "SELECT sax, SUM(num_pos) AS occurrences",
+    "SELECT sax, SUM(num_pos) AS occurrences, spatial, block, stretch",
     "FROM df",
     paste("WHERE inline = ", vars$inline, sep=""),
     paste("AND orientation = '", vars$orientation, "'", sep=""),
-    paste("AND spatial = ", vars$min_spatial, sep=""),
-    paste("AND block = ", vars$min_block, sep=""),
-    paste("AND stretch = ", vars$max_stretch, sep=""),
+    "GROUP BY sax, spatial, block, stretch;"));
+df = sqldf(paste(
+    "SELECT sax, SUM(occurrences) / COUNT(*) AS occurrences",
+    "FROM df",
     "GROUP BY sax;"));
-utils$dev_open_file(vars$matches_by_sax_filename, vars$width, vars$height);
+utils$dev_open_file(
+    vars$matches_by_sax_filename,
+    vars$width, vars$height);
 utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="occurrences",
@@ -95,15 +95,18 @@ rm(df);
 
 df = vars$blocks_by_sax;
 df = sqldf(paste(
-    "SELECT sax, SUM(num_blocks) AS blocks",
+    "SELECT sax, SUM(num_blocks) AS blocks, spatial, block, stretch",
     "FROM df",
     paste("WHERE inline = ", vars$inline, sep=""),
     paste("AND orientation = '", vars$orientation, "'", sep=""),
-    paste("AND spatial = ", vars$min_spatial, sep=""),
-    paste("AND block = ", vars$min_block, sep=""),
-    paste("AND stretch = ", vars$max_stretch, sep=""),
+    "GROUP BY sax, spatial, block, stretch;"));
+df = sqldf(paste(
+    "SELECT sax, SUM(blocks) / COUNT(*) AS blocks",
+    "FROM df",
     "GROUP BY sax;"));
-utils$dev_open_file(vars$blocks_by_sax_filename, vars$width, vars$height);
+utils$dev_open_file(
+    vars$blocks_by_sax_filename,
+    vars$width, vars$height);
 utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="blocks",
@@ -116,15 +119,18 @@ rm(df);
 
 df = vars$sequences_with_big_blocks_by_sax;
 df = sqldf(paste(
-    "SELECT sax, SUM(sequences) AS sequences",
+    "SELECT sax, SUM(sequences) AS sequences, spatial, block, stretch",
     "FROM df",
     paste("WHERE inline = ", vars$inline, sep=""),
     paste("AND orientation = '", vars$orientation, "'", sep=""),
-    paste("AND spatial = ", vars$min_spatial, sep=""),
-    paste("AND block = ", vars$min_block, sep=""),
-    paste("AND stretch = ", vars$max_stretch, sep=""),
+    "GROUP BY sax, spatial, block, stretch;"));
+df = sqldf(paste(
+    "SELECT sax, SUM(sequences) / COUNT(*) AS sequences",
+    "FROM df",
     "GROUP BY sax;"));
-utils$dev_open_file(vars$sequences_with_big_blocks_by_sax_filename, vars$width, vars$height);
+utils$dev_open_file(
+    vars$sequences_with_big_blocks_by_sax_filename,
+    vars$width, vars$height);
 utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="sequences",
