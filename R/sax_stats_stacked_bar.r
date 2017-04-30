@@ -42,8 +42,9 @@ vars$sequences_with_big_blocks_by_sax_filename =
 vars$inline = args[5];
 vars$orientation = args[6];
 
-vars$width = 200;
-vars$height = 200;
+vars$width = 300;
+vars$height = 300;
+vars$dpi = 100;
 
 
 
@@ -60,7 +61,7 @@ df = sqldf(paste(
     "GROUP BY sax;"));
 utils$dev_open_file(
     vars$sequences_by_sax_filename,
-    vars$width, vars$height);
+    vars$width, vars$height, dpi=vars$dpi);
 utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="sequences",
@@ -83,7 +84,7 @@ df = sqldf(paste(
     "GROUP BY sax;"));
 utils$dev_open_file(
     vars$matches_by_sax_filename,
-    vars$width, vars$height);
+    vars$width, vars$height, dpi=vars$dpi);
 utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="occurrences",
@@ -106,7 +107,7 @@ df = sqldf(paste(
     "GROUP BY sax;"));
 utils$dev_open_file(
     vars$blocks_by_sax_filename,
-    vars$width, vars$height);
+    vars$width, vars$height, dpi=vars$dpi);
 utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="blocks",
@@ -130,7 +131,7 @@ df = sqldf(paste(
     "GROUP BY sax;"));
 utils$dev_open_file(
     vars$sequences_with_big_blocks_by_sax_filename,
-    vars$width, vars$height);
+    vars$width, vars$height, dpi=vars$dpi);
 utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="sequences",

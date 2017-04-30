@@ -171,10 +171,11 @@ utils$readJSON = function(file_name) {
 
 
 
-utils$dev_open_file = function(file_name, width=480, height=480, scale=1) {
+utils$dev_open_file = function(
+    file_name, width=480, height=480, scale=1, dpi=72
+    ) {
     ext = strsplit(file_name, "\\.")[[1]][[-1]];
 
-    dpi = 72
     pointsize = 12 * dpi / 72  # do not change
 
     if(ext == "svg") {
