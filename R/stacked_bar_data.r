@@ -42,7 +42,7 @@ config$max_sequence_len = 20;
 #config$min_sequence_length_to_plot = 2;
 #config$max_sequence_length_to_plot = Inf;
 #config$max_length_plot_limit = 100000;
-config$per_sequence_plot_block_requires_min_width_to_be_drawn = 5;
+#config$per_sequence_plot_block_requires_min_width_to_be_drawn = 5;
 
 
 
@@ -176,8 +176,11 @@ blk_by_len = utils$newDict();
 # count sequences by length in ranged_sequences data
 seq_by_len = utils$newDict();
 
-# count sequences with big blocks by length in blocked sequences data
-seq_with_big_blocks_by_len = utils$newDict();
+# count sequences with blocks by length in blocked sequences data
+seq_with_2width_blocks_by_len = utils$newDict();
+seq_with_3width_blocks_by_len = utils$newDict();
+seq_with_4width_blocks_by_len = utils$newDict();
+seq_with_5width_blocks_by_len = utils$newDict();
 
 # histogram of block areas by length
 # hist_block_stats = utils$newDict();
@@ -309,25 +312,67 @@ for(iteration in 1:length(solid_blocks)) {
                 i_start = block_data_item$i_start;
                 i_end = block_data_item$i_end;
 
-                if(
-                    (r_end - r_start + 1) >=
-                    config$per_sequence_plot_block_requires_min_width_to_be_drawn
-                ) {
+                if((r_end - r_start + 1) >= 2) {
                     # count sequences with blocks by length
-                    if(! exists(len, seq_with_big_blocks_by_len)) {
-                        seq_with_big_blocks_by_len[[len]] = utils$newDict();
-                        seq_with_big_blocks_by_len[[len]]$sequences_map =
+                    if(! exists(len, seq_with_2width_blocks_by_len)) {
+                        seq_with_2width_blocks_by_len[[len]] = utils$newDict();
+                        seq_with_2width_blocks_by_len[[len]]$sequences_map =
                             utils$newDict();
                     }
 
                     # using a map to get uniques values
-                    seq_with_big_blocks_by_len[[
+                    seq_with_2width_blocks_by_len[[
+                        len]]$sequences_map[[sequence]] = TRUE;
+                }
+
+                if((r_end - r_start + 1) >= 3) {
+                    # count sequences with blocks by length
+                    if(! exists(len, seq_with_3width_blocks_by_len)) {
+                        seq_with_3width_blocks_by_len[[len]] = utils$newDict();
+                        seq_with_3width_blocks_by_len[[len]]$sequences_map =
+                            utils$newDict();
+                    }
+
+                    # using a map to get uniques values
+                    seq_with_3width_blocks_by_len[[
+                        len]]$sequences_map[[sequence]] = TRUE;
+                }
+
+                if((r_end - r_start + 1) >= 4) {
+                    # count sequences with blocks by length
+                    if(! exists(len, seq_with_4width_blocks_by_len)) {
+                        seq_with_4width_blocks_by_len[[len]] = utils$newDict();
+                        seq_with_4width_blocks_by_len[[len]]$sequences_map =
+                            utils$newDict();
+                    }
+
+                    # using a map to get uniques values
+                    seq_with_4width_blocks_by_len[[
+                        len]]$sequences_map[[sequence]] = TRUE;
+                }
+
+                if((r_end - r_start + 1) >= 5) {
+                    # count sequences with blocks by length
+                    if(! exists(len, seq_with_5width_blocks_by_len)) {
+                        seq_with_5width_blocks_by_len[[len]] = utils$newDict();
+                        seq_with_5width_blocks_by_len[[len]]$sequences_map =
+                            utils$newDict();
+                    }
+
+                    # using a map to get uniques values
+                    seq_with_5width_blocks_by_len[[
                         len]]$sequences_map[[sequence]] = TRUE;
                 }
             }
             # count stored sequences with blocks by length
-            seq_with_big_blocks_by_len[[len]]$sequences =
-                length(seq_with_big_blocks_by_len[[len]]$sequences_map);
+            seq_with_2width_blocks_by_len[[len]]$sequences =
+                length(seq_with_2width_blocks_by_len[[len]]$sequences_map);
+            seq_with_3width_blocks_by_len[[len]]$sequences =
+                length(seq_with_3width_blocks_by_len[[len]]$sequences_map);
+            seq_with_4width_blocks_by_len[[len]]$sequences =
+                length(seq_with_4width_blocks_by_len[[len]]$sequences_map);
+            seq_with_5width_blocks_by_len[[len]]$sequences =
+                length(seq_with_5width_blocks_by_len[[len]]$sequences_map);
         }
     }
 }
@@ -573,8 +618,14 @@ blk_by_len_frame = to_data_frame_of_2(
 seq_by_len_frame = to_data_frame_of_2(
     seq_by_len, "length", "sequences");
 
-seq_with_big_blocks_by_len_frame = to_data_frame_of_2(
-    seq_with_big_blocks_by_len, "length", "sequences");
+seq_with_2width_blocks_by_len_frame = to_data_frame_of_2(
+    seq_with_2width_blocks_by_len, "length", "sequences");
+seq_with_3width_blocks_by_len_frame = to_data_frame_of_2(
+    seq_with_3width_blocks_by_len, "length", "sequences");
+seq_with_4width_blocks_by_len_frame = to_data_frame_of_2(
+    seq_with_4width_blocks_by_len, "length", "sequences");
+seq_with_5width_blocks_by_len_frame = to_data_frame_of_2(
+    seq_with_5width_blocks_by_len, "length", "sequences");
 
 
 
@@ -596,9 +647,21 @@ utils$writeCSV(
         vars$base_filename, "_sequences-by-len.csv", sep="")));
 
 utils$writeCSV(
-    seq_with_big_blocks_by_len_frame,
+    seq_with_2width_blocks_by_len_frame,
     file=file.path(vars$output_stats_dir, paste(
-        vars$base_filename, "_sequences_with_big_blocks-by-len.csv", sep="")));
+        vars$base_filename, "_sequences_with_2width_blocks-by-len.csv", sep="")));
+utils$writeCSV(
+    seq_with_3width_blocks_by_len_frame,
+    file=file.path(vars$output_stats_dir, paste(
+        vars$base_filename, "_sequences_with_3width_blocks-by-len.csv", sep="")));
+utils$writeCSV(
+    seq_with_4width_blocks_by_len_frame,
+    file=file.path(vars$output_stats_dir, paste(
+        vars$base_filename, "_sequences_with_4width_blocks-by-len.csv", sep="")));
+utils$writeCSV(
+    seq_with_5width_blocks_by_len_frame,
+    file=file.path(vars$output_stats_dir, paste(
+        vars$base_filename, "_sequences_with_5width_blocks-by-len.csv", sep="")));
 
 
 
@@ -813,18 +876,17 @@ utils$dev_off();
 
 
 
-
 # draw a stacked bar plot of sequences by length in log scale
-seq_with_big_blocks_by_len_frame =
-    seq_with_big_blocks_by_len_frame[
-        seq_with_big_blocks_by_len_frame$sequences != 0,];
+seq_with_2width_blocks_by_len_frame =
+    seq_with_2width_blocks_by_len_frame[
+        seq_with_2width_blocks_by_len_frame$sequences != 0,];
 utils$dev_open_file(
     file.path(vars$output_stats_dir,
               paste(vars$base_filename,
-                    "_sequences_with_big_blocks-by-len_log.png", sep="")),
+                    "_sequences_with_2width_blocks-by-len_log.png", sep="")),
     640, 480);
 utils$bar_plot(
-    data_frame=seq_with_big_blocks_by_len_frame,
+    data_frame=seq_with_2width_blocks_by_len_frame,
     x_col="length",
     y_col="sequences",
     log=TRUE,
@@ -832,7 +894,73 @@ utils$bar_plot(
         "Range frequency:", vars$min_spatial_freq,
         "- Block frequency:", vars$min_block_freq),
     x_title="Sequence lengths",
-    y_title="Num of sequence patterns containing big blocks"
+    y_title="Num of sequence patterns containing 2width blocks"
+);
+utils$dev_off();
+
+# draw a stacked bar plot of sequences by length in log scale
+seq_with_3width_blocks_by_len_frame =
+    seq_with_3width_blocks_by_len_frame[
+        seq_with_3width_blocks_by_len_frame$sequences != 0,];
+utils$dev_open_file(
+    file.path(vars$output_stats_dir,
+              paste(vars$base_filename,
+                    "_sequences_with_3width_blocks-by-len_log.png", sep="")),
+    640, 480);
+utils$bar_plot(
+    data_frame=seq_with_3width_blocks_by_len_frame,
+    x_col="length",
+    y_col="sequences",
+    log=TRUE,
+    title=paste(
+        "Range frequency:", vars$min_spatial_freq,
+        "- Block frequency:", vars$min_block_freq),
+    x_title="Sequence lengths",
+    y_title="Num of sequence patterns containing 3width blocks"
+);
+utils$dev_off();
+
+# draw a stacked bar plot of sequences by length in log scale
+seq_with_4width_blocks_by_len_frame =
+    seq_with_4width_blocks_by_len_frame[
+        seq_with_4width_blocks_by_len_frame$sequences != 0,];
+utils$dev_open_file(
+    file.path(vars$output_stats_dir,
+              paste(vars$base_filename,
+                    "_sequences_with_4width_blocks-by-len_log.png", sep="")),
+    640, 480);
+utils$bar_plot(
+    data_frame=seq_with_4width_blocks_by_len_frame,
+    x_col="length",
+    y_col="sequences",
+    log=TRUE,
+    title=paste(
+        "Range frequency:", vars$min_spatial_freq,
+        "- Block frequency:", vars$min_block_freq),
+    x_title="Sequence lengths",
+    y_title="Num of sequence patterns containing 4width blocks"
+);
+utils$dev_off();
+
+# draw a stacked bar plot of sequences by length in log scale
+seq_with_5width_blocks_by_len_frame =
+    seq_with_5width_blocks_by_len_frame[
+        seq_with_5width_blocks_by_len_frame$sequences != 0,];
+utils$dev_open_file(
+    file.path(vars$output_stats_dir,
+              paste(vars$base_filename,
+                    "_sequences_with_5width_blocks-by-len_log.png", sep="")),
+    640, 480);
+utils$bar_plot(
+    data_frame=seq_with_5width_blocks_by_len_frame,
+    x_col="length",
+    y_col="sequences",
+    log=TRUE,
+    title=paste(
+        "Range frequency:", vars$min_spatial_freq,
+        "- Block frequency:", vars$min_block_freq),
+    x_title="Sequence lengths",
+    y_title="Num of sequence patterns containing 5width blocks"
 );
 utils$dev_off();
 
