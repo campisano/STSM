@@ -21,13 +21,13 @@ args = commandArgs(TRUE);
 #cat(args, "\n");
 # examples:
 #args = c();
-#args[1] = "results_test/matches-by-sax.csv";
-#args[2] = "results_test/blocks-by-sax.csv";
-#args[3] = "results_test/sequences-by-sax.csv";
-#args[4] = "results_test/sequences_with_2width_blocks-by-sax.csv";
-#args[5] = "results_test/sequences_with_3width_blocks-by-sax.csv";
-#args[6] = "results_test/sequences_with_4width_blocks-by-sax.csv";
-#args[7] = "results_test/sequences_with_5width_blocks-by-sax.csv";
+#args[1] = "results/matches-by-sax.csv";
+#args[2] = "results/blocks-by-sax.csv";
+#args[3] = "results/sequences-by-sax.csv";
+#args[4] = "results/sequences_with_2width_blocks-by-sax.csv";
+#args[5] = "results/sequences_with_3width_blocks-by-sax.csv";
+#args[6] = "results/sequences_with_4width_blocks-by-sax.csv";
+#args[7] = "results/sequences_with_5width_blocks-by-sax.csv";
 #args[8] = 401;
 #args[9] = "original";
 #cat("    args:", args, "\n");
@@ -55,9 +55,9 @@ vars$sequences_with_5width_blocks_by_sax_filename =
 vars$inline = args[8];
 vars$orientation = args[9];
 
-vars$width = 300;
-vars$height = 300;
-vars$dpi = 100;
+vars$width = 800;
+vars$height = 800;
+vars$dpi = 300;
 
 
 
@@ -78,7 +78,8 @@ utils$dev_open_file(
 utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="occurrences",
-    x_title="SAX alphabet size", y_title="Sequence pattern occurrences");
+    x_title="SAX alphabet size",
+    y_title="Total sequences occurrences");
 utils$dev_off();
 rm(df);
 
@@ -101,7 +102,8 @@ utils$dev_open_file(
 utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="blocks",
-    x_title="SAX alphabet size", y_title="Solid block occurrencies");
+    x_title="SAX alphabet size",
+    y_title="Total solid blocked sequences");
 utils$dev_off();
 rm(df);
 
@@ -125,11 +127,13 @@ utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="sequences",
     x_title="SAX alphabet size",
-    y_title="Seq. patterns with any solid blocks");
+    y_title="Sequences with any s.b.s.");
 utils$dev_off();
 rm(df);
 
 
+
+###########################################################
 
 
 
@@ -151,9 +155,11 @@ utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="sequences",
     x_title="SAX alphabet size",
-    y_title="Results with any blocks");
+    y_title="Sequences with s.b.s. (\u2265 2 occur.)    ");
 utils$dev_off();
 rm(df);
+
+
 
 df = vars$sequences_with_3width_blocks_by_sax;
 df = sqldf(paste(
@@ -173,9 +179,11 @@ utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="sequences",
     x_title="SAX alphabet size",
-    y_title="Results with blocks of 3 occurrences");
+    y_title="Sequences with s.b.s. (\u2265 3 occur.)    ");
 utils$dev_off();
 rm(df);
+
+
 
 df = vars$sequences_with_4width_blocks_by_sax;
 df = sqldf(paste(
@@ -195,9 +203,11 @@ utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="sequences",
     x_title="SAX alphabet size",
-    y_title="Results with blocks of 4 occurrences");
+    y_title="Sequences with s.b.s. (\u2265 4 occur.)    ");
 utils$dev_off();
 rm(df);
+
+
 
 df = vars$sequences_with_5width_blocks_by_sax;
 df = sqldf(paste(
@@ -217,6 +227,6 @@ utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="sequences",
     x_title="SAX alphabet size",
-    y_title="Results with blocks of 5 occurrences");
+    y_title="Sequences with s.b.s. (\u2265 5 occur.)    ");
 utils$dev_off();
 rm(df);
