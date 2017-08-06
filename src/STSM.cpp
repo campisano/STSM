@@ -21,6 +21,9 @@ namespace
     const unsigned long MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 5000;
     const unsigned long MAX_FAST_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 10000;
 
+    //TODO [CMP] to implement
+    // a solid block sequence must contains more than 1 sequence position
+
     float getSecs(const time_t _time)
     {
         return floor(double(clock() - _time) / CLOCKS_PER_SEC * 100) / 100;
@@ -575,6 +578,9 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
         return;
     }
 
+    time_t start_time = clock();
+    time_t mid_time;
+
     m_log_stream << '\t'
                  << _solid_sequence.sequence().toStringOfItems() << '('
                  << _solid_sequence.range().start() << ','
@@ -597,8 +603,6 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
     m_log_stream << "\tinit.size: " << sb_candidates.size();
     m_log_stream.flush();
 
-    time_t time;
-
     ListSequenceBlocks to_add;
     ListSequenceBlocks::iterator it_sb_to_add;
 
@@ -616,16 +620,15 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
 
     bool did_any_merge;
     bool is_contained;
+    size_t additional_erased;
+    size_t skipped;
     ListSequenceBlocks::iterator chk_toadd_bigger_it;
+    ListSequenceBlocks::iterator chk_cand_bigger_it;
 
 	if(sb_candidates.size() < MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
     {
         m_log_stream << "\t full merges:";
         m_log_stream.flush();
-
-        size_t additional_erased;
-        size_t skipped;
-        ListSequenceBlocks::iterator chk_cand_bigger_it;
 
         // TODO [CMP] sort disabled: is wrost
         // ListSequenceBlocks sb_sub_sort;
@@ -638,17 +641,17 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
             did_any_merge = false;
 
             // TODO [CMP] sort disabled: is wrost
-            // time = clock();
+            // mid_time = clock();
 
             // sort candidates to be ordered by Manhattan distance
             // from 0,0 point
             // sb_candidates.sort(
             //     SequenceBlock::PositionComparer(0, 0));
 
-            // m_log_stream << " sort"<< " (" << getSecs(time) << "s)";
+            // m_log_stream << " sort"<< " (" << getSecs(mid_time) << "s)";
             // m_log_stream.flush();
 
-            time = clock();
+            mid_time = clock();
 
             // for each solid block q
             for(
@@ -776,7 +779,7 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
             }
 
             m_log_stream << " +" << to_add.size() << " -" << to_del.size()
-                         << " (" << getSecs(time) << "s)";
+                         << " (" << getSecs(mid_time) << "s)";
             m_log_stream.flush();
 
             for(
@@ -789,7 +792,7 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
 
             to_del.clear();
 
-            time = clock();
+            mid_time = clock();
             additional_erased = 0;
             skipped = 0;
 
@@ -829,17 +832,17 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
 
             to_add.clear();
 
-            if(sb_candidates.size() > MAX_FAST_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
+            m_log_stream << " --" << additional_erased << " #"
+                         << skipped << " (" << getSecs(mid_time) << "s) |";
+            m_log_stream.flush();
+
+            if(sb_candidates.size() > MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
             {
-                m_log_stream << " [WARN] max fast blocks per sequence "
+                m_log_stream << " [WARN] max full blocks per sequence "
                              << "exceeded: " << sb_candidates.size()
                              << ". Skip." << std::endl;
                 return;
             }
-
-            m_log_stream << " --" << additional_erased << " #"
-                         << skipped << " (" << getSecs(time) << "s) |";
-            m_log_stream.flush();
         }
         while(did_any_merge);
 	}
@@ -848,8 +851,8 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
         m_log_stream << "\t fast merges:";
         m_log_stream.flush();
 
-        Size add_count;
-        Size del_count;
+        Size mid_add_count;
+        Size mid_del_count;
 
         bool current_q_used_to_merge;
 
@@ -859,10 +862,10 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
         {
             did_any_merge = false;
 
-            add_count = 0;
-            del_count = 0;
+            mid_add_count = 0;
+            mid_del_count = 0;
 
-            time = clock();
+            mid_time = clock();
 
             // for each solid block q
             for(
@@ -951,9 +954,13 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
                     continue;  // q will be incremented in the for statement
                 }
 
-                add_count += to_add.size();
-                del_count += to_del.size();
+                mid_add_count += to_add.size();
+                mid_del_count += to_del.size();
             }
+
+            // m_log_stream << " +" << mid_add_count << " -" << mid_del_count
+            //              << " (" << getSecs(mid_time) << "s) |";
+            // m_log_stream.flush();
 
             for(
                 it_sb_to_del = to_del.begin();
@@ -965,24 +972,64 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
 
             to_del.clear();
 
+            mid_time = clock();
+            additional_erased = 0;
+            skipped = 0;
+
             for(
                 it_sb_to_add = to_add.begin();
                 it_sb_to_add != to_add.end();
                 ++it_sb_to_add)
             {
-                sb_candidates.push_back(* it_sb_to_add);
+                // add only not already contained in the block candidates
+                is_contained = false;
+                chk_cand_bigger_it = sb_candidates.begin();
+
+                while(chk_cand_bigger_it != sb_candidates.end())
+                {
+                    if(chk_cand_bigger_it->contains(* it_sb_to_add))
+                    {
+                        is_contained = true;
+                        ++chk_cand_bigger_it;
+                        ++skipped;
+                    }
+                    else if (it_sb_to_add->contains(* chk_cand_bigger_it))
+                    {
+                        sb_candidates.erase(chk_cand_bigger_it++);
+                        ++additional_erased;
+                    }
+                    else
+                    {
+                        ++chk_cand_bigger_it;
+                    }
+                }
+
+                if(! is_contained)
+                {
+                    sb_candidates.push_back(* it_sb_to_add);
+                }
             }
 
             to_add.clear();
 
-            m_log_stream << " +" << add_count << " -" << del_count
-                         << " (" << getSecs(time) << "s) |";
-            m_log_stream.flush();
+            // m_log_stream << " --" << additional_erased << " #"
+            //              << skipped << " (" << getSecs(mid_time) << "s) |";
+            // m_log_stream.flush();
+
+            if(sb_candidates.size() > MAX_FAST_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
+            {
+                m_log_stream << " [WARN] max fast blocks per sequence "
+                             << "exceeded: " << sb_candidates.size()
+                             << ". Skip." << std::endl;
+                return;
+            }
         }
         while(did_any_merge);
 	}
 
+    m_log_stream << " total: " << getSecs(start_time) << "s.";
     m_log_stream << std::endl;
+    m_log_stream.flush();
 
     _sequence_blocks.insert(
         _sequence_blocks.end(),
