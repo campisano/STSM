@@ -168,10 +168,10 @@ args = commandArgs(TRUE);
 #cat(args, "\n");
 # examples:
 #args = c();
-#args[1] = "data/100_sax-25_original.csv";
-#args[2] = "results_test/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB50_MS0.json";
-#args[3] = "results_test/inline-100_orientation-original/sax-25/img/spatial-100/block-50/stretch-0";
-#args[4] = "data/inline_100_951x462.jpg";
+#args[1] = "data/401_sax-10_original.csv";
+#args[2] = "results/inline-401_orientation-original/sax-10/json/I401_Ooriginal_S10_FS80_FB20_MS0.json";
+#args[3] = "results/inline-401_orientation-original/sax-10/img/spatial-80/block-20/stretch-0";
+#args[4] = "data/inline_401_951x462.jpg";
 #cat("    args:", args, "\n");
 
 vars = utils$newDict();

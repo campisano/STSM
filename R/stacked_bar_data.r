@@ -20,10 +20,10 @@ args = commandArgs(TRUE);
 #cat(args, "\n");
 # examples:
 #args = c();
-#args[1] = "results_test/inline-100_orientation-original/sax-25/json/I100_Ooriginal_S25_FS100_FB50_MS0.json";
-#args[2] = "results_test/inline-100_orientation-original/sax-25/stats/spatial-100/block-50/stretch-0";
-#args[3] = 100;
-#args[4] = 50;
+#args[2] = "results/inline-401_orientation-original/sax-10/json/I401_Ooriginal_S10_FS80_FB20_MS0.json";
+#args[2] = "results/inline-401_orientation-original/sax-10/stats/spatial-80/block-20/stretch-0";
+#args[3] = 80;
+#args[4] = 20;
 #args[5] = 0;
 #cat("    args:", args, "\n");
 

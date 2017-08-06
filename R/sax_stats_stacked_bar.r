@@ -127,7 +127,7 @@ utils$bar_plot(
     data_frame=df,
     x_col="sax", y_col="sequences",
     x_title="SAX alphabet size",
-    y_title="Sequences with any s.b.s.");
+    y_title="Total unconstrained sequences");
 utils$dev_off();
 rm(df);
 
