@@ -1,4 +1,4 @@
-#include "SIMTest.h"
+#include "STSMTest.h"
 
 #include <cxxtools/unit/registertest.h>
 #include <cstdlib>
@@ -43,126 +43,126 @@ namespace
     }
 }
 
-SIMTest::SIMTest() : cxxtools::unit::TestSuite("SIMTest")
+STSMTest::STSMTest() : cxxtools::unit::TestSuite("STSMTest")
 {
     std::cout << std::endl << "Test methods:" << std::endl;
 
     registerMethod(
         "test_sequenceEqualityOperator",
         *this,
-        &SIMTest::test_sequenceEqualityOperator);
+        &STSMTest::test_sequenceEqualityOperator);
 
     registerMethod(
         "test_sequenceStringRepresentation",
         *this,
-        &SIMTest::test_sequenceStringRepresentation);
+        &STSMTest::test_sequenceStringRepresentation);
 
     registerMethod(
         "test_mergeKernels_f100_size1_adjacent__does_joins",
         *this,
-        &SIMTest::test_mergeKernels_f100_size1_adjacent__does_joins);
+        &STSMTest::test_mergeKernels_f100_size1_adjacent__does_joins);
 
     registerMethod(
         "test_mergeKernels_f100_size2_adjacent__does_joins",
         *this,
-        &SIMTest::test_mergeKernels_f100_size2_adjacent__does_joins);
+        &STSMTest::test_mergeKernels_f100_size2_adjacent__does_joins);
 
     registerMethod(
         "test_mergeKernels_f100_size1_not_adjacent__does_not_joins",
         *this,
-        &SIMTest::test_mergeKernels_f100_size1_not_adjacent__does_not_joins);
+        &STSMTest::test_mergeKernels_f100_size1_not_adjacent__does_not_joins);
 
     registerMethod(
         "test_mergeKernels_f100_size2_not_adjacent__does_not_joins",
         *this,
-        &SIMTest::test_mergeKernels_f100_size2_not_adjacent__does_not_joins);
+        &STSMTest::test_mergeKernels_f100_size2_not_adjacent__does_not_joins);
 
     registerMethod(
         "test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins",
         *this,
-        &SIMTest::test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins);
+        &STSMTest::test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins);
 
     registerMethod(
         "test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins",
         *this,
-        &SIMTest::test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins);
+        &STSMTest::test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins);
 
     registerMethod(
         "test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_joins",
         *this,
-        &SIMTest::test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_joins);
+        &STSMTest::test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_joins);
 
     registerMethod(
         "test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins",
         *this,
-        &SIMTest::test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins);
+        &STSMTest::test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins);
 
     registerMethod(
         "test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins",
         *this,
-        &SIMTest::test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins);
+        &STSMTest::test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins);
 
     registerMethod(
-        "test_SIMRun_any_result",
+        "test_STSMRun_any_result",
         *this,
-        &SIMTest::test_SIMRun_any_result);
+        &STSMTest::test_STSMRun_any_result);
 
     registerMethod(
-        "test_SIMRun_f100_gets_only_single_ABCD100_solidSequence",
+        "test_STSMRun_f100_gets_only_single_ABCD100_solidSequence",
         *this,
-        &SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence);
+        &STSMTest::test_STSMRun_f100_gets_only_single_ABCD100_solidSequence);
 
     registerMethod(
-        "test_SIMRun_f100_testing_ABCD100_positions",
+        "test_STSMRun_f100_testing_ABCD100_positions",
         *this,
-        &SIMTest::test_SIMRun_f100_testing_ABCD100_positions);
+        &STSMTest::test_STSMRun_f100_testing_ABCD100_positions);
 
     registerMethod(
-        "test_SIMRun_f75_does_get_EFGH75_solidSequence",
+        "test_STSMRun_f75_does_get_EFGH75_solidSequence",
         *this,
-        &SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence);
+        &STSMTest::test_STSMRun_f75_does_get_EFGH75_solidSequence);
 
     registerMethod(
-        "test_SIMRun_f90_does_not_get_EFGH75_solidSequence",
+        "test_STSMRun_f90_does_not_get_EFGH75_solidSequence",
         *this,
-        &SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence);
+        &STSMTest::test_STSMRun_f90_does_not_get_EFGH75_solidSequence);
 
     registerMethod(
-        "test_SIMRun_f100_b100_does_get_EFGHI_solidBlock",
+        "test_STSMRun_f100_b100_does_get_EFGHI_solidBlock",
         *this,
-        &SIMTest::test_SIMRun_f100_b100_does_get_EFGHI_solidBlock);
+        &STSMTest::test_STSMRun_f100_b100_does_get_EFGHI_solidBlock);
 
     registerMethod(
-        "test_SIMRun_f100_b100_does_not_get_diagonal_EFGHI",
+        "test_STSMRun_f100_b100_does_not_get_diagonal_EFGHI",
         *this,
-        &SIMTest::test_SIMRun_f100_b100_does_not_get_diagonal_EFGHI);
+        &STSMTest::test_STSMRun_f100_b100_does_not_get_diagonal_EFGHI);
 
     registerMethod(
-        "test_SIMRun_f75_b75_does_get_EFGHI7575_solidBlock",
+        "test_STSMRun_f75_b75_does_get_EFGHI7575_solidBlock",
         *this,
-        &SIMTest::test_SIMRun_f75_b75_does_get_EFGHI7575_solidBlock);
+        &STSMTest::test_STSMRun_f75_b75_does_get_EFGHI7575_solidBlock);
 
     registerMethod(
-        "test_SIMRun_f100_b50_does_get_EFGHI10025_solidBlock",
+        "test_STSMRun_f100_b50_does_get_EFGHI10025_solidBlock",
         *this,
-        &SIMTest::test_SIMRun_f100_b50_does_get_EFGHI10025_solidBlock);
+        &STSMTest::test_STSMRun_f100_b50_does_get_EFGHI10025_solidBlock);
 
     registerMethod(
-        "test_SIMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock",
+        "test_STSMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock",
         *this,
-        &SIMTest::test_SIMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock);
+        &STSMTest::test_STSMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock);
 
     registerMethod(
-        "test_SIMRun_f100_b50_does_get_ABCD_big_solidBlock",
+        "test_STSMRun_f100_b50_does_get_ABCD_big_solidBlock",
         *this,
-        &SIMTest::test_SIMRun_f100_b50_does_get_ABCD_big_solidBlock);
+        &STSMTest::test_STSMRun_f100_b50_does_get_ABCD_big_solidBlock);
 }
 
-SIMTest::~SIMTest()
+STSMTest::~STSMTest()
 {
 }
 
-void SIMTest::test_sequenceEqualityOperator()
+void STSMTest::test_sequenceEqualityOperator()
 {
     // Arrange
     Sequence seq1, seq2;
@@ -175,7 +175,7 @@ void SIMTest::test_sequenceEqualityOperator()
     CXXTOOLS_UNIT_ASSERT(seq1 == seq2);
 }
 
-void SIMTest::test_sequenceStringRepresentation()
+void STSMTest::test_sequenceStringRepresentation()
 {
     // Arrange
     Sequence seq1;
@@ -190,7 +190,7 @@ void SIMTest::test_sequenceStringRepresentation()
     CXXTOOLS_UNIT_ASSERT(seq1.toStringOfItems() == str_items);
 }
 
-void SIMTest::test_mergeKernels_f100_size1_adjacent__does_joins()
+void STSMTest::test_mergeKernels_f100_size1_adjacent__does_joins()
 {
     // Arrange
     Kernel k1(0, 0);
@@ -221,7 +221,7 @@ void SIMTest::test_mergeKernels_f100_size1_adjacent__does_joins()
         std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
 }
 
-void SIMTest::test_mergeKernels_f100_size2_adjacent__does_joins()
+void STSMTest::test_mergeKernels_f100_size2_adjacent__does_joins()
 {
     // Arrange
     Kernel k1(0, 1);
@@ -252,7 +252,7 @@ void SIMTest::test_mergeKernels_f100_size2_adjacent__does_joins()
         std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
 }
 
-void SIMTest::test_mergeKernels_f100_size1_not_adjacent__does_not_joins()
+void STSMTest::test_mergeKernels_f100_size1_not_adjacent__does_not_joins()
 {
     // Arrange
     Kernel k1(0, 0);
@@ -290,7 +290,7 @@ void SIMTest::test_mergeKernels_f100_size1_not_adjacent__does_not_joins()
         std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
 }
 
-void SIMTest::test_mergeKernels_f100_size2_not_adjacent__does_not_joins()
+void STSMTest::test_mergeKernels_f100_size2_not_adjacent__does_not_joins()
 {
     // Arrange
     Kernel k1(0, 1);
@@ -328,7 +328,7 @@ void SIMTest::test_mergeKernels_f100_size2_not_adjacent__does_not_joins()
         std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
 }
 
-void SIMTest::test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins()
+void STSMTest::test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins()
 {
     // Arrange
     Kernel k1(0, 1);
@@ -360,7 +360,7 @@ void SIMTest::test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins()
         std::abs(cand.kernels().back().frequency() - (4.0 / 5.0)) < EPSILON);
 }
 
-void SIMTest::test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins()
+void STSMTest::test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins()
 {
     // Arrange
     Kernel k1(0, 2);
@@ -392,7 +392,7 @@ void SIMTest::test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins()
         std::abs(cand.kernels().back().frequency() - (6.0 / 7.0)) < EPSILON);
 }
 
-void SIMTest::test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_joins()
+void STSMTest::test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_joins()
 {
     // Arrange
     Kernel k1(0, 2);
@@ -424,7 +424,7 @@ void SIMTest::test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_jo
         std::abs(cand.kernels().back().frequency() - (4.0 / 7.0)) < EPSILON);
 }
 
-void SIMTest::test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins()
+void STSMTest::test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins()
 {
     // Arrange
     Kernel k1(0, 0);
@@ -456,7 +456,7 @@ void SIMTest::test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins()
         std::abs(cand.kernels().back().frequency() - (3.0 / 4.0)) < EPSILON);
 }
 
-void SIMTest::test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins()
+void STSMTest::test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins()
 {
     // Arrange
     Kernel k1(0, 0);
@@ -494,7 +494,7 @@ void SIMTest::test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not
         std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
 }
 
-void SIMTest::test_SIMRun_any_result()
+void STSMTest::test_STSMRun_any_result()
 {
     // Arrange
 
@@ -521,7 +521,7 @@ void SIMTest::test_SIMRun_any_result()
 
     // Act
 
-    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -537,7 +537,7 @@ void SIMTest::test_SIMRun_any_result()
     cleanupTestFolder();
 }
 
-void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
+void STSMTest::test_STSMRun_f100_gets_only_single_ABCD100_solidSequence()
 {
     // Arrange
 
@@ -564,7 +564,7 @@ void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
 
     // Act
 
-    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -585,7 +585,7 @@ void SIMTest::test_SIMRun_f100_gets_only_single_ABCD100_solidSequence()
     cleanupTestFolder();
 }
 
-void SIMTest::test_SIMRun_f100_testing_ABCD100_positions()
+void STSMTest::test_STSMRun_f100_testing_ABCD100_positions()
 {
     // Arrange
 
@@ -612,7 +612,7 @@ void SIMTest::test_SIMRun_f100_testing_ABCD100_positions()
 
     // Act
 
-    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -639,7 +639,7 @@ void SIMTest::test_SIMRun_f100_testing_ABCD100_positions()
     cleanupTestFolder();
 }
 
-void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
+void STSMTest::test_STSMRun_f75_does_get_EFGH75_solidSequence()
 {
     // Arrange
 
@@ -666,7 +666,7 @@ void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
 
     // Act
 
-    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -687,7 +687,7 @@ void SIMTest::test_SIMRun_f75_does_get_EFGH75_solidSequence()
     cleanupTestFolder();
 }
 
-void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
+void STSMTest::test_STSMRun_f90_does_not_get_EFGH75_solidSequence()
 {
     // Arrange
 
@@ -714,7 +714,7 @@ void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
 
     // Act
 
-    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -738,7 +738,7 @@ void SIMTest::test_SIMRun_f90_does_not_get_EFGH75_solidSequence()
     cleanupTestFolder();
 }
 
-void SIMTest::test_SIMRun_f100_b100_does_get_EFGHI_solidBlock()
+void STSMTest::test_STSMRun_f100_b100_does_get_EFGHI_solidBlock()
 {
     // Arrange
 
@@ -765,7 +765,7 @@ void SIMTest::test_SIMRun_f100_b100_does_get_EFGHI_solidBlock()
 
     // Act
 
-    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -796,7 +796,7 @@ void SIMTest::test_SIMRun_f100_b100_does_get_EFGHI_solidBlock()
     cleanupTestFolder();
 }
 
-void SIMTest::test_SIMRun_f100_b100_does_not_get_diagonal_EFGHI()
+void STSMTest::test_STSMRun_f100_b100_does_not_get_diagonal_EFGHI()
 {
     // Arrange
 
@@ -823,7 +823,7 @@ void SIMTest::test_SIMRun_f100_b100_does_not_get_diagonal_EFGHI()
 
     // Act
 
-    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -846,7 +846,7 @@ void SIMTest::test_SIMRun_f100_b100_does_not_get_diagonal_EFGHI()
     cleanupTestFolder();
 }
 
-void SIMTest::test_SIMRun_f75_b75_does_get_EFGHI7575_solidBlock()
+void STSMTest::test_STSMRun_f75_b75_does_get_EFGHI7575_solidBlock()
 {
     // Arrange
 
@@ -873,7 +873,7 @@ void SIMTest::test_SIMRun_f75_b75_does_get_EFGHI7575_solidBlock()
 
     // Act
 
-    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -896,7 +896,7 @@ void SIMTest::test_SIMRun_f75_b75_does_get_EFGHI7575_solidBlock()
     cleanupTestFolder();
 }
 
-void SIMTest::test_SIMRun_f100_b50_does_get_EFGHI10025_solidBlock()
+void STSMTest::test_STSMRun_f100_b50_does_get_EFGHI10025_solidBlock()
 {
     // Arrange
 
@@ -923,7 +923,7 @@ void SIMTest::test_SIMRun_f100_b50_does_get_EFGHI10025_solidBlock()
 
     // Act
 
-    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -946,7 +946,7 @@ void SIMTest::test_SIMRun_f100_b50_does_get_EFGHI10025_solidBlock()
     cleanupTestFolder();
 }
 
-void SIMTest::test_SIMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock()
+void STSMTest::test_STSMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock()
 {
     // Arrange
 
@@ -973,7 +973,7 @@ void SIMTest::test_SIMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock()
 
     // Act
 
-    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -996,7 +996,7 @@ void SIMTest::test_SIMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock()
     cleanupTestFolder();
 }
 
-void SIMTest::test_SIMRun_f100_b50_does_get_ABCD_big_solidBlock()
+void STSMTest::test_STSMRun_f100_b50_does_get_ABCD_big_solidBlock()
 {
     // Arrange
 
@@ -1023,7 +1023,7 @@ void SIMTest::test_SIMRun_f100_b50_does_get_ABCD_big_solidBlock()
 
     // Act
 
-    SIM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -1046,6 +1046,6 @@ void SIMTest::test_SIMRun_f100_b50_does_get_ABCD_big_solidBlock()
     cleanupTestFolder();
 }
 
-cxxtools::unit::RegisterTest<SIMTest> register_SIMTest;
+cxxtools::unit::RegisterTest<STSMTest> register_STSMTest;
 
 #include "cxxtools/unit/testmain.h"

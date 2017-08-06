@@ -1,4 +1,4 @@
-#setwd("/home/shared/develop/projects/CEFET/mestrado/SIM");
+#setwd("/home/shared/develop/projects/CEFET/mestrado/STSM");
 
 # include utility file
 source(file="R/utils.r", chdir=TRUE);

@@ -1,4 +1,4 @@
-#include "SIM.h"
+#include "STSM.h"
 #include <cmath>
 #include <ctime>
 #include <iostream>
@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-// make clean all && reset && ./BUILD/release/sim > test_N.out
+// make clean all && reset && ./BUILD/release/stsm > test_N.out
 
 int main(int _argn, char * _argv[])
 {
@@ -69,13 +69,13 @@ int main(int _argn, char * _argv[])
 
     try
     {
-        SIM sim;
+        STSM stsm;
 
         clock_t begin;
         int elapsed_s;
 
         begin = clock();
-        sim.run(
+        stsm.run(
             input_data_csv, output_log,
             min_spatial_frequency, min_block_frequency);
         elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
@@ -85,7 +85,7 @@ int main(int _argn, char * _argv[])
         std::cout << "    saving to " << result_json << std::endl;
 
         begin = clock();
-        sim.saveJSON(result_json);
+        stsm.saveJSON(result_json);
         elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
         std::cout
             << "        save clock time: " << elapsed_s << "s" << std::endl;

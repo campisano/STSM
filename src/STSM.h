@@ -1,5 +1,5 @@
-#ifndef SIM__H__
-#define SIM__H__
+#ifndef STSM__H__
+#define STSM__H__
 
 #include <fstream>
 #include <list>
@@ -16,11 +16,11 @@
 #include "RangedSequence.h"
 #include "SequenceBlock.h"
 
-class SIM
+class STSM
 {
 public:
-    explicit SIM();
-    virtual ~SIM();
+    explicit STSM();
+    virtual ~STSM();
 
     void clear();
 

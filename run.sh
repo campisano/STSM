@@ -72,13 +72,13 @@ do
                         mkdir -p $STATS_OUTPUT_FOLDER;
                         mkdir -p $IMG_OUTPUT_FOLDER;
 
-                        # Produce SIM results only if was not already done
+                        # Produce STSM results only if was not already done
                         if test ! -f $OUTPUT_FILE.gz
                         then
                             if test ! -f $OUTPUT_FILE
                             then
-                                echo " * Running SIM $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" 2>&1 | tee -a $RUN_LOG;
-                                "${TIMECMD[@]}" sim $INPUT_FILE $OUTPUT_FILE $LOG_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ
+                                echo " * Running STSM $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" 2>&1 | tee -a $RUN_LOG;
+                                "${TIMECMD[@]}" stsm $INPUT_FILE $OUTPUT_FILE $LOG_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ
                                 #$MAX_STRETCH;
                             fi;
                         fi;

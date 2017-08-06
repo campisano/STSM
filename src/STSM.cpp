@@ -1,4 +1,4 @@
-#include "SIM.h"
+#include "STSM.h"
 
 #include <algorithm>
 #include <ctime>
@@ -27,17 +27,17 @@ namespace
     }
 }
 
-SIM::SIM()
+STSM::STSM()
 {
     m_min_spatial_freq = 0.0;
     m_min_block_freq = 0.0;
 }
 
-SIM::~SIM()
+STSM::~STSM()
 {
 }
 
-void SIM::clear()
+void STSM::clear()
 {
     m_database.clear();
     m_solid_sequences.clear();
@@ -45,7 +45,7 @@ void SIM::clear()
     m_solid_sequence_blocks.clear();
 }
 
-void SIM::run(
+void STSM::run(
     const std::string & _input_filename,
     const std::string & _log_filename,
     const unsigned int & _min_spatial_freq_perc,
@@ -119,7 +119,7 @@ void SIM::run(
     m_log_stream.close();
 }
 
-void SIM::updateKernelsOfAllCandidates(ListCandidates & _candidates)
+void STSM::updateKernelsOfAllCandidates(ListCandidates & _candidates)
 {
     clock_t time = clock();
     m_log_stream << " - Updating candidate kernels...";
@@ -151,7 +151,7 @@ void SIM::updateKernelsOfAllCandidates(ListCandidates & _candidates)
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
-void SIM::mergeKernelsOfAllCandidates(
+void STSM::mergeKernelsOfAllCandidates(
     ListCandidates & _candidates,
     ListRangedSequence & _solid_sequences_k)
 {
@@ -191,7 +191,7 @@ void SIM::mergeKernelsOfAllCandidates(
                  << _solid_sequences_k.size() << ")" << std::endl;
 }
 
-void SIM::detectBlocksOfAllSolidSequences()
+void STSM::detectBlocksOfAllSolidSequences()
 {
     clock_t time = clock();
     m_log_stream << " - Detecting solid sequence blocks..." << std::endl;
@@ -223,7 +223,7 @@ void SIM::detectBlocksOfAllSolidSequences()
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
-void SIM::loadDatabase(const std::string & _input_filename)
+void STSM::loadDatabase(const std::string & _input_filename)
 {
     clock_t time = clock();
     m_log_stream << "Loading database...";
@@ -240,7 +240,7 @@ void SIM::loadDatabase(const std::string & _input_filename)
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
-void SIM::generateTheSetOfAllDatabaseItems(
+void STSM::generateTheSetOfAllDatabaseItems(
     const Database & _database,
     SetItems & _items)
 {
@@ -263,7 +263,7 @@ void SIM::generateTheSetOfAllDatabaseItems(
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
-void SIM::generate1SizeCandidates(
+void STSM::generate1SizeCandidates(
     const SetItems & _items,
     const Point & _start,
     const Point & _end,
@@ -291,7 +291,7 @@ void SIM::generate1SizeCandidates(
                  << _candidates.size() << ")" << std::endl;
 }
 
-void SIM::generateCandidates(
+void STSM::generateCandidates(
     const ListRangedSequence & _solid_sequences,
     ListCandidates & _candidates)
 {
@@ -363,7 +363,7 @@ void SIM::generateCandidates(
         _candidates.size() << ")" << std::endl;
 }
 
-void SIM::setMinSpatialFreq(const Frequency & _min_spatial_freq)
+void STSM::setMinSpatialFreq(const Frequency & _min_spatial_freq)
 {
     if(_min_spatial_freq <=0 )
     {
@@ -386,7 +386,7 @@ void SIM::setMinSpatialFreq(const Frequency & _min_spatial_freq)
     m_min_spatial_freq = _min_spatial_freq;
 }
 
-void SIM::setMinBlockFreq(const Frequency & _min_block_freq)
+void STSM::setMinBlockFreq(const Frequency & _min_block_freq)
 {
     if(_min_block_freq <= 0)
     {
@@ -409,7 +409,7 @@ void SIM::setMinBlockFreq(const Frequency & _min_block_freq)
     m_min_block_freq = _min_block_freq;
 }
 
-void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
+void STSM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
 {
     clock_t time = clock();
     m_log_stream << " - Detecting sequence positions in the database...";
@@ -542,7 +542,7 @@ void SIM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
-void SIM::cleanupSolidSequencesWithSmallRangeSize(
+void STSM::cleanupSolidSequencesWithSmallRangeSize(
     const Size & _min_size, ListRangedSequence & _solid_sequences)
 {
     clock_t time = clock();
@@ -565,7 +565,7 @@ void SIM::cleanupSolidSequencesWithSmallRangeSize(
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
-void SIM::detectSolidSequenceBlocksFromSolidSequence(
+void STSM::detectSolidSequenceBlocksFromSolidSequence(
     const RangedSequence & _solid_sequence,
     const Frequency & _min_block_freq,
     ListSequenceBlocks & _sequence_blocks)
@@ -990,7 +990,7 @@ void SIM::detectSolidSequenceBlocksFromSolidSequence(
         sb_candidates.end());
 }
 
-void SIM::generate1SizeBlockCandidatesForEachSequenceOccurrence(
+void STSM::generate1SizeBlockCandidatesForEachSequenceOccurrence(
     const ListPositions & _positions,
     const RangedSequence & _solid_sequence,
     ListSequenceBlocks & _sb_candidates) const
@@ -1009,7 +1009,7 @@ void SIM::generate1SizeBlockCandidatesForEachSequenceOccurrence(
     }
 }
 
-void SIM::printSolidSequences()
+void STSM::printSolidSequences()
 {
     m_log_stream << std::endl << "Printing solid sequences:" << std::endl;
 
@@ -1037,7 +1037,7 @@ void SIM::printSolidSequences()
     }
 }
 
-void SIM::printSolidBlocks()
+void STSM::printSolidBlocks()
 {
     m_log_stream << std::endl << "Printing solid blocks:" << std::endl;
 
@@ -1067,7 +1067,7 @@ void SIM::printSolidBlocks()
     }
 }
 
-void SIM::saveJSON(const std::string & _output_filename) const
+void STSM::saveJSON(const std::string & _output_filename) const
 {
     std::ofstream output_file;
     output_file.open(_output_filename.c_str());
