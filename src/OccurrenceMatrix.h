@@ -27,9 +27,8 @@ private:
     void detectBorders(const ListPositions & _positions);
     void initMatrix();
     void clearMatrix();
-    size_t getIndex(const size_t _x, const size_t _y) const;
 
-    bool * m_matrix;
+    bool ** m_matrix;
     size_t m_width, m_height;
 
     size_t m_x_start, m_y_start;

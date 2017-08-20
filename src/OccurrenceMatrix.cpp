@@ -1,6 +1,7 @@
 #include "OccurrenceMatrix.h"
 
 #include <cstddef>
+// #include <iostream>
 #include <sstream>
 #include <stdexcept>
 
@@ -19,18 +20,14 @@ OccurrenceMatrix::OccurrenceMatrix(
     initMatrix();
 
     ListPositions::const_iterator it_pos;
-    size_t idx_start, idx_end, idx;
+    size_t idx_s;
 
     for(it_pos = _positions.begin(); it_pos != _positions.end(); ++it_pos)
     {
-        idx_start = getIndex(
-            it_pos->first - m_x_start,
-            it_pos->second - m_y_start);
-        idx_end = idx_start + m_seq_size;
-
-        for(idx = idx_start; idx != idx_end; ++idx)
+        for(idx_s = 0; idx_s < m_seq_size; ++idx_s)
         {
-            m_matrix[idx] = true;
+            m_matrix[it_pos->first - m_x_start][
+                it_pos->second - m_y_start + idx_s] = true;
         }
     }
 
@@ -99,22 +96,24 @@ void OccurrenceMatrix::detectBorders(
 
 void OccurrenceMatrix::initMatrix()
 {
-    m_matrix = new bool[m_height * m_width](); // initialized to false
+    m_matrix = new bool * [m_width];
+
+    for(size_t x = 0; x < m_width; ++x) {
+        m_matrix[x] = new bool[m_height](); // () initialize all to false
+    }
 }
 
 void OccurrenceMatrix::clearMatrix()
 {
     if(m_matrix)
     {
-        delete m_matrix;
+        for(size_t x = 0; x < m_width; ++x) {
+            delete [] m_matrix[x];
+        }
 
+        delete [] m_matrix;
         m_matrix = NULL;
     }
-}
-
-size_t OccurrenceMatrix::getIndex(const size_t _x, const size_t _y) const
-{
-    return _x * m_height + _y;
 }
 
 Support OccurrenceMatrix::getSupport(
@@ -126,7 +125,6 @@ Support OccurrenceMatrix::getSupport(
 
     size_t y_start = _interval.start() - m_y_start;
     size_t y_end = y_start + _interval.size();
-    size_t y_idx_end;
 
     size_t x, y;
 
@@ -136,11 +134,10 @@ Support OccurrenceMatrix::getSupport(
     for(x = x_start; x != x_end; ++x)
     {
         items_count = 0;
-        y_idx_end = x * m_height + y_end;
 
-        for(y = x * m_height + y_start; y != y_idx_end; ++y)
+        for(y = y_start; y != y_end; ++y)
         {
-            if(m_matrix[y])
+            if(m_matrix[x][y])
             {
                 ++items_count;
 
@@ -156,7 +153,7 @@ Support OccurrenceMatrix::getSupport(
     // std::cout << "r:" << _range.start() << "," << _range.end()
     //           << "rb:" << x_start << "," << x_end
     //           << " i:" << _interval.start() << "," << _interval.end()
-    //           << " ib:" << y_start << "," << y_start + _interval.size()
+    //           << " ib:" << y_start << "," << y_end
     //           << " s:" << support * m_seq_size << std::endl;
 
     return support * m_seq_size;
@@ -165,16 +162,13 @@ Support OccurrenceMatrix::getSupport(
 std::string OccurrenceMatrix::toString() const
 {
     std::stringstream ss;
-    size_t x, idx_start, idx_end, idx;
+    size_t x, y;
 
     for(x = 0; x != m_width; ++x)
     {
-        idx_start = getIndex(x, 0);
-        idx_end = idx_start + m_height;
-
-        for(idx = idx_start; idx != idx_end; ++idx)
+        for(y = 0; y != m_height; ++y)
         {
-            ss << int(m_matrix[idx]);
+            ss << int(m_matrix[x][y]);
         }
 
         ss << std::endl;
