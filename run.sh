@@ -4,7 +4,7 @@ MEM_LIMIT=5248000;      # 5GB
 #MEM_LIMIT=7340032;      # 7GB
 #MEM_LIMIT=15728640;     # 15GB
 ulimit -v $MEM_LIMIT;
-TIMECMD=(`which time` -f "real: %e, user: %U, sys: %S");
+TIMECMD=(`type -P time` -f "real: %e, user: %U, sys: %S");
 
 
 
