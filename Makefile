@@ -1,5 +1,5 @@
 # version of this Makefile
-MAKEFILE_VER=		0.6.5
+MAKEFILE_VER=		0.6.6
 
 
 
@@ -22,19 +22,21 @@ SRC_DIR=			src
 LIB_DIR=			lib
 
 # CUSTOM libs
-LIBS_REL=			-l cxxtools
-LIBS_STA=			$(LIBS_REL)
-LIBS_DEB=			$(LIBS_REL)
-LIBS_TES=			$(LIBS_REL) -l cxxtools-unit
+REL_LIBS=			-l cxxtools
+STA_LIBS=			$(REL_LIBS)
+DEB_LIBS=			$(REL_LIBS)
+PRO_LIBS=			$(REL_LIBS)
+TES_LIBS=			$(REL_LIBS) -l cxxtools-unit
 
 
 
 # basic path
 BUILD_DIR=			BUILD
-RELEASE_DIR=		$(BUILD_DIR)/release
-STATIC_DIR=			$(BUILD_DIR)/static
-DEBUG_DIR=			$(BUILD_DIR)/debug
-TEST_DIR=			$(BUILD_DIR)/test
+REL_BUILD_DIR=		$(BUILD_DIR)/release
+STA_BUILD_DIR=		$(BUILD_DIR)/static
+DEB_BUILD_DIR=		$(BUILD_DIR)/debug
+PRO_BUILD_DIR=		$(BUILD_DIR)/profile
+TES_BUILD_DIR=		$(BUILD_DIR)/test
 
 
 
@@ -54,9 +56,10 @@ CC_FLAGS=			-pipe -ansi -pedantic -Wall -Wextra $(PLATFORM_FLAGS) -I$(INC_DIR)
 LD_FLAGS=			-L$(LIB_DIR) $(PLATFORM_FLAGS)
 
 RELEASE_FLAGS=		-O3 -s				# optimization and remove all symbol table
-#RELEASE_FLAGS=		-O3 -ggdb -g3		# keep debug information but optimize so that the code is fast like a release
 STATIC_LD_FLAGS=	-static -static-libgcc -static-libstdc++ -pthread
-DEBUG_FLAGS=		-Og -ggdb -g3    	# some debug optimization and increase debug level to 3
+DEBUG_FLAGS=		-Og -ggdb -g3 -fno-omit-frame-pointer	# some debug optimization and increase debug level to 3, mantain frame pointer for 'prof' tool
+PROFILE_FLAGS=		-g -pg				# add 'gprof' tool info
+PROFILE_LD_FLAGS=	-pg $(LD_FLAGS)
 TEST_FLAGS=			$(DEBUG_FLAGS)
 
 
@@ -64,26 +67,31 @@ TEST_FLAGS=			$(DEBUG_FLAGS)
 # commands
 ifeq ($(MAKECMDGOALS), clean)
 	GOAL=			Clean
-else ifeq ($(MAKECMDGOALS), debug)
-	GOAL=			Debug
-	OUT_DIR=		$(DEBUG_DIR)
-	CC_CMD_ARGS=	$(DEBUG_FLAGS) $(CC_FLAGS)
-	LD_CMD_ARGS=	$(DEBUG_FLAGS) $(LD_FLAGS) $(LIBS_DEB)
-else ifeq ($(MAKECMDGOALS), test)
-	GOAL=			Test
-	OUT_DIR=		$(TEST_DIR)
-	CC_CMD_ARGS=	$(TEST_FLAGS) $(CC_FLAGS)
-	LD_CMD_ARGS=	$(TEST_FLAGS) $(LD_FLAGS) $(LIBS_TES)
 else ifeq ($(MAKECMDGOALS), static)
 	GOAL=			Static
-	OUT_DIR=		$(STATIC_DIR)
+	OUT_DIR=		$(STA_BUILD_DIR)
 	CC_CMD_ARGS=	$(RELEASE_FLAGS) $(CC_FLAGS)
-	LD_CMD_ARGS=	$(RELEASE_FLAGS) $(STATIC_LD_FLAGS) $(LD_FLAGS) $(LIBS_STA)
+	LD_CMD_ARGS=	$(RELEASE_FLAGS) $(STATIC_LD_FLAGS) $(LD_FLAGS) $(STA_LIBS)
+else ifeq ($(MAKECMDGOALS), debug)
+	GOAL=			Debug
+	OUT_DIR=		$(DEB_BUILD_DIR)
+	CC_CMD_ARGS=	$(DEBUG_FLAGS) $(CC_FLAGS)
+	LD_CMD_ARGS=	$(DEBUG_FLAGS) $(LD_FLAGS) $(DEB_LIBS)
+else ifeq ($(MAKECMDGOALS), profile)
+	GOAL=			Profile
+	OUT_DIR=		$(PRO_BUILD_DIR)
+	CC_CMD_ARGS=	$(PROFILE_FLAGS) $(CC_FLAGS)
+	LD_CMD_ARGS=	$(PROFILE_FLAGS) $(PROFILE_LD_FLAGS) $(PRO_LIBS)
+else ifeq ($(MAKECMDGOALS), test)
+	GOAL=			Test
+	OUT_DIR=		$(TES_BUILD_DIR)
+	CC_CMD_ARGS=	$(TEST_FLAGS) $(CC_FLAGS)
+	LD_CMD_ARGS=	$(TEST_FLAGS) $(LD_FLAGS) $(TES_LIBS)
 else
 	GOAL=			Release
-	OUT_DIR=		$(RELEASE_DIR)
+	OUT_DIR=		$(REL_BUILD_DIR)
 	CC_CMD_ARGS=	$(RELEASE_FLAGS) $(CC_FLAGS)
-	LD_CMD_ARGS=	$(RELEASE_FLAGS) $(LD_FLAGS) $(LIBS_REL)
+	LD_CMD_ARGS=	$(RELEASE_FLAGS) $(LD_FLAGS) $(REL_LIBS)
 endif
 
 
@@ -132,6 +140,11 @@ static:				INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE INFO_LD CMD_LINK
 debug:				INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE INFO_LD CMD_LINK
 	@echo
 	@echo "Hint: debug with 'ddd $(OUT_DIR)/$(OUT_FILE)'"
+	@echo
+
+profile:			INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE INFO_LD CMD_LINK
+	@echo
+	@echo "Hint: profile with 'gprof $(OUT_DIR)/$(OUT_FILE)'"
 	@echo
 
 test:				INFO_TRG CMD_PREREQ INFO_VARS INFO_CC CMD_COMPILE_TEST INFO_LD CMD_LINK
@@ -183,24 +196,27 @@ CMD_LINK:
 
 ################################################################################
 CMD_PREREQ:
-	mkdir -p $(RELEASE_DIR)
-	mkdir -p $(STATIC_DIR)
-	mkdir -p $(DEBUG_DIR)
-	mkdir -p $(TEST_DIR)
+	mkdir -p $(REL_BUILD_DIR)
+	mkdir -p $(STA_BUILD_DIR)
+	mkdir -p $(DEB_BUILD_DIR)
+	mkdir -p $(PRO_BUILD_DIR)
+	mkdir -p $(TES_BUILD_DIR)
 
 
 
 ################################################################################
 clean:				INFO_TRG
 	@echo
-	@echo -n ${RED}"   - "${WHITE}$(RM) $(RELEASE_DIR)"/*.o" $(RELEASE_DIR)/$(OUT_FILE)$(NORMAL)
-	$(RM) $(RELEASE_DIR)/*.o $(RELEASE_DIR)/$(OUT_FILE)$(CHECK)
-	@echo -n ${RED}"   - "${WHITE}$(RM) $(STATIC_DIR)"/*.o" $(STATIC_DIR)/$(OUT_FILE)$(NORMAL)
-	$(RM) $(STATIC_DIR)/*.o $(STATIC_DIR)/$(OUT_FILE)$(CHECK)
-	@echo -n ${RED}"   - "${WHITE}$(RM) $(DEBUG_DIR)"/*.o" $(DEBUG_DIR)/$(OUT_FILE)$(NORMAL)
-	$(RM) $(DEBUG_DIR)/*.o $(DEBUG_DIR)/$(OUT_FILE)$(CHECK)
-	@echo -n ${RED}"   - "${WHITE}$(RM) $(TEST_DIR)"/*.o" $(TEST_DIR)/$(OUT_FILE)$(NORMAL)
-	$(RM) $(TEST_DIR)/*.o $(TEST_DIR)/$(OUT_FILE)$(CHECK)
+	@echo -n ${RED}"   - "${WHITE}$(RM) $(REL_BUILD_DIR)"/*.o" $(REL_BUILD_DIR)/$(OUT_FILE)$(NORMAL)
+	$(RM) $(REL_BUILD_DIR)/*.o $(REL_BUILD_DIR)/$(OUT_FILE)$(CHECK)
+	@echo -n ${RED}"   - "${WHITE}$(RM) $(STA_BUILD_DIR)"/*.o" $(STA_BUILD_DIR)/$(OUT_FILE)$(NORMAL)
+	$(RM) $(STA_BUILD_DIR)/*.o $(STA_BUILD_DIR)/$(OUT_FILE)$(CHECK)
+	@echo -n ${RED}"   - "${WHITE}$(RM) $(DEB_BUILD_DIR)"/*.o" $(DEB_BUILD_DIR)/$(OUT_FILE)$(NORMAL)
+	$(RM) $(DEB_BUILD_DIR)/*.o $(DEB_BUILD_DIR)/$(OUT_FILE)$(CHECK)
+	@echo -n ${RED}"   - "${WHITE}$(RM) $(PRO_BUILD_DIR)"/*.o" $(PRO_BUILD_DIR)/$(OUT_FILE)$(NORMAL)
+	$(RM) $(PRO_BUILD_DIR)/*.o $(PRO_BUILD_DIR)/$(OUT_FILE)$(CHECK)
+	@echo -n ${RED}"   - "${WHITE}$(RM) $(TES_BUILD_DIR)"/*.o" $(TES_BUILD_DIR)/$(OUT_FILE)$(NORMAL)
+	$(RM) $(TES_BUILD_DIR)/*.o $(TES_BUILD_DIR)/$(OUT_FILE)$(CHECK)
 	@echo
 
 
@@ -218,12 +234,12 @@ INFO_VARS:
 INFO_CC:
 	@echo
 	@echo $(YELLOW)"Command used to build:"$(NORMAL)
-	@echo    $(BLUE)$(CC)" <files> "$(CC_CMD_ARGS) -c$(NORMAL)
+	@echo    $(BLUE)$(CC)" <FILE> "$(CC_CMD_ARGS) -c$(NORMAL)
 
 INFO_LD:
 	@echo
 	@echo $(YELLOW)"Command used to link:"$(NORMAL)
-	@echo    $(BLUE)$(LD)" <files> "$(LD_CMD_ARGS)$(NORMAL)
+	@echo    $(BLUE)$(LD)" <FILE> "$(LD_CMD_ARGS)$(NORMAL)
 
 
 
