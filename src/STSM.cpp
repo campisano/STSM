@@ -16,10 +16,12 @@
 // TODO [CMP] put in a good place
 namespace
 {
-    const unsigned int MIN_RANGE_SIZE = 2;
-    const unsigned int MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2;
-    const unsigned long MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 5000;
-    const unsigned long MAX_FAST_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 10000;
+    const unsigned long
+        MIN_RANGE_SIZE = 2,
+        BLOCK_MERGE_MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2,
+        BLOCK_MERGE_FULL_MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2,
+        BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 5000,
+        BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 10000;
 
     //TODO [CMP] to implement
     // a solid block sequence must contains more than 1 sequence position
@@ -573,7 +575,10 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
     const Frequency & _min_block_freq,
     ListSequenceBlocks & _sequence_blocks)
 {
-    if(_solid_sequence.sequence().size() < MIN_SOLID_BLOCK_SEQUENCE_SIZE)
+    if(
+        _solid_sequence.sequence().size() <
+        BLOCK_MERGE_MIN_SOLID_BLOCK_SEQUENCE_SIZE
+    )
     {
         return;
     }
@@ -625,7 +630,13 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
     ListSequenceBlocks::iterator chk_toadd_bigger_it;
     ListSequenceBlocks::iterator chk_cand_bigger_it;
 
-	if(sb_candidates.size() < MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
+	if(
+        _solid_sequence.sequence().size() >=
+        BLOCK_MERGE_FULL_MIN_SOLID_BLOCK_SEQUENCE_SIZE
+        &&
+        sb_candidates.size() <=
+        BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE
+    )
     {
         m_log_stream << "\t full merges:";
         m_log_stream.flush();
@@ -836,7 +847,10 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
                          << skipped << " (" << getSecs(mid_time) << "s) |";
             m_log_stream.flush();
 
-            if(sb_candidates.size() > MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
+            if(
+                sb_candidates.size() >
+                BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE
+            )
             {
                 m_log_stream << " [WARN] max full blocks per sequence "
                              << "exceeded: " << sb_candidates.size()
@@ -1016,7 +1030,10 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
             //              << skipped << " (" << getSecs(mid_time) << "s) |";
             // m_log_stream.flush();
 
-            if(sb_candidates.size() > MAX_FAST_SOLID_BLOCKS_PER_SOLID_SEQUENCE)
+            if(
+                sb_candidates.size() >
+                BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE
+            )
             {
                 m_log_stream << " [WARN] max fast blocks per sequence "
                              << "exceeded: " << sb_candidates.size()
