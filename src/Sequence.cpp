@@ -1,7 +1,7 @@
 #include "Sequence.h"
 
 #include <algorithm>
-#include <cxxtools/regex.h>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -53,9 +53,9 @@ bool Sequence::operator!=(const Sequence & _other) const
 
 void Sequence::set(const std::string & _string_representation)
 {
-    cxxtools::Regex seq_regex("^<[a-zA-Z]+>$");
+    std::regex seq_regex("^<[a-zA-Z]+>$");
 
-    if(! seq_regex.match(_string_representation))
+    if(! std::regex_match(_string_representation, seq_regex))
     {
         std::stringstream msg;
         msg << "Invalid sequence string representation: '"
@@ -63,14 +63,14 @@ void Sequence::set(const std::string & _string_representation)
         std::runtime_error(msg.str());
     }
 
-    cxxtools::Regex items_regex("([a-zA-Z])");
-    cxxtools::RegexSMatch items;
-    std::string substr = _string_representation.substr(1);
+    std::regex items_regex("([a-zA-Z])");
+    std::smatch items;
+    std::string substr = _string_representation;
 
-    while(items_regex.match(substr, items))
+    while(std::regex_search(substr, items, items_regex))
     {
-        Item is = items.get(1).c_str()[0];
-        substr = substr.substr(items.offsetEnd(1));
+        Item is = items[0].str().c_str()[0];
+        substr = items.suffix();
         append(is);
     }
 

@@ -1,5 +1,5 @@
 # version of this Makefile
-MAKEFILE_VER=		0.6.6
+MAKEFILE_VER=		0.7.0
 
 
 
@@ -21,7 +21,7 @@ INC_DIR=			src
 SRC_DIR=			src
 LIB_DIR=			lib
 
-# CUSTOM libs
+# CUSTOM libs TODO remove cxxtools and any other to REL_LIBS
 REL_LIBS=			-l cxxtools
 STA_LIBS=			$(REL_LIBS)
 DEB_LIBS=			$(REL_LIBS)
@@ -50,10 +50,8 @@ RM=					rm -f
 
 
 # flags
-PLATFORM_FLAGS=		-m64
-
-CC_FLAGS=			-pipe -ansi -pedantic -Wall -Wextra $(PLATFORM_FLAGS) -I$(INC_DIR)
-LD_FLAGS=			-L$(LIB_DIR) $(PLATFORM_FLAGS)
+CC_FLAGS=			-pipe -std=c++11 -pedantic -Wall -Wextra -I$(INC_DIR)
+LD_FLAGS=			-L$(LIB_DIR)
 
 RELEASE_FLAGS=		-O3 -s				# optimization and remove all symbol table
 STATIC_LD_FLAGS=	-static -static-libgcc -static-libstdc++ -pthread
