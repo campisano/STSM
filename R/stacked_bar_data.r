@@ -172,6 +172,7 @@ pos_by_len = utils$newDict();
 
 # count blocks by length in blocked sequences data
 blk_by_len = utils$newDict();
+blk_by_len_with_5_occ= utils$newDict();
 
 # count sequences by length in ranged_sequences data
 seq_by_len = utils$newDict();
@@ -278,6 +279,8 @@ for(iteration in 1:length(solid_blocks)) {
         len = as.character(sequence_length);
         blk_by_len[[len]] = utils$newDict();
         blk_by_len[[len]]$num_blocks = 0;
+        blk_by_len_with_5_occ[[len]] = utils$newDict();
+        blk_by_len_with_5_occ[[len]]$num_blocks = 0;
 
 #         hist_block_stats[[len]] = utils$newDict();
 #         hist_block_stats[[len]]$areas = c();
@@ -352,6 +355,9 @@ for(iteration in 1:length(solid_blocks)) {
                 }
 
                 if((r_end - r_start + 1) >= 5) {
+                    blk_by_len_with_5_occ[[len]]$num_blocks =
+                        blk_by_len_with_5_occ[[len]]$num_blocks + 1;
+
                     # count sequences with blocks by length
                     if(! exists(len, seq_with_5width_blocks_by_len)) {
                         seq_with_5width_blocks_by_len[[len]] = utils$newDict();
@@ -615,6 +621,9 @@ pos_by_len_frame = to_data_frame_of_3(
 blk_by_len_frame = to_data_frame_of_2(
     blk_by_len, "length", "num_blocks");
 
+blk_by_len_with_5_occ_frame = to_data_frame_of_2(
+    blk_by_len_with_5_occ, "length", "num_blocks");
+
 seq_by_len_frame = to_data_frame_of_2(
     seq_by_len, "length", "sequences");
 
@@ -641,6 +650,10 @@ utils$writeCSV(
 utils$writeCSV(
     blk_by_len_frame, file=file.path(vars$output_stats_dir, paste(
         vars$base_filename, "_blocks-by-len.csv", sep="")));
+
+utils$writeCSV(
+    blk_by_len_with_5_occ_frame, file=file.path(vars$output_stats_dir, paste(
+        vars$base_filename, "_blocks-by-len-with-5-occ.csv", sep="")));
 
 utils$writeCSV(
     seq_by_len_frame, file=file.path(vars$output_stats_dir, paste(
@@ -766,6 +779,25 @@ utils$dev_open_file(
     640, 480);
 utils$bar_plot(
     data_frame=blk_by_len_frame,
+    x_col="length",
+    y_col="num_blocks",
+    log=TRUE,
+    title=paste(
+        "Range frequency:", vars$min_spatial_freq,
+        "- Block frequency:", vars$min_block_freq),
+    x_title="Sequence lengths",
+    y_title="Num of blocks"
+);
+utils$dev_off();
+
+# draw a stacked bar plot of num_blocks by length in log scale
+blk_by_len_with_5_occ_frame = blk_by_len_with_5_occ_frame[blk_by_len_with_5_occ_frame$num_blocks != 0,];
+utils$dev_open_file(
+    file.path(vars$output_stats_dir,
+              paste(vars$base_filename, "_numblocks-by-len_with_5_occ_log.png", sep="")),
+    640, 480);
+utils$bar_plot(
+    data_frame=blk_by_len_with_5_occ_frame,
     x_col="length",
     y_col="num_blocks",
     log=TRUE,
