@@ -1,3 +1,25 @@
+## Copyright (C) 2017 Riccardo Campisano <riccardo.campisano@gmail.com>
+##               2017 Fabio Porto
+##               2017 Fabio Perosi
+##               2017 Esther Pacitti
+##               2017 Florent Masseglia
+##               2017 Eduardo Ogasawara
+##
+## This file is part of STSM (Spatio-Temporal Sequence Miner).
+##
+## STSM is free software: you can redistribute it and/or modify
+## it under the terms of the GNU Lesser General Public License as published by
+## the Free Software Foundation, either version 3 of the License, or
+## (at your option) any later version.
+##
+## STSM is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU Lesser General Public License for more details.
+##
+## You should have received a copy of the GNU Lesser General Public License
+## along with STSM.  If not, see <http://www.gnu.org/licenses/>.
+
 #setwd("/home/shared/develop/projects/CEFET/mestrado/STSM");
 
 # include utility file
@@ -522,6 +544,12 @@ for(iteration in 1:length(solid_sequences)) {
     for(key in ls(seq_plotd)) {
         k = k + 1;
         if(seq_plotd[[key]]$min_width_to_be_drawn) {
+            print(paste(
+                "seq:", key,
+                "block_area:", seq_plotd[[key]]$block_area,
+                "block_count:", seq_plotd[[key]]$block_count,
+                "mean_areas:", (seq_plotd[[key]]$block_area / seq_plotd[[key]]$block_count)
+            ));
             plot(plotSequencePositionsRangesAndBlocks(
                 seq_plotd[[key]]$x_points,
                 seq_plotd[[key]]$y_points,
