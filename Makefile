@@ -23,7 +23,7 @@
 
 
 # version of this Makefile
-MAKEFILE_VER=		0.7.0
+MAKEFILE_VER=		0.8.0
 
 
 
@@ -41,9 +41,10 @@ MAKEFLAGS+=			-s
 OUT_FILE=			stsm
 
 # CUSTOM paths
-INC_DIR=			src
+INC_DIR=			inc
 SRC_DIR=			src
 LIB_DIR=			lib
+EXT_DIR=			ext
 
 # CUSTOM libs TODO remove cxxtools and any other to REL_LIBS
 REL_LIBS=			-l cxxtools
@@ -74,7 +75,7 @@ RM=					rm -f
 
 
 # flags
-CC_FLAGS=			-pipe -std=c++11 -pedantic -Wall -Wextra -I$(INC_DIR)
+CC_FLAGS=			-pipe -std=c++11 -pedantic -Wall -Wextra -I$(INC_DIR) -I$(EXT_DIR)
 LD_FLAGS=			-L$(LIB_DIR)
 
 RELEASE_FLAGS=		-O3 -s				# optimization and remove all symbol table

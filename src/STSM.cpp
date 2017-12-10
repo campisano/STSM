@@ -25,13 +25,11 @@
 #include <algorithm>
 #include <ctime>
 #include <cxxtools/csvdeserializer.h>
-#include <cxxtools/decomposer.h>
-#include <cxxtools/jsonformatter.h>
-#include <cxxtools/utf8codec.h>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <json.hpp>
 
 #include "OccurrenceMatrix.h"
 
@@ -1154,15 +1152,9 @@ void STSM::printSolidBlocks()
 
 void STSM::saveJSON(const std::string & _output_filename) const
 {
-    std::ofstream output_file;
-    output_file.open(_output_filename.c_str());
-    cxxtools::TextOStream ts(output_file, new cxxtools::Utf8Codec());
-    cxxtools::JsonFormatter formatter(ts);
-    formatter.beautify(true);
+    nlohmann::json root;
 
-    formatter.beginObject("", "");
-
-    formatter.beginArray("solid_sequences", "");
+    nlohmann::json solid_sequences = nlohmann::json::array();
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
@@ -1177,25 +1169,25 @@ void STSM::saveJSON(const std::string & _output_filename) const
         )
     {
         const Size & size = it_ss_by_len->first;
-        const ListRangedSequence & sequences = it_ss_by_len->second;
+        const ListRangedSequence & lst_sequences = it_ss_by_len->second;
 
-        formatter.beginObject("", "");
-        formatter.addValueInt("length", "", size);
-        formatter.beginArray("sequences", "");
+        nlohmann::json ss;
+        ss["length"] = size;
+
+        nlohmann::json sequences = nlohmann::json::array();
 
         // for each sequence of that length
-        for(it_ss = sequences.begin(); it_ss != sequences.end(); ++it_ss)
+        for(
+            it_ss = lst_sequences.begin();
+            it_ss != lst_sequences.end();
+            ++it_ss
+        )
         {
-            formatter.beginObject("", "");
-
-            formatter.addValueStdString(
-                "sequence", "", it_ss->sequence().toStringOfItems());
-            formatter.addValueInt(
-                "support", "", it_ss->support());
-            formatter.addValueInt(
-                "start", "", it_ss->range().start());
-            formatter.addValueInt(
-                "end", "", it_ss->range().end());
+            nlohmann::json seq;
+            seq["sequence"] =  it_ss->sequence().toStringOfItems();
+            seq["support"] = it_ss->support();
+            seq["start"] = it_ss->range().start();
+            seq["end"] = it_ss->range().end();
 
             it_list_pos = m_ranged_sequence_positions.find(& (*it_ss));
 
@@ -1209,9 +1201,9 @@ void STSM::saveJSON(const std::string & _output_filename) const
                 throw std::runtime_error(msg.str());
             }
 
-            const ListPositions & positions = it_list_pos->second;
+            const ListPositions & lst_positions = it_list_pos->second;
 
-            if(positions.size() == 0)
+            if(lst_positions.size() == 0)
             {
                 std::stringstream msg;
                 msg << "We find 0 positions for ranged sequence '"
@@ -1224,44 +1216,45 @@ void STSM::saveJSON(const std::string & _output_filename) const
             // the follow strange way to structure the data
             // is needed by R language
             {
-                formatter.beginArray("spaces", "");
+                nlohmann::json spaces = nlohmann::json::array();
 
                 for(
-                    it_pos = positions.begin();
-                    it_pos != positions.end();
+                    it_pos = lst_positions.begin();
+                    it_pos != lst_positions.end();
                     ++it_pos
                     )
                 {
-                    formatter.addValueInt(
-                        "", "", it_pos->first);
+                    spaces.push_back(it_pos->first);
                 }
 
-                formatter.finishArray();
-                formatter.beginArray("times", "");
+                seq["spaces"] = spaces;
+            }
+            {
+                nlohmann::json times = nlohmann::json::array();
 
                 for(
-                    it_pos = positions.begin();
-                    it_pos != positions.end();
+                    it_pos = lst_positions.begin();
+                    it_pos != lst_positions.end();
                     ++it_pos
                     )
                 {
-                    formatter.addValueInt(
-                        "", "", it_pos->second);
+                    times.push_back(it_pos->second);
                 }
 
-                formatter.finishArray();
+                seq["times"] = times;
             }
 
-            formatter.finishObject();
+            sequences.push_back(seq);
         }
 
-        formatter.finishArray();
-        formatter.finishObject();
+        ss["sequences"] = sequences;
+
+        solid_sequences.push_back(ss);
     }
 
-    formatter.finishArray();
+    root["solid_sequences"] = solid_sequences;
 
-    formatter.beginArray("solid_blocks", "");
+    nlohmann::json solid_blocks = nlohmann::json::array();
 
     MapSequenceBlocksByLength::const_iterator it_sb_by_len;
     ListSequenceBlocks::const_iterator it_sb;
@@ -1274,37 +1267,34 @@ void STSM::saveJSON(const std::string & _output_filename) const
         )
     {
         const Size & size = it_sb_by_len->first;
-        const ListSequenceBlocks & blocks = it_sb_by_len->second;
+        const ListSequenceBlocks & lst_blocks = it_sb_by_len->second;
 
-        formatter.beginObject("", "");
-        formatter.addValueInt("length", "", size);
-        formatter.beginArray("blocks", "");
+        nlohmann::json sb;
+        sb["length"] = size;
+
+        nlohmann::json blocks = nlohmann::json::array();
 
         // for each sequence of that length
-        for(it_sb = blocks.begin(); it_sb != blocks.end(); ++it_sb)
+        for(it_sb = lst_blocks.begin(); it_sb != lst_blocks.end(); ++it_sb)
         {
-            formatter.beginObject("", "");
+            nlohmann::json blk;
+            blk["sequence"] = it_sb->sequence().toStringOfItems();
+            blk["support"] = it_sb->support();
+            blk["r_start"] = it_sb->range().start();
+            blk["r_end"] = it_sb->range().end();
+            blk["i_start"] = it_sb->interval().start();
+            blk["i_end"] = it_sb->interval().end();
 
-            formatter.addValueStdString(
-                "sequence", "", it_sb->sequence().toStringOfItems());
-            formatter.addValueInt(
-                "support", "", it_sb->support());
-            formatter.addValueInt(
-                "r_start", "", it_sb->range().start());
-            formatter.addValueInt(
-                "r_end", "", it_sb->range().end());
-            formatter.addValueInt(
-                "i_start", "", it_sb->interval().start());
-            formatter.addValueInt(
-                "i_end", "", it_sb->interval().end());
-
-            formatter.finishObject();
+            blocks.push_back(blk);
         }
 
-        formatter.finishArray();
-        formatter.finishObject();
-    }
-    formatter.finishArray();
+        sb["blocks"] = blocks;
 
-    formatter.finishObject();
+        solid_blocks.push_back(sb);
+    }
+
+    root["solid_blocks"] = solid_blocks;
+
+    std::ofstream output_file(_output_filename.c_str());
+    output_file << root << std::endl;
 }
