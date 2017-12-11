@@ -47,11 +47,11 @@ LIB_DIR=			lib
 EXT_DIR=			ext
 
 # CUSTOM libs TODO remove cxxtools and any other to REL_LIBS
-REL_LIBS=			-l cxxtools
+REL_LIBS=
 STA_LIBS=			$(REL_LIBS)
 DEB_LIBS=			$(REL_LIBS)
 PRO_LIBS=			$(REL_LIBS)
-TES_LIBS=			$(REL_LIBS) -l cxxtools-unit
+TES_LIBS=			$(REL_LIBS) -l cxxtools -l cxxtools-unit
 
 
 

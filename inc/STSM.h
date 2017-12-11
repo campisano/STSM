@@ -52,7 +52,7 @@ public:
         const unsigned int & _min_spatial_freq_perc,
         const unsigned int & _min_block_freq_perc);
 
-    void saveJSON(const std::string & _output_filename) const;
+    void saveJSON(const std::string & _output_filename);
 
 protected:
     void setMinSpatialFreq(const Frequency & _min_spatial_freq);

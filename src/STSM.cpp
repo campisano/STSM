@@ -24,12 +24,12 @@
 
 #include <algorithm>
 #include <ctime>
-#include <cxxtools/csvdeserializer.h>
+#include <json.hpp>
+#include <rapidcsv.h>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <json.hpp>
 
 #include "OccurrenceMatrix.h"
 
@@ -253,14 +253,23 @@ void STSM::loadDatabase(const std::string & _input_filename)
     clock_t time = clock();
     m_log_stream << "Loading database...";
 
-    std::ifstream file_stream;
-    file_stream.open(_input_filename.c_str(), std::ifstream::in);
+    rapidcsv::Document doc(
+        rapidcsv::Properties(_input_filename, 0, -1));
 
-    cxxtools::CsvDeserializer deserializer(file_stream);
-    deserializer.delimiter(',');
-    deserializer.deserialize(m_database);
+    //TODO [CMP] now we should rotate the csv to the expected order
+    // unsigned int i, cols = doc.GetColumnCount();
 
-    file_stream.close();
+    // for(i = 0; i < cols; ++i)
+    // {
+    //     m_database.push_back(doc.GetColumn<char>(i));
+    // }
+
+    unsigned int i, rows = doc.GetRowCount() -1;  // -1 is the header
+
+    for(i = 0; i < rows; ++i)
+    {
+        m_database.push_back(doc.GetRow<char>(i));
+    }
 
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
@@ -1150,8 +1159,11 @@ void STSM::printSolidBlocks()
     }
 }
 
-void STSM::saveJSON(const std::string & _output_filename) const
+void STSM::saveJSON(const std::string & _output_filename)
 {
+    clock_t time = clock();
+    m_log_stream << "Saving results...";
+
     nlohmann::json root;
 
     nlohmann::json solid_sequences = nlohmann::json::array();
@@ -1295,6 +1307,8 @@ void STSM::saveJSON(const std::string & _output_filename) const
 
     root["solid_blocks"] = solid_blocks;
 
-    std::ofstream output_file(_output_filename.c_str());
+    std::ofstream output_file(_output_filename);
     output_file << root << std::endl;
+
+    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
