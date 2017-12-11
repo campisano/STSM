@@ -22,7 +22,6 @@
 
 #include "STSMTest.h"
 
-#include <cxxtools/unit/registertest.h>
 #include <cstdlib>
 #include <cmath>
 #include <fstream>
@@ -36,9 +35,12 @@
 #include "Kernel.h"
 #include "Sequence.h"
 
+#define CATCH_CONFIG_MAIN
+#include <catch.hpp>
+
 namespace
 {
-    double EPSILON = 0.0001;
+    double FREQ_EPSILON = 0.0001;
     std::string TEST_FOLDER = "test_output";
 
     void prepareTestFolder(
@@ -48,8 +50,7 @@ namespace
     {
         _input_file = TEST_FOLDER + "/" + "input.csv";
         _log_file = TEST_FOLDER + "/" + "output.log";
-        CXXTOOLS_UNIT_ASSERT_EQUALS(
-            system(("mkdir -p " + TEST_FOLDER).c_str()), 0);
+        REQUIRE(system(("mkdir -p " + TEST_FOLDER).c_str()) == 0);
 
         std::ofstream ofs(_input_file.c_str());
         ofs << _data;
@@ -58,161 +59,37 @@ namespace
 
     void cleanupTestFolder()
     {
-        CXXTOOLS_UNIT_ASSERT_EQUALS(
-            system(("rm -f " + TEST_FOLDER + "/*").c_str()), 0);
-        CXXTOOLS_UNIT_ASSERT_EQUALS(
-            system(("rmdir " + TEST_FOLDER + "/").c_str()),  0);
+        REQUIRE(system(("rm -f " + TEST_FOLDER + "/*").c_str()) == 0);
+        REQUIRE(system(("rmdir " + TEST_FOLDER + "/").c_str()) == 0);
     }
 }
 
-STSMTest::STSMTest() : cxxtools::unit::TestSuite("STSMTest")
-{
-    std::cout << std::endl << "Test methods:" << std::endl;
 
-    registerMethod(
-        "test_sequenceEqualityOperator",
-        *this,
-        &STSMTest::test_sequenceEqualityOperator);
-
-    registerMethod(
-        "test_sequenceStringRepresentation",
-        *this,
-        &STSMTest::test_sequenceStringRepresentation);
-
-    registerMethod(
-        "test_mergeKernels_f100_size1_adjacent__does_joins",
-        *this,
-        &STSMTest::test_mergeKernels_f100_size1_adjacent__does_joins);
-
-    registerMethod(
-        "test_mergeKernels_f100_size2_adjacent__does_joins",
-        *this,
-        &STSMTest::test_mergeKernels_f100_size2_adjacent__does_joins);
-
-    registerMethod(
-        "test_mergeKernels_f100_size1_not_adjacent__does_not_joins",
-        *this,
-        &STSMTest::test_mergeKernels_f100_size1_not_adjacent__does_not_joins);
-
-    registerMethod(
-        "test_mergeKernels_f100_size2_not_adjacent__does_not_joins",
-        *this,
-        &STSMTest::test_mergeKernels_f100_size2_not_adjacent__does_not_joins);
-
-    registerMethod(
-        "test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins",
-        *this,
-        &STSMTest::test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins);
-
-    registerMethod(
-        "test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins",
-        *this,
-        &STSMTest::test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins);
-
-    registerMethod(
-        "test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_joins",
-        *this,
-        &STSMTest::test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_joins);
-
-    registerMethod(
-        "test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins",
-        *this,
-        &STSMTest::test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins);
-
-    registerMethod(
-        "test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins",
-        *this,
-        &STSMTest::test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins);
-
-    registerMethod(
-        "test_STSMRun_any_result",
-        *this,
-        &STSMTest::test_STSMRun_any_result);
-
-    registerMethod(
-        "test_STSMRun_f100_gets_only_single_ABCD100_solidSequence",
-        *this,
-        &STSMTest::test_STSMRun_f100_gets_only_single_ABCD100_solidSequence);
-
-    registerMethod(
-        "test_STSMRun_f100_testing_ABCD100_positions",
-        *this,
-        &STSMTest::test_STSMRun_f100_testing_ABCD100_positions);
-
-    registerMethod(
-        "test_STSMRun_f75_does_get_EFGH75_solidSequence",
-        *this,
-        &STSMTest::test_STSMRun_f75_does_get_EFGH75_solidSequence);
-
-    registerMethod(
-        "test_STSMRun_f90_does_not_get_EFGH75_solidSequence",
-        *this,
-        &STSMTest::test_STSMRun_f90_does_not_get_EFGH75_solidSequence);
-
-    registerMethod(
-        "test_STSMRun_f100_b100_does_get_EFGHI_solidBlock",
-        *this,
-        &STSMTest::test_STSMRun_f100_b100_does_get_EFGHI_solidBlock);
-
-    registerMethod(
-        "test_STSMRun_f100_b100_does_not_get_diagonal_EFGHI",
-        *this,
-        &STSMTest::test_STSMRun_f100_b100_does_not_get_diagonal_EFGHI);
-
-    registerMethod(
-        "test_STSMRun_f75_b75_does_get_EFGHI7575_solidBlock",
-        *this,
-        &STSMTest::test_STSMRun_f75_b75_does_get_EFGHI7575_solidBlock);
-
-    registerMethod(
-        "test_STSMRun_f100_b50_does_get_EFGHI10025_solidBlock",
-        *this,
-        &STSMTest::test_STSMRun_f100_b50_does_get_EFGHI10025_solidBlock);
-
-    registerMethod(
-        "test_STSMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock",
-        *this,
-        &STSMTest::test_STSMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock);
-
-    registerMethod(
-        "test_STSMRun_f100_b50_does_get_ABCD_big_solidBlock",
-        *this,
-        &STSMTest::test_STSMRun_f100_b50_does_get_ABCD_big_solidBlock);
-}
-
-STSMTest::~STSMTest()
-{
-}
-
-void STSMTest::test_sequenceEqualityOperator()
+TEST_CASE("Sequence equality operator", "[Sequence]")
 {
     // Arrange
     Sequence seq1, seq2;
-
-    // Act
     seq1.set("<abcdefghilm>");
     seq2.set("<abcdefghilm>");
 
     // Assert
-    CXXTOOLS_UNIT_ASSERT(seq1 == seq2);
+    CHECK(seq1 == seq2);
 }
 
-void STSMTest::test_sequenceStringRepresentation()
+TEST_CASE("Sequence string representation", "[Sequence]")
 {
     // Arrange
     Sequence seq1;
     std::string str_items = "abcdefghilm";
     std::string str_seq = "<" + str_items + ">";
-
-    // Act
     seq1.set(str_seq);
 
     // Assert
-    CXXTOOLS_UNIT_ASSERT(seq1.toString() == str_seq);
-    CXXTOOLS_UNIT_ASSERT(seq1.toStringOfItems() == str_items);
+    CHECK(seq1.toString() == str_seq);
+    CHECK(seq1.toStringOfItems() == str_items);
 }
 
-void STSMTest::test_mergeKernels_f100_size1_adjacent__does_joins()
+TEST_CASE("mergeKernels f100 size1 adjacent -> does joins", "[Kernel]")
 {
     // Arrange
     Kernel k1(0, 0);
@@ -235,15 +112,14 @@ void STSMTest::test_mergeKernels_f100_size1_adjacent__does_joins()
     cand.mergeKernels(1.0);
 
     // Assert
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 1);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 2);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
+    CHECK(cand.kernels().size() == 1);
+    CHECK(cand.kernels().back().start() == 0);
+    CHECK(cand.kernels().back().end() == 1);
+    CHECK(cand.kernels().back().support() == 2);
+    CHECK(std::abs(cand.kernels().back().frequency() - 1.0) < FREQ_EPSILON);
 }
 
-void STSMTest::test_mergeKernels_f100_size2_adjacent__does_joins()
+TEST_CASE("mergeKernels f100 size2 adjacent -> does joins", "[Kernel]")
 {
     // Arrange
     Kernel k1(0, 1);
@@ -266,15 +142,14 @@ void STSMTest::test_mergeKernels_f100_size2_adjacent__does_joins()
     cand.mergeKernels(1.0);
 
     // Assert
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 3);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 4);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
+    CHECK(cand.kernels().size() == 1);
+    CHECK(cand.kernels().back().start() == 0);
+    CHECK(cand.kernels().back().end() == 3);
+    CHECK(cand.kernels().back().support() == 4);
+    CHECK(std::abs(cand.kernels().back().frequency() - 1.0) < FREQ_EPSILON);
 }
 
-void STSMTest::test_mergeKernels_f100_size1_not_adjacent__does_not_joins()
+TEST_CASE("mergeKernels f100 size1 not adjacent -> does not joins", "[Kernel]")
 {
     // Arrange
     Kernel k1(0, 0);
@@ -297,22 +172,20 @@ void STSMTest::test_mergeKernels_f100_size1_not_adjacent__does_not_joins()
     cand.mergeKernels(1.0);
 
     // Assert
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 2);
+    CHECK(cand.kernels().size() == 2);
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().start(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().end(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().support(), 1);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().front().frequency() - 1.0) < EPSILON);
+    CHECK(cand.kernels().front().start() == 0);
+    CHECK(cand.kernels().front().end() == 0);
+    CHECK(cand.kernels().front().support() == 1);
+    CHECK(std::abs(cand.kernels().front().frequency() - 1.0) < FREQ_EPSILON);
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 2);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 2);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 1);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
+    CHECK(cand.kernels().back().start() == 2);
+    CHECK(cand.kernels().back().end() == 2);
+    CHECK(cand.kernels().back().support() == 1);
+    CHECK(std::abs(cand.kernels().back().frequency() - 1.0) < FREQ_EPSILON);
 }
 
-void STSMTest::test_mergeKernels_f100_size2_not_adjacent__does_not_joins()
+TEST_CASE("mergeKernels f100 size2 not adjacent -> does not joins", "[Kernel]")
 {
     // Arrange
     Kernel k1(0, 1);
@@ -335,22 +208,22 @@ void STSMTest::test_mergeKernels_f100_size2_not_adjacent__does_not_joins()
     cand.mergeKernels(1.0);
 
     // Assert
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 2);
+    CHECK(cand.kernels().size() == 2);
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().start(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().end(), 1);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().support(), 2);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().front().frequency() - 1.0) < EPSILON);
+    CHECK(cand.kernels().front().start() == 0);
+    CHECK(cand.kernels().front().end() == 1);
+    CHECK(cand.kernels().front().support() == 2);
+    CHECK(std::abs(cand.kernels().front().frequency() - 1.0) < FREQ_EPSILON);
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 3);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 4);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 2);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
+    CHECK(cand.kernels().back().start() == 3);
+    CHECK(cand.kernels().back().end() == 4);
+    CHECK(cand.kernels().back().support() == 2);
+    CHECK(std::abs(cand.kernels().back().frequency() - 1.0) < FREQ_EPSILON);
 }
 
-void STSMTest::test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins()
+TEST_CASE(
+    "mergeKernels f75 nearby 2 1 2 that should joins -> does joins",
+    "[Kernel]")
 {
     // Arrange
     Kernel k1(0, 1);
@@ -373,16 +246,19 @@ void STSMTest::test_mergeKernels_f75_nearby_2_1_2_that_should_joins__does_joins(
     cand.mergeKernels(0.75);
 
     // Assert
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
+    CHECK(cand.kernels().size() == 1);
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 4);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 4);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().back().frequency() - (4.0 / 5.0)) < EPSILON);
+    CHECK(cand.kernels().back().start() == 0);
+    CHECK(cand.kernels().back().end() == 4);
+    CHECK(cand.kernels().back().support() == 4);
+    CHECK(
+        std::abs(cand.kernels().back().frequency() - (4.0 / 5.0))
+        < FREQ_EPSILON);
 }
 
-void STSMTest::test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins()
+TEST_CASE(
+    "mergeKernels f75 nearby 3 1 3 that should joins -> does joins",
+    "[Kernel]")
 {
     // Arrange
     Kernel k1(0, 2);
@@ -405,16 +281,19 @@ void STSMTest::test_mergeKernels_f75_nearby_3_1_3_that_should_joins__does_joins(
     cand.mergeKernels(0.75);
 
     // Assert
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
+    CHECK(cand.kernels().size() == 1);
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 6);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 6);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().back().frequency() - (6.0 / 7.0)) < EPSILON);
+    CHECK(cand.kernels().back().start() == 0);
+    CHECK(cand.kernels().back().end() == 6);
+    CHECK(cand.kernels().back().support() == 6);
+    CHECK(
+        std::abs(cand.kernels().back().frequency() - (6.0 / 7.0))
+        < FREQ_EPSILON);
 }
 
-void STSMTest::test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_joins()
+TEST_CASE(
+    "mergeKernels f50 nearby half 3 1 3 that should joins -> does joins",
+    "[Kernel]")
 {
     // Arrange
     Kernel k1(0, 2);
@@ -437,16 +316,19 @@ void STSMTest::test_mergeKernels_f50_nearby_half_3_1_3_that_should_joins__does_j
     cand.mergeKernels(0.50);
 
     // Assert
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
+    CHECK(cand.kernels().size() == 1);
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 6);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 4);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().back().frequency() - (4.0 / 7.0)) < EPSILON);
+    CHECK(cand.kernels().back().start() == 0);
+    CHECK(cand.kernels().back().end() == 6);
+    CHECK(cand.kernels().back().support() == 4);
+    CHECK(
+        std::abs(cand.kernels().back().frequency() - (4.0 / 7.0))
+        < FREQ_EPSILON);
 }
 
-void STSMTest::test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins()
+TEST_CASE(
+    "mergeKernels f75 nearby 1 1 2 that should joins -> does joins",
+    "[Kernel]")
 {
     // Arrange
     Kernel k1(0, 0);
@@ -469,16 +351,18 @@ void STSMTest::test_mergeKernels_f75_nearby_1_1_2_that_should_joins__does_joins(
     cand.mergeKernels(0.75);
 
     // Assert
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 1);
+    CHECK(cand.kernels().size() == 1);
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 3);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 3);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().back().frequency() - (3.0 / 4.0)) < EPSILON);
+    CHECK(cand.kernels().back().start() == 0);
+    CHECK(cand.kernels().back().end() == 3);
+    CHECK(cand.kernels().back().support() == 3);
+    CHECK(
+        std::abs(cand.kernels().back().frequency() - (3.0 / 4.0))
+        < FREQ_EPSILON);
 }
 
-void STSMTest::test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_not_joins()
+TEST_CASE("mergeKernels f90 nearby 1 1 2 that should not joins -> does not joins",
+    "[Kernel]")
 {
     // Arrange
     Kernel k1(0, 0);
@@ -501,22 +385,23 @@ void STSMTest::test_mergeKernels_f90_nearby_1_1_2_that_should_not_joins__does_no
     cand.mergeKernels(0.90);
 
     // Assert
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().size(), 2);
+    CHECK(cand.kernels().size() == 2);
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().start(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().end(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().front().support(), 1);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().front().frequency() - 1.0) < EPSILON);
+    CHECK(cand.kernels().front().start() == 0);
+    CHECK(cand.kernels().front().end() == 0);
+    CHECK(cand.kernels().front().support() == 1);
+    CHECK(std::abs(cand.kernels().front().frequency() - 1.0) < FREQ_EPSILON);
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().start(), 2);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().end(), 3);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(cand.kernels().back().support(), 2);
-    CXXTOOLS_UNIT_ASSERT(
-        std::abs(cand.kernels().back().frequency() - 1.0) < EPSILON);
+    CHECK(cand.kernels().back().start() == 2);
+    CHECK(cand.kernels().back().end() == 3);
+    CHECK(cand.kernels().back().support() == 2);
+    CHECK(std::abs(cand.kernels().back().frequency() - 1.0) < FREQ_EPSILON);
 }
 
-void STSMTest::test_STSMRun_any_result()
+TEST_CASE_METHOD(
+    STSMTest,
+    "Run obtaining single 5_solid_sequence result",
+    "[Run]")
 {
     // Arrange
 
@@ -547,19 +432,22 @@ void STSMTest::test_STSMRun_any_result()
 
     // Assert
 
-    CXXTOOLS_UNIT_ASSERT(m_solid_sequences.size() > 0);
-    CXXTOOLS_UNIT_ASSERT(m_solid_sequences[2].size() > 0);
-    CXXTOOLS_UNIT_ASSERT(m_solid_sequences[3].size() > 0);
-    CXXTOOLS_UNIT_ASSERT(m_solid_sequences[4].size() > 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[5].size(), 1);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[6].size(), 0);
+    CHECK(m_solid_sequences.size() > 0);
+    CHECK(m_solid_sequences[2].size() > 0);
+    CHECK(m_solid_sequences[3].size() > 0);
+    CHECK(m_solid_sequences[4].size() > 0);
+    CHECK(m_solid_sequences[5].size() == 1);
+    CHECK(m_solid_sequences[6].size() == 0);
 
     // Cleanup
 
     cleanupTestFolder();
 }
 
-void STSMTest::test_STSMRun_f100_gets_only_single_ABCD100_solidSequence()
+TEST_CASE_METHOD(
+    STSMTest,
+    "Run f100 gets only single ABCD100 solidSequence",
+    "[Run]")
 {
     // Arrange
 
@@ -591,23 +479,26 @@ void STSMTest::test_STSMRun_f100_gets_only_single_ABCD100_solidSequence()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[4].size(), 1);
+    CHECK(m_solid_sequences[4].size() == 1);
 
     RangedSequence & rg = m_solid_sequences[4].back();
 
     // testing synthetic known data
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "ABCD");
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 3);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 4);
-    CXXTOOLS_UNIT_ASSERT((rg.frequency() - min_spatial) < EPSILON);
+    CHECK(rg.sequence().toStringOfItems() == "ABCD");
+    CHECK(rg.range().start() == 0);
+    CHECK(rg.range().end() == 3);
+    CHECK(rg.support() == 4);
+    CHECK((rg.frequency() - min_spatial) < FREQ_EPSILON);
 
     // Cleanup
 
     cleanupTestFolder();
 }
 
-void STSMTest::test_STSMRun_f100_testing_ABCD100_positions()
+TEST_CASE_METHOD(
+    STSMTest,
+    "Run f100 testing ABCD100 positions",
+    "[Run]")
 {
     // Arrange
 
@@ -639,29 +530,32 @@ void STSMTest::test_STSMRun_f100_testing_ABCD100_positions()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[4].size(), 1);
+    CHECK(m_solid_sequences[4].size() == 1);
 
     RangedSequence & rg = m_solid_sequences[4].back();
     ListPositions & positions = m_ranged_sequence_positions[&rg];
     std::vector < Position > v_pos (positions.begin(), positions.end());
 
     // testing expected positions
-    CXXTOOLS_UNIT_ASSERT_EQUALS(positions.size(), 4);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[0].first, 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[0].second, 2);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[1].first, 1);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[1].second, 3);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[2].first, 2);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[2].second, 5);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[3].first, 3);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(v_pos[3].second, 1);
+    CHECK(positions.size() == 4);
+    CHECK(v_pos[0].first == 0);
+    CHECK(v_pos[0].second == 2);
+    CHECK(v_pos[1].first == 1);
+    CHECK(v_pos[1].second == 3);
+    CHECK(v_pos[2].first == 2);
+    CHECK(v_pos[2].second == 5);
+    CHECK(v_pos[3].first == 3);
+    CHECK(v_pos[3].second == 1);
 
     // Cleanup
 
     cleanupTestFolder();
 }
 
-void STSMTest::test_STSMRun_f75_does_get_EFGH75_solidSequence()
+TEST_CASE_METHOD(
+    STSMTest,
+    "Run f75 does get EFGH75 solidSequence",
+    "[Run]")
 {
     // Arrange
 
@@ -693,23 +587,26 @@ void STSMTest::test_STSMRun_f75_does_get_EFGH75_solidSequence()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[4].size(), 1);
+    CHECK(m_solid_sequences[4].size() == 1);
 
     RangedSequence & rg = m_solid_sequences[4].back();
 
     // testing synthetic known data
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "EFGH");
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 4);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 7);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 3);
-    CXXTOOLS_UNIT_ASSERT((rg.frequency() - min_spatial) < EPSILON);
+    CHECK(rg.sequence().toStringOfItems() == "EFGH");
+    CHECK(rg.range().start() == 4);
+    CHECK(rg.range().end() == 7);
+    CHECK(rg.support() == 3);
+    CHECK((rg.frequency() - min_spatial) < FREQ_EPSILON);
 
     // Cleanup
 
     cleanupTestFolder();
 }
 
-void STSMTest::test_STSMRun_f90_does_not_get_EFGH75_solidSequence()
+TEST_CASE_METHOD(
+    STSMTest,
+    "Run f90 does not get EFGH75 solidSequence",
+    "[Run]")
 {
     // Arrange
 
@@ -741,26 +638,29 @@ void STSMTest::test_STSMRun_f90_does_not_get_EFGH75_solidSequence()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[4].size(), 1);
+    CHECK(m_solid_sequences[4].size() == 1);
 
     RangedSequence & rg = m_solid_sequences[4].back();
 
     // testing defined min frequency
-    CXXTOOLS_UNIT_ASSERT(rg.frequency() >= (min_spatial - EPSILON));
+    CHECK(rg.frequency() >= (min_spatial - FREQ_EPSILON));
 
     // testing synthetic known data
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "EFGH");
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 6);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 7);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 2);
-    CXXTOOLS_UNIT_ASSERT((rg.frequency() - 1.0) < EPSILON);
+    CHECK(rg.sequence().toStringOfItems() == "EFGH");
+    CHECK(rg.range().start() == 6);
+    CHECK(rg.range().end() == 7);
+    CHECK(rg.support() == 2);
+    CHECK((rg.frequency() - 1.0) < FREQ_EPSILON);
 
     // Cleanup
 
     cleanupTestFolder();
 }
 
-void STSMTest::test_STSMRun_f100_b100_does_get_EFGHI_solidBlock()
+TEST_CASE_METHOD(
+    STSMTest,
+    "Run f100 b100 does get EFGHI solidBlock",
+    "[Run]")
 {
     // Arrange
 
@@ -792,33 +692,36 @@ void STSMTest::test_STSMRun_f100_b100_does_get_EFGHI_solidBlock()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequences[5].size(), 1);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequence_blocks[5].size(), 1);
+    CHECK(m_solid_sequences[5].size() == 1);
+    CHECK(m_solid_sequence_blocks[5].size() == 1);
 
     RangedSequence & rg = m_solid_sequences[5].back();
     SequenceBlock & sb = m_solid_sequence_blocks[5].back();
 
     // testing synthetic known data
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.sequence().toStringOfItems(), "EFGHI");
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().start(), 4);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.range().end(), 6);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(rg.support(), 3);
-    CXXTOOLS_UNIT_ASSERT((rg.frequency() - min_spatial) < EPSILON);
+    CHECK(rg.sequence().toStringOfItems() == "EFGHI");
+    CHECK(rg.range().start() == 4);
+    CHECK(rg.range().end() == 6);
+    CHECK(rg.support() == 3);
+    CHECK((rg.frequency() - min_spatial) < FREQ_EPSILON);
 
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.sequence().toStringOfItems(), "EFGHI");
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().start(), 4);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().end(), 6);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().start(), 13);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().end(), 17);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.support(), 15);
-    CXXTOOLS_UNIT_ASSERT((sb.frequency() - min_block) < EPSILON);
+    CHECK(sb.sequence().toStringOfItems() == "EFGHI");
+    CHECK(sb.range().start() == 4);
+    CHECK(sb.range().end() == 6);
+    CHECK(sb.interval().start() == 13);
+    CHECK(sb.interval().end() == 17);
+    CHECK(sb.support() == 15);
+    CHECK((sb.frequency() - min_block) < FREQ_EPSILON);
 
     // Cleanup
 
     cleanupTestFolder();
 }
 
-void STSMTest::test_STSMRun_f100_b100_does_not_get_diagonal_EFGHI()
+TEST_CASE_METHOD(
+    STSMTest,
+    "Run f100 b100 does not get diagonal EFGHI",
+    "[Run]")
 {
     // Arrange
 
@@ -850,7 +753,7 @@ void STSMTest::test_STSMRun_f100_b100_does_not_get_diagonal_EFGHI()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequence_blocks[5].size(), 3);
+    CHECK(m_solid_sequence_blocks[5].size() == 3);
 
     ListSequenceBlocks::const_iterator it;
 
@@ -859,8 +762,8 @@ void STSMTest::test_STSMRun_f100_b100_does_not_get_diagonal_EFGHI()
         it != m_solid_sequence_blocks[5].end();
         ++it)
     {
-        CXXTOOLS_UNIT_ASSERT_EQUALS(it->sequence().toStringOfItems(), "EFGHI");
-        CXXTOOLS_UNIT_ASSERT_EQUALS(it->range().size(), 1);
+        CHECK(it->sequence().toStringOfItems() == "EFGHI");
+        CHECK(it->range().size() == 1);
     }
 
     // Cleanup
@@ -868,7 +771,10 @@ void STSMTest::test_STSMRun_f100_b100_does_not_get_diagonal_EFGHI()
     cleanupTestFolder();
 }
 
-void STSMTest::test_STSMRun_f75_b75_does_get_EFGHI7575_solidBlock()
+TEST_CASE_METHOD(
+    STSMTest,
+    "Run f75 b75 does get EFGHI7575 solidBlock",
+    "[Run]")
 {
     // Arrange
 
@@ -900,25 +806,28 @@ void STSMTest::test_STSMRun_f75_b75_does_get_EFGHI7575_solidBlock()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequence_blocks[5].size(), 1);
+    CHECK(m_solid_sequence_blocks[5].size() == 1);
 
     SequenceBlock & sb = m_solid_sequence_blocks[5].back();
 
     // testing synthetic known data
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.sequence().toStringOfItems(), "EFGHI");
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().start(), 4);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().end(), 7);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().start(), 13);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().end(), 17);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.support(), 15);
-    CXXTOOLS_UNIT_ASSERT((sb.frequency() - min_block) < EPSILON);
+    CHECK(sb.sequence().toStringOfItems() == "EFGHI");
+    CHECK(sb.range().start() == 4);
+    CHECK(sb.range().end() == 7);
+    CHECK(sb.interval().start() == 13);
+    CHECK(sb.interval().end() == 17);
+    CHECK(sb.support() == 15);
+    CHECK((sb.frequency() - min_block) < FREQ_EPSILON);
 
     // Cleanup
 
     cleanupTestFolder();
 }
 
-void STSMTest::test_STSMRun_f100_b50_does_get_EFGHI10025_solidBlock()
+TEST_CASE_METHOD(
+    STSMTest,
+    "Run f100 b50 does get EFGHI10025 solidBlock",
+    "[Run]")
 {
     // Arrange
 
@@ -950,25 +859,28 @@ void STSMTest::test_STSMRun_f100_b50_does_get_EFGHI10025_solidBlock()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequence_blocks[5].size(), 1);
+    CHECK(m_solid_sequence_blocks[5].size() == 1);
 
     SequenceBlock & sb = m_solid_sequence_blocks[5].back();
 
     // testing synthetic known data
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.sequence().toStringOfItems(), "EFGHI");
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().start(), 4);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().end(), 7);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().start(), 13);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().end(), 22);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.support(), 20);
-    CXXTOOLS_UNIT_ASSERT((sb.frequency() - min_block) < EPSILON);
+    CHECK(sb.sequence().toStringOfItems() == "EFGHI");
+    CHECK(sb.range().start() == 4);
+    CHECK(sb.range().end() == 7);
+    CHECK(sb.interval().start() == 13);
+    CHECK(sb.interval().end() == 22);
+    CHECK(sb.support() == 20);
+    CHECK((sb.frequency() - min_block) < FREQ_EPSILON);
 
     // Cleanup
 
     cleanupTestFolder();
 }
 
-void STSMTest::test_STSMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock()
+TEST_CASE_METHOD(
+    STSMTest,
+    "Run f100 b75 same line does get EFGHI10034 solidBlock",
+    "[Run]")
 {
     // Arrange
 
@@ -1000,25 +912,28 @@ void STSMTest::test_STSMRun_f100_b75_same_line_does_get_EFGHI10034_solidBlock()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequence_blocks[5].size(), 1);
+    CHECK(m_solid_sequence_blocks[5].size() == 1);
 
     SequenceBlock & sb = m_solid_sequence_blocks[5].back();
 
     // testing synthetic known data
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.sequence().toStringOfItems(), "EFGHI");
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().start(), 4);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().end(), 5);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().start(), 13);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().end(), 22);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.support(), 15);
-    CXXTOOLS_UNIT_ASSERT((sb.frequency() - min_block) < EPSILON);
+    CHECK(sb.sequence().toStringOfItems() == "EFGHI");
+    CHECK(sb.range().start() == 4);
+    CHECK(sb.range().end() == 5);
+    CHECK(sb.interval().start() == 13);
+    CHECK(sb.interval().end() == 22);
+    CHECK(sb.support() == 15);
+    CHECK((sb.frequency() - min_block) < FREQ_EPSILON);
 
     // Cleanup
 
     cleanupTestFolder();
 }
 
-void STSMTest::test_STSMRun_f100_b50_does_get_ABCD_big_solidBlock()
+TEST_CASE_METHOD(
+    STSMTest,
+    "Run f100 b50 does get ABCD big solidBlock",
+    "[Run]")
 {
     // Arrange
 
@@ -1050,24 +965,20 @@ void STSMTest::test_STSMRun_f100_b50_does_get_ABCD_big_solidBlock()
     // Assert
 
     // testing number and last expected results
-    CXXTOOLS_UNIT_ASSERT_EQUALS(m_solid_sequence_blocks[4].size(), 1);
+    CHECK(m_solid_sequence_blocks[4].size() == 1);
 
     SequenceBlock & sb = m_solid_sequence_blocks[4].back();
 
     // testing synthetic known data
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.sequence().toStringOfItems(), "ABCD");
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().start(), 0);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.range().end(), 6);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().start(), 9);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.interval().end(), 18);
-    CXXTOOLS_UNIT_ASSERT_EQUALS(sb.support(), 36);
-    CXXTOOLS_UNIT_ASSERT((sb.frequency() - (36.0/70.0)) < EPSILON);
+    CHECK(sb.sequence().toStringOfItems() == "ABCD");
+    CHECK(sb.range().start() == 0);
+    CHECK(sb.range().end() == 6);
+    CHECK(sb.interval().start() == 9);
+    CHECK(sb.interval().end() == 18);
+    CHECK(sb.support() == 36);
+    CHECK((sb.frequency() - (36.0/70.0)) < FREQ_EPSILON);
 
     // Cleanup
 
     cleanupTestFolder();
 }
-
-cxxtools::unit::RegisterTest<STSMTest> register_STSMTest;
-
-#include "cxxtools/unit/testmain.h"

@@ -23,7 +23,7 @@
 
 
 # version of this Makefile
-MAKEFILE_VER=		0.8.0
+MAKEFILE_VER=		0.8.1
 
 
 
@@ -46,12 +46,12 @@ SRC_DIR=			src
 LIB_DIR=			lib
 EXT_DIR=			ext
 
-# CUSTOM libs TODO remove cxxtools and any other to REL_LIBS
+# CUSTOM libs
 REL_LIBS=
 STA_LIBS=			$(REL_LIBS)
 DEB_LIBS=			$(REL_LIBS)
 PRO_LIBS=			$(REL_LIBS)
-TES_LIBS=			$(REL_LIBS) -l cxxtools -l cxxtools-unit
+TES_LIBS=			$(REL_LIBS)
 
 
 
@@ -75,7 +75,7 @@ RM=					rm -f
 
 
 # flags
-CC_FLAGS=			-pipe -std=c++11 -pedantic -Wall -Wextra -I$(INC_DIR) -I$(EXT_DIR)
+CC_FLAGS=			-pipe -std=c++11 -fexceptions -pedantic -Wall -Wextra -I$(INC_DIR) -I$(EXT_DIR)
 LD_FLAGS=			-L$(LIB_DIR)
 
 RELEASE_FLAGS=		-O3 -s				# optimization and remove all symbol table
