@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/campisano/STSM.svg?branch=master)](https://travis-ci.org/campisano/STSM)
+
 # STSM (Spatio-Temporal Sequence Miner)
 
 #### *Spatio-Temporal Sequence Miner* (*STSM*) is a new algorithm to discover tight space-time sequences.
