@@ -1,0 +1,14 @@
+language: cpp
+compiler: gcc
+os: linux
+dist: trusty
+
+before_install:
+- sudo apt-get -qq update
+
+install:
+- sudo apt-get install -y g++ make
+
+script:
+- make test
+- ./BUILD/test/stsm
