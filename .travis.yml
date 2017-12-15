@@ -9,11 +9,7 @@ addons:
         packages:
             - g++-7
             - make
-env:
-    global:
-        - CC="gcc-7"
-        - CXX="g++-7"
-
 script:
-    - make test
+    - export CC="g++-7"
+    - make -e test
     - ./BUILD/test/stsm
