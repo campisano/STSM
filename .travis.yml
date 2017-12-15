@@ -7,9 +7,9 @@ addons:
         sources:
             - ubuntu-toolchain-r-test
         packages:
-            - g++-7
+            - g++-5
             - make
 script:
-    - export CC="g++-7"
+    - export CC="g++-5"
     - make -e test
     - ./BUILD/test/stsm
