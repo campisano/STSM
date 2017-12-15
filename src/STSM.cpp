@@ -264,7 +264,7 @@ void STSM::loadDatabase(const std::string & _input_filename)
     //     m_database.push_back(doc.GetColumn<char>(i));
     // }
 
-    unsigned int i, rows = doc.GetRowCount() -1;  // -1 is the header
+    unsigned int i, rows = doc.GetRowCount();
 
     for(i = 0; i < rows; ++i)
     {

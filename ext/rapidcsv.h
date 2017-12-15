@@ -13,14 +13,15 @@
 
 #pragma once
 
-#include <assert.h>
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <map>
-#include <vector>
+#include <sstream>
 #include <string>
 #include <typeinfo>
+#include <vector>
 
 #if defined(_MSC_VER)
 #include <BaseTsd.h>
@@ -44,7 +45,7 @@ namespace rapidcsv
   class Converter
   {
   public:
-    void ToStr(std::string& pStr, const T& pVal)
+    void ToStr(const T& pVal, std::string& pStr) const
     {
       if (typeid(T) == typeid(int) ||
           typeid(T) == typeid(long) ||
@@ -54,10 +55,15 @@ namespace rapidcsv
           typeid(T) == typeid(unsigned long long) ||
           typeid(T) == typeid(float) ||
           typeid(T) == typeid(double) ||
-          typeid(T) == typeid(long double) ||
-          typeid(T) == typeid(char))
+          typeid(T) == typeid(long double))
       {
         pStr = std::to_string(pVal);
+      }
+      else if (typeid(T) == typeid(char))
+      {
+        std::ostringstream out;
+        out << pVal;
+        pStr = out.str();
       }
       else
       {
@@ -65,7 +71,7 @@ namespace rapidcsv
       }
     }
 
-    void ToVal(T& pVal, const std::string& pStr)
+    void ToVal(const std::string& pStr, T& pVal) const
     {
       if (typeid(T) == typeid(int))
       {
@@ -115,20 +121,20 @@ namespace rapidcsv
   };
 
   template<>
-  inline void Converter<std::string>::ToStr(std::string& pStr, const std::string& pVal)
+  inline void Converter<std::string>::ToStr(const std::string& pVal, std::string& pStr) const
   {
     pStr = pVal;
   }
 
   template<>
-  inline void Converter<std::string>::ToVal(std::string& pVal, const std::string& pStr)
+  inline void Converter<std::string>::ToVal(const std::string& pStr, std::string& pVal) const
   {
     pVal = pStr;
   }
 
   struct Properties
   {
-    Properties(const std::string& pPath = "", const int pColumnNameIdx = 0, const int pRowNameIdx = 0, const bool pHasCR = DEFAULT_HASCR)
+    explicit Properties(const std::string& pPath = std::string(), const int pColumnNameIdx = 0, const int pRowNameIdx = 0, const bool pHasCR = DEFAULT_HASCR)
       : mPath(pPath)
       , mColumnNameIdx(pColumnNameIdx)
       , mRowNameIdx(pRowNameIdx)
@@ -145,7 +151,7 @@ namespace rapidcsv
   {
   public:
     // Contructors --------------------------------------------------------
-    explicit Document(const std::string& pPath = "")
+    explicit Document(const std::string& pPath = std::string())
     {
       mProperties.mPath = pPath;
       if (!mProperties.mPath.empty())
@@ -183,7 +189,7 @@ namespace rapidcsv
       ReadCsv();
     }
 
-    void Save(const std::string& pPath = "")
+    void Save(const std::string& pPath = std::string())
     {
       if (!pPath.empty())
       {
@@ -194,7 +200,7 @@ namespace rapidcsv
 
     // Column Methods -----------------------------------------------------
     template<typename T>
-    std::vector<T> GetColumn(const size_t pColumnIdx)
+    std::vector<T> GetColumn(const size_t pColumnIdx) const
     {
       const ssize_t columnIdx = pColumnIdx + (mProperties.mRowNameIdx + 1);
       std::vector<T> column;
@@ -204,7 +210,7 @@ namespace rapidcsv
         if (std::distance(mData.begin(), itRow) > mProperties.mColumnNameIdx)
         {
           T val;
-          converter.ToVal(val, itRow->at(columnIdx));
+          converter.ToVal(itRow->at(columnIdx), val);
           column.push_back(val);
         }
       }
@@ -212,7 +218,7 @@ namespace rapidcsv
     }
 
     template<typename T>
-    std::vector<T> GetColumn(const std::string& pColumnName)
+    std::vector<T> GetColumn(const std::string& pColumnName) const
     {
       const ssize_t columnIdx = GetColumnIdx(pColumnName);
       if (columnIdx < 0)
@@ -227,14 +233,14 @@ namespace rapidcsv
     {
       const size_t columnIdx = pColumnIdx + (mProperties.mRowNameIdx + 1);
         
-      while (pColumn.size() + (mProperties.mColumnNameIdx + 1) > GetRowCount())
+      while (pColumn.size() + (mProperties.mColumnNameIdx + 1) > GetDataRowCount())
       {
         std::vector<std::string> row;
-        row.resize(GetColumnCount());
+        row.resize(GetDataColumnCount());
         mData.push_back(row);
       }
 
-      if ((columnIdx + 1) > GetColumnCount())
+      if ((columnIdx + 1) > GetDataColumnCount())
       {
         for (auto itRow = mData.begin(); itRow != mData.end(); ++itRow)
         {
@@ -246,7 +252,7 @@ namespace rapidcsv
       for (auto itRow = pColumn.begin(); itRow != pColumn.end(); ++itRow)
       {
         std::string str;
-        converter.ToStr(str, *itRow);
+        converter.ToStr(*itRow, str);
         mData.at(std::distance(pColumn.begin(), itRow) + (mProperties.mColumnNameIdx + 1)).at(columnIdx) = str;
       }
     }
@@ -282,9 +288,14 @@ namespace rapidcsv
       RemoveColumn(columnIdx);
     }
 
+    size_t GetColumnCount() const
+    {
+      return (mData.size() > 0) ? (mData.at(0).size() - (mProperties.mRowNameIdx + 1)) : 0;
+    }
+
     // Row Methods --------------------------------------------------------
     template<typename T>
-    std::vector<T> GetRow(const size_t pRowIdx)
+    std::vector<T> GetRow(const size_t pRowIdx) const
     {
       const ssize_t rowIdx = pRowIdx + (mProperties.mColumnNameIdx + 1);
       std::vector<T> row;
@@ -294,7 +305,7 @@ namespace rapidcsv
         if (std::distance(mData.at(rowIdx).begin(), itCol) > mProperties.mRowNameIdx)
         {
           T val;
-          converter.ToVal(val, *itCol);
+          converter.ToVal(*itCol, val);
           row.push_back(val);
         }
       }
@@ -302,7 +313,7 @@ namespace rapidcsv
     }
 
     template<typename T>
-    std::vector<T> GetRow(const std::string& pRowName)
+    std::vector<T> GetRow(const std::string& pRowName) const
     {
       ssize_t rowIdx = GetRowIdx(pRowName);
       if (rowIdx < 0)
@@ -317,14 +328,14 @@ namespace rapidcsv
     {
       const size_t rowIdx = pRowIdx + (mProperties.mColumnNameIdx + 1);
 
-      while ((rowIdx + 1) > GetRowCount())
+      while ((rowIdx + 1) > GetDataRowCount())
       {
         std::vector<std::string> row;
-        row.resize(GetColumnCount());
+        row.resize(GetDataColumnCount());
         mData.push_back(row);
       }
 
-      if (pRow.size() > GetColumnCount())
+      if (pRow.size() > GetDataColumnCount())
       {
         for (auto itRow = mData.begin(); itRow != mData.end(); ++itRow)
         {
@@ -336,7 +347,7 @@ namespace rapidcsv
       for (auto itCol = pRow.begin(); itCol != pRow.end(); ++itCol)
       {
         std::string str;
-        converter.ToStr(str, *itCol);
+        converter.ToStr(*itCol, str);
         mData.at(rowIdx).at(std::distance(pRow.begin(), itCol) + (mProperties.mRowNameIdx + 1)) = str;
       }
     }
@@ -369,21 +380,26 @@ namespace rapidcsv
       RemoveRow(rowIdx);
     }
 
+    size_t GetRowCount() const
+    {
+      return mData.size() - (mProperties.mColumnNameIdx + 1);
+    }
+
     // Cell Methods -------------------------------------------------------
     template<typename T>
-    T GetCell(const size_t pColumnIdx, const size_t pRowIdx)
+    T GetCell(const size_t pColumnIdx, const size_t pRowIdx) const
     {
       const ssize_t columnIdx = pColumnIdx + (mProperties.mRowNameIdx + 1);
       const ssize_t rowIdx = pRowIdx + (mProperties.mColumnNameIdx + 1);
         
       T val;
       Converter<T> converter;
-      converter.ToVal(val, mData.at(rowIdx).at(columnIdx));
+      converter.ToVal(mData.at(rowIdx).at(columnIdx), val);
       return val;
     }
 
     template<typename T>
-    T GetCell(const std::string& pColumnName, const std::string& pRowName)
+    T GetCell(const std::string& pColumnName, const std::string& pRowName) const
     {
       const ssize_t columnIdx = GetColumnIdx(pColumnName);
       if (columnIdx < 0)
@@ -406,14 +422,14 @@ namespace rapidcsv
       const size_t columnIdx = pColumnIdx + (mProperties.mRowNameIdx + 1);
       const size_t rowIdx = pRowIdx + (mProperties.mColumnNameIdx + 1);
 
-      while ((rowIdx + 1) > GetRowCount())
+      while ((rowIdx + 1) > GetDataRowCount())
       {
         std::vector<std::string> row;
-        row.resize(GetColumnCount());
+        row.resize(GetDataColumnCount());
         mData.push_back(row);
       }
 
-      if ((columnIdx + 1) > GetColumnCount())
+      if ((columnIdx + 1) > GetDataColumnCount())
       {
         for (auto itRow = mData.begin(); itRow != mData.end(); ++itRow)
         {
@@ -423,7 +439,7 @@ namespace rapidcsv
 
       std::string str;
       Converter<T> converter;
-      converter.ToStr(str, pCell);
+      converter.ToStr(pCell, str);
       mData.at(rowIdx).at(columnIdx) = str;
     }
 
@@ -464,16 +480,6 @@ namespace rapidcsv
       {
         mData.at(rowIdx).at(mProperties.mRowNameIdx) = pRowName;
       }
-    }
-
-    size_t GetRowCount()
-    {
-      return mData.size();
-    }
-
-    size_t GetColumnCount()
-    {
-      return (mData.size() > 0) ? mData.at(0).size() : 0;
     }
 
   private:
@@ -577,7 +583,7 @@ namespace rapidcsv
       }
     }
 
-    void WriteCsv()
+    void WriteCsv() const
     {
       std::ofstream file;
       file.exceptions(std::ofstream::failbit | std::ofstream::badbit);
@@ -596,28 +602,38 @@ namespace rapidcsv
       }
     }
 
-    ssize_t GetColumnIdx(const std::string& pColumnName)
+    ssize_t GetColumnIdx(const std::string& pColumnName) const
     {
       if (mProperties.mColumnNameIdx >= 0)
       {
         if (mColumnNames.find(pColumnName) != mColumnNames.end())
         {
-          return mColumnNames[pColumnName] - (mProperties.mRowNameIdx + 1);
+          return mColumnNames.at(pColumnName) - (mProperties.mRowNameIdx + 1);
         }
       }
       return -1;
     }
 
-    ssize_t GetRowIdx(const std::string& pRowName)
+    ssize_t GetRowIdx(const std::string& pRowName) const
     {
       if (mProperties.mRowNameIdx >= 0)
       {
         if (mRowNames.find(pRowName) != mRowNames.end())
         {
-          return mRowNames[pRowName] - (mProperties.mColumnNameIdx + 1);
+          return mRowNames.at(pRowName) - (mProperties.mColumnNameIdx + 1);
         }
       }
       return -1;
+    }
+
+    size_t GetDataRowCount() const
+    {
+      return mData.size();
+    }
+
+    size_t GetDataColumnCount() const
+    {
+      return (mData.size() > 0) ? mData.at(0).size() : 0;
     }
 
   private:
