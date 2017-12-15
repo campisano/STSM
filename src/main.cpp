@@ -23,74 +23,51 @@
 #include "STSM.h"
 #include <cmath>
 #include <ctime>
+#include <cxxopts.hpp>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <vector>
-
-// make clean all && reset && ./BUILD/release/stsm > test_N.out
 
 int main(int _argn, char * _argv[])
 {
-    unsigned int expected_arguments = 6;
-    std::vector < std::string > parameters;
-
-    if(_argn != 1)
-    {
-        // read from command line arguments
-        for(int i = 0; i < _argn; ++i)
-        {
-            parameters.push_back(_argv[i]);
-        }
-    }
-    else
-    {
-        parameters.push_back((_argv[0]));
-
-        // read from standard input
-        for(std::string line; std::getline(std::cin, line);)
-        {
-            parameters.push_back(line);
-        }
-    }
-
-    if(parameters.size() != expected_arguments)
-    {
-        std::cerr << "Bad number of parameters: expected " << expected_arguments
-                  << ", obtained " << parameters.size() << "." << std::endl;
-        std::cerr << "Usage: "
-                  << parameters[0]
-                  << " <input_data.csv> <result.json>"
-                  << " <output.log> <min_spatial_frequency>"
-                  << " <min_block_frequency>"
-                  << std::endl;
-
-        std::cerr << "Alternative usage (you can mix them): "
-                  << parameters[0] << " < filename_with_arguments.txt"
-                  << std::endl;
-
-        return 1;
-    }
-
-    std::string input_data_csv = parameters[1];
-    std::string result_json = parameters[2];
-    std::string output_log = parameters[3];
-    unsigned int min_spatial_frequency;
-    std::stringstream(parameters[4]) >> min_spatial_frequency;
-    unsigned int min_block_frequency;
-    std::stringstream(parameters[5]) >> min_block_frequency;
-
-    std::cout << "    args: "
-              << input_data_csv
-              << " " << result_json
-              << " " << output_log
-              << " " << min_spatial_frequency
-              << " " << min_block_frequency
-              << std::endl;
-
     try
     {
+        std::string input_data_csv;
+        std::string result_json;
+        std::string output_log;
+        float min_spatial_frequency;
+        float min_block_frequency;
+
+        cxxopts::Options options(_argv[0], "Spatio-Temporal Sequence Miner");
+        options.add_options()
+            ("h,help", "Print help")
+            ("i,input", "Input", cxxopts::value<std::string>(input_data_csv))
+            ("o,output", "Output file", cxxopts::value<std::string>(result_json)->default_value("result.json"))
+            ("l,log", "Log file", cxxopts::value<std::string>(output_log)->default_value("stsm.log"))
+            ("s,spatial", "Minimum spatial frequency", cxxopts::value<float>(min_spatial_frequency))
+            ("b,block", "Minimum block frequency", cxxopts::value<float>(min_block_frequency));
+        cxxopts::ParseResult parsed = options.parse(_argn, _argv);
+
+        if(parsed.count("h"))
+        {
+            std::cout << options.help({"", "Group"}) << std::endl;
+            return 0;
+        }
+
+        if(parsed.count("i") != 1 || parsed.count("s") != 1 || parsed.count("b") != 1)
+        {
+            std::cout << "Error: 'input', 'spatial' and 'block' argument are mandatory." << std::endl;
+            return 1;
+        }
+
+        std::cout << "    args:"
+                  << " " << input_data_csv
+                  << " " << result_json
+                  << " " << output_log
+                  << " " << min_spatial_frequency
+                  << " " << min_block_frequency
+                  << std::endl;
+
         STSM stsm;
 
         clock_t begin;
