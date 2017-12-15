@@ -3,10 +3,16 @@ compiler: gcc
 os: linux
 dist: trusty
 addons:
-apt:
-    packages:
-        - g++
-        - make
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+        packages:
+            - g++-7
+            - make
+env:
+    global:
+        - CC="gcc-7"
+        - CXX="g++-7"
 
 script:
     - make test
