@@ -12,16 +12,16 @@ Even though our solution is generic, we evaluate *STSM* on a seismic use case ba
 
 ### Processing
 
-![Alt text](/seismic_use_case.jpg?raw=true "Seismic use-case processing")
+![Alt text](/doc/README.md/seismic_use_case.jpg?raw=true "Seismic use-case processing")
 Starting from a discretized spatio-temporal dataset, *STSM* first detects the spatial ranges that contains frequent sequential patterns, obtaining the solid ranged sequences. Then, it refines each detected spatial range looking for time intervals to detect the spatio-temporal blocks where the sequence is still frequent, obtaining the solid blocked sequences. The right side of this image shows potential bright spots identified using the proposed algorithm for inline 401, alphabet size 10, γ = 80%, and δ = 20%. The results follow the blue-yellow pattern produced using the previously known bright spots for this dataset.
 
 ### Ranked results
 
-![Alt text](/best_ranked_patterns.jpg?raw=true "Seismic best ranked results")
+![Alt text](/doc/README.md/best_ranked_patterns.jpg?raw=true "Seismic best ranked results")
 Identified sequences ranked according to their density for inline 401, alphabet size 10, solid range threshold γ 80% and solid block threshold δ 20%. Images from (a) to (d), (e) to (h), and (i) to (l) respectively present the four best ranked patterns for sequences of size two, three, and four.
 
 ## License
 
-![Alt text](/COPYING.png?raw=true "License")
+![Alt text](/doc/README.md/COPYING.png?raw=true "License")
 
 *STSM* is free software: you can redistribute it and/or modify it under the terms of the [GNU Lesser General Public License](https://www.gnu.org/licenses/lgpl.html) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
