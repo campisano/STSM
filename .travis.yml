@@ -10,6 +10,6 @@ addons:
             - g++-5
             - make
 script:
-    - export CC="g++-5"
+    - export CXX="g++-5"
     - make -e test
     - ./BUILD/test/stsm
