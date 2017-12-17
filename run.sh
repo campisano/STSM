@@ -100,7 +100,7 @@ do
                             if test ! -f $OUTPUT_FILE
                             then
                                 echo " * Running STSM $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" 2>&1 | tee -a $RUN_LOG;
-                                "${TIMECMD[@]}" stsm $INPUT_FILE $OUTPUT_FILE $LOG_FILE $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ
+                                "${TIMECMD[@]}" stsm -i $INPUT_FILE -o $OUTPUT_FILE -l $LOG_FILE -s $MIN_SPATIAL_FREQ -b $MIN_BLOCK_FREQ
                                 #$MAX_STRETCH;
                             fi;
                         fi;
