@@ -24,8 +24,8 @@
 #include "STSM.h"
 
 #include <algorithm>
+#include <cmath>
 #include <ctime>
-#include <json.hpp>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -40,8 +40,8 @@ namespace
         MIN_RANGE_SIZE = 2,
         BLOCK_MERGE_MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2,
         BLOCK_MERGE_FULL_MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2,
-        BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGED_SEQUENCE = 5000,
-        BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_RANGED_SEQUENCE = 10000;
+        BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGES = 5000,
+        BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_RANGES = 10000;
 
     //TODO [CMP] to implement
     // a solid block sequence must contains more than 1 sequence position
@@ -98,12 +98,13 @@ void STSM::run(
                      << seq_size << std::endl;
 
         ListRangedSequence & solid_ranged_sequences_k =
-            m_solid_ranged_sequences[seq_size] = ListRangedSequence();
+            m_patterns.m_solid_ranged_sequences[seq_size] =
+            ListRangedSequence();
 
         updateKernelsOfAllCandidates(_database, candidates);
         mergeKernelsOfAllCandidates(candidates, solid_ranged_sequences_k);
 
-        cleanupSolidSequencesWithSmallRangeSize(
+        cleanupSolidRangedSequencesWithSmallRangeSize(
             MIN_RANGE_SIZE, solid_ranged_sequences_k);
 
         updateMatchingPositions(_database, solid_ranged_sequences_k);
@@ -115,13 +116,13 @@ void STSM::run(
     }
     while(candidates.size() > 0);
 
-    // print solid sequences data and positions
-    // printSolidSequences();
+    // print solid ranged sequences data and positions
+    // printSolidRangedSequences();
 
-    detectBlocksOfAllSolidSequences();
+    detectBlocksOfAllSolidRangedSequences();
 
-    // print solid blocks data and positions
-    // printSolidBlocks();
+    // print solid blocked sequences data and positions
+    // printSolidBlockedSequences();
 
     m_log_stream << "* Total run time: "
                  << getSecs(start_time)
@@ -129,6 +130,11 @@ void STSM::run(
 
     // close the logger
     m_log_stream.close();
+}
+
+const Patterns & STSM::getPatterns() const
+{
+    return m_patterns;
 }
 
 void STSM::updateKernelsOfAllCandidates(
@@ -170,7 +176,7 @@ void STSM::mergeKernelsOfAllCandidates(
     ListRangedSequence & _solid_ranged_sequences_k)
 {
     clock_t time = clock();
-    m_log_stream << " - Merging kernels and creating solid sequences...";
+    m_log_stream << " - Merging kernels and creating solid ranged sequences...";
 
     ListKernels::const_iterator kern_it;
     ListCandidates::iterator cand_it;
@@ -190,7 +196,7 @@ void STSM::mergeKernelsOfAllCandidates(
             ++ kern_it)
         {
             // defining a new Ranged Sequence
-            // that is also a Solid Sequence for this kernel range
+            // that is also a Solid Ranged Sequence for this kernel range
             _solid_ranged_sequences_k.push_back(
                 RangedSequence(
                     cand_it->sequence(),
@@ -200,23 +206,23 @@ void STSM::mergeKernelsOfAllCandidates(
     }
 
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
-    m_log_stream << "   (Num of solid sequences (with range size > 1)"
+    m_log_stream << "   (Num of solid ranged sequences (with range size > 1)"
                  << " for this iteration: "
                  << _solid_ranged_sequences_k.size() << ")" << std::endl;
 }
 
-void STSM::detectBlocksOfAllSolidSequences()
+void STSM::detectBlocksOfAllSolidRangedSequences()
 {
     clock_t time = clock();
-    m_log_stream << " - Detecting solid sequence blocks..." << std::endl;
+    m_log_stream << " - Detecting solid ranged sequence blocks..." << std::endl;
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
 
     // for each length
     for(
-        it_ss_by_len = m_solid_ranged_sequences.begin();
-        it_ss_by_len != m_solid_ranged_sequences.end();
+        it_ss_by_len = m_patterns.m_solid_ranged_sequences.begin();
+        it_ss_by_len != m_patterns.m_solid_ranged_sequences.end();
         ++it_ss_by_len
         )
     {
@@ -224,12 +230,13 @@ void STSM::detectBlocksOfAllSolidSequences()
         const ListRangedSequence & sequences = it_ss_by_len->second;
 
         ListBlockedSequences & blocked_sequences =
-            m_solid_blocked_sequences[size] = ListBlockedSequences();
+            m_patterns.m_solid_blocked_sequences[size] =
+            ListBlockedSequences();
 
         // for each sequence of that length
         for(it_ss = sequences.begin(); it_ss != sequences.end(); ++it_ss)
         {
-            detectSolidBlockedSequencesFromSolidSequence(
+            detectSolidBlockedSequencesFromSolidRangedSequence(
                 *it_ss, m_min_block_freq, blocked_sequences);
         }
     }
@@ -459,10 +466,10 @@ void STSM::updateMatchingPositions(
             //     throw std::runtime_error(msg.str());
             // }
 
-            if(m_ranged_sequence_positions.find(& (*it_seq))
-               == m_ranged_sequence_positions.end())
+            if(m_patterns.m_ranged_sequence_positions.find(& (*it_seq))
+               == m_patterns.m_ranged_sequence_positions.end())
             {
-                m_ranged_sequence_positions[& (*it_seq)] =
+                m_patterns.m_ranged_sequence_positions[& (*it_seq)] =
                     ListPositions();
             }
 
@@ -518,7 +525,7 @@ void STSM::updateMatchingPositions(
                     // then the input data-sequence contain the sequence
                     if(str_it == str_seq_rep.end())
                     {
-                        m_ranged_sequence_positions[& (*it_seq)]
+                        m_patterns.m_ranged_sequence_positions[& (*it_seq)]
                             .push_back(Position(row, col - str_seq_size + 1));
 
                         // rewind to start_match_col + 1
@@ -540,11 +547,11 @@ void STSM::updateMatchingPositions(
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
-void STSM::cleanupSolidSequencesWithSmallRangeSize(
+void STSM::cleanupSolidRangedSequencesWithSmallRangeSize(
     const Size & _min_size, ListRangedSequence & _solid_ranged_sequences)
 {
     clock_t time = clock();
-    m_log_stream << " - Clean up solid sequences with small range size...";
+    m_log_stream << " - Clean up solid ranged sequences with small range size...";
 
     ListRangedSequence::iterator it = _solid_ranged_sequences.begin();
 
@@ -563,7 +570,7 @@ void STSM::cleanupSolidSequencesWithSmallRangeSize(
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
-void STSM::detectSolidBlockedSequencesFromSolidSequence(
+void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
     const RangedSequence & _solid_ranged_sequence,
     const Frequency & _min_block_freq,
     ListBlockedSequences & _blocked_sequences)
@@ -585,8 +592,9 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
                  << _solid_ranged_sequence.range().end() << ')';
     m_log_stream.flush();
 
-    const ListPositions & positions = m_ranged_sequence_positions.find(
-        & _solid_ranged_sequence)->second;
+    const ListPositions & positions =
+        m_patterns.m_ranged_sequence_positions.find(
+            & _solid_ranged_sequence)->second;
 
     OccurrenceMatrix occurr_matrix(
         _solid_ranged_sequence,
@@ -629,7 +637,7 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
         BLOCK_MERGE_FULL_MIN_SOLID_BLOCK_SEQUENCE_SIZE
         &&
         sb_candidates.size() <=
-        BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGED_SEQUENCE
+        BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGES
     )
     {
         m_log_stream << "\t full merges:";
@@ -639,8 +647,8 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
         // ListBlockedSequences sb_sub_sort;
         // ListBlockedSequences::iterator it_sort_start, it_sort_end;
 
-        // merge the Sequence Block candidates to obtain Solid Sequence Blocks
-        // that respect Θ
+        // merge the SolidBlockedSequence candidates
+        // to obtain SolidBlockedSequences that respect Θ
         do
         {
             did_any_merge = false;
@@ -843,7 +851,7 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
 
             if(
                 sb_candidates.size() >
-                BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGED_SEQUENCE
+                BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGES
             )
             {
                 m_log_stream << " [WARN] max full blocks per sequence "
@@ -864,8 +872,8 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
 
         bool current_q_used_to_merge;
 
-        // merge the Sequence Block candidates to obtain Solid Sequence Blocks
-        // that respect Θ
+        // merge the SolidBlockedSequence candidates
+        // to obtain SolidBlockedSequences that respect Θ
         do
         {
             did_any_merge = false;
@@ -883,14 +891,15 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
             {
                 current_q_used_to_merge = false;
 
-                // for each other solid sequence r... where r > q
+                // for each other SolidRangedSequence r... where r > q
                 for(
                     it_sb_r = sb_candidates.end(), --it_sb_r;
                     it_sb_r != it_sb_q;
                     --it_sb_r)
                 {
                     it_sb_q->range().unify(it_sb_r->range(), new_range);
-                    it_sb_q->interval().unify(it_sb_r->interval(), new_interval);
+                    it_sb_q->interval().unify(
+                        it_sb_r->interval(), new_interval);
                     new_support = it_sb_q->support() + it_sb_r->support();
                     new_area = new_range.size() * new_interval.size();
 
@@ -1026,7 +1035,7 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
 
             if(
                 sb_candidates.size() >
-                BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_RANGED_SEQUENCE
+                BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_RANGES
             )
             {
                 m_log_stream << " [WARN] max fast blocks per sequence "
@@ -1067,16 +1076,16 @@ void STSM::generate1SizeBlockCandidatesForEachSequenceOccurrence(
     }
 }
 
-void STSM::printSolidSequences()
+void STSM::printSolidRangedSequences()
 {
-    m_log_stream << std::endl << "Printing solid sequences:" << std::endl;
+    m_log_stream << std::endl << "Printing SolidRangedSequences:" << std::endl;
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
 
     for(
-        it_ss_by_len = m_solid_ranged_sequences.begin();
-        it_ss_by_len != m_solid_ranged_sequences.end();
+        it_ss_by_len = m_patterns.m_solid_ranged_sequences.begin();
+        it_ss_by_len != m_patterns.m_solid_ranged_sequences.end();
         ++it_ss_by_len
         )
     {
@@ -1095,16 +1104,16 @@ void STSM::printSolidSequences()
     }
 }
 
-void STSM::printSolidBlocks()
+void STSM::printSolidBlockedSequences()
 {
-    m_log_stream << std::endl << "Printing solid blocks:" << std::endl;
+    m_log_stream << std::endl << "Printing SolidBlockedSequences:" << std::endl;
 
     MapBlockedSequencesByLength::const_iterator it_sb_by_len;
     ListBlockedSequences::const_iterator it_sb;
 
     for(
-        it_sb_by_len = m_solid_blocked_sequences.begin();
-        it_sb_by_len != m_solid_blocked_sequences.end();
+        it_sb_by_len = m_patterns.m_solid_blocked_sequences.begin();
+        it_sb_by_len != m_patterns.m_solid_blocked_sequences.end();
         ++it_sb_by_len
         )
     {
@@ -1123,159 +1132,4 @@ void STSM::printSolidBlocks()
                 << std::endl;
         }
     }
-}
-
-void STSM::saveJSON(const std::string & _output_filename)
-{
-    clock_t time = clock();
-    m_log_stream << "Saving results...";
-
-    nlohmann::json root;
-
-    nlohmann::json solid_ranged_sequences = nlohmann::json::array();
-
-    MapRangedSequencesByLength::const_iterator it_ss_by_len;
-    ListRangedSequence::const_iterator it_ss;
-    MapPositionsBySeq::const_iterator it_list_pos;
-    ListPositions::const_iterator it_pos;
-
-    // for each length in m_solid_ranged_sequences
-    for(
-        it_ss_by_len = m_solid_ranged_sequences.begin();
-        it_ss_by_len != m_solid_ranged_sequences.end();
-        ++it_ss_by_len
-        )
-    {
-        const Size & size = it_ss_by_len->first;
-        const ListRangedSequence & lst_sequences = it_ss_by_len->second;
-
-        nlohmann::json ss;
-        ss["length"] = size;
-
-        nlohmann::json sequences = nlohmann::json::array();
-
-        // for each sequence of that length
-        for(
-            it_ss = lst_sequences.begin();
-            it_ss != lst_sequences.end();
-            ++it_ss
-        )
-        {
-            nlohmann::json seq;
-            seq["sequence"] =  it_ss->sequence().toStringOfItems();
-            seq["support"] = it_ss->support();
-            seq["start"] = it_ss->range().start();
-            seq["end"] = it_ss->range().end();
-
-            it_list_pos = m_ranged_sequence_positions.find(& (*it_ss));
-
-            if(it_list_pos == m_ranged_sequence_positions.end())
-            {
-                std::stringstream msg;
-                msg << "Can not find positions for ranged sequence '"
-                    << it_ss->sequence().toStringOfItems() << '('
-                    << it_ss->range().start() << ','
-                    << it_ss->range().end() << ")'.";
-                throw std::runtime_error(msg.str());
-            }
-
-            const ListPositions & lst_positions = it_list_pos->second;
-
-            if(lst_positions.size() == 0)
-            {
-                std::stringstream msg;
-                msg << "We find 0 positions for ranged sequence '"
-                    << it_ss->sequence().toStringOfItems() << '('
-                    << it_ss->range().start() << ','
-                    << it_ss->range().end() << ")': this is a bug.";
-                throw std::runtime_error(msg.str());
-            }
-
-            // the follow strange way to structure the data
-            // is needed by R language
-            {
-                nlohmann::json spaces = nlohmann::json::array();
-
-                for(
-                    it_pos = lst_positions.begin();
-                    it_pos != lst_positions.end();
-                    ++it_pos
-                    )
-                {
-                    spaces.push_back(it_pos->first);
-                }
-
-                seq["spaces"] = spaces;
-            }
-            {
-                nlohmann::json times = nlohmann::json::array();
-
-                for(
-                    it_pos = lst_positions.begin();
-                    it_pos != lst_positions.end();
-                    ++it_pos
-                    )
-                {
-                    times.push_back(it_pos->second);
-                }
-
-                seq["times"] = times;
-            }
-
-            sequences.push_back(seq);
-        }
-
-        ss["sequences"] = sequences;
-
-        solid_ranged_sequences.push_back(ss);
-    }
-
-    //TODO [CMP] rename solid_sequences to solid_ranged_sequences
-    root["solid_sequences"] = solid_ranged_sequences;
-
-    nlohmann::json solid_blocks = nlohmann::json::array();
-
-    MapBlockedSequencesByLength::const_iterator it_sb_by_len;
-    ListBlockedSequences::const_iterator it_sb;
-
-    // for each length in m_solid_blocks
-    for(
-        it_sb_by_len = m_solid_blocked_sequences.begin();
-        it_sb_by_len != m_solid_blocked_sequences.end();
-        ++it_sb_by_len
-        )
-    {
-        const Size & size = it_sb_by_len->first;
-        const ListBlockedSequences & lst_blocks = it_sb_by_len->second;
-
-        nlohmann::json sb;
-        sb["length"] = size;
-
-        nlohmann::json blocks = nlohmann::json::array();
-
-        // for each sequence of that length
-        for(it_sb = lst_blocks.begin(); it_sb != lst_blocks.end(); ++it_sb)
-        {
-            nlohmann::json blk;
-            blk["sequence"] = it_sb->sequence().toStringOfItems();
-            blk["support"] = it_sb->support();
-            blk["r_start"] = it_sb->range().start();
-            blk["r_end"] = it_sb->range().end();
-            blk["i_start"] = it_sb->interval().start();
-            blk["i_end"] = it_sb->interval().end();
-
-            blocks.push_back(blk);
-        }
-
-        sb["blocks"] = blocks;
-
-        solid_blocks.push_back(sb);
-    }
-
-    root["solid_blocks"] = solid_blocks;
-
-    std::ofstream output_file(_output_filename);
-    output_file << root << std::endl;
-
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }

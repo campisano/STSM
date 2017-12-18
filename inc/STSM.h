@@ -25,15 +25,14 @@
 
 #include <fstream>
 #include <list>
-#include <map>
 #include <string>
-#include <utility>
 
 #include "BlockedSequence.h"
 #include "Candidate.h"
 #include "Database.h"
 #include "Frequency.h"
 #include "Item.h"
+#include "Patterns.h"
 #include "Point.h"
 #include "Position.h"
 #include "RangedSequence.h"
@@ -50,7 +49,7 @@ public:
         const unsigned int & _min_spatial_freq_perc,
         const unsigned int & _min_block_freq_perc);
 
-    void saveJSON(const std::string & _output_filename);
+    const Patterns & getPatterns() const;
 
 protected:
     void setMinSpatialFreq(const Frequency & _min_spatial_freq);
@@ -81,12 +80,12 @@ protected:
         const ListRangedSequence & _solid_ranged_sequences,
         ListCandidates & _candidates);
 
-    void cleanupSolidSequencesWithSmallRangeSize(
+    void cleanupSolidRangedSequencesWithSmallRangeSize(
         const Size & _min_size, ListRangedSequence & _solid_ranged_sequences);
 
-    void detectBlocksOfAllSolidSequences();
+    void detectBlocksOfAllSolidRangedSequences();
 
-    void detectSolidBlockedSequencesFromSolidSequence(
+    void detectSolidBlockedSequencesFromSolidRangedSequence(
         const RangedSequence & _solid_ranged_sequence,
         const Frequency & _min_block_freq,
         ListBlockedSequences & _blocked_sequences);
@@ -96,23 +95,17 @@ protected:
         const RangedSequence & _solid_ranged_sequence,
         ListBlockedSequences & _sb_candidates) const;
 
-    void printSolidSequences();
-    void printSolidBlocks();
+    void printSolidRangedSequences();
+    void printSolidBlockedSequences();
+
+protected:
+    Patterns m_patterns;                // resulting patterns
 
 private:
     std::ofstream m_log_stream;
 
     Frequency m_min_spatial_freq;
     Frequency m_min_block_freq;
-
-protected:
-    MapRangedSequencesByLength m_solid_ranged_sequences;
-    typedef std::map <
-        const RangedSequence *, ListPositions
-        > MapPositionsBySeq;                        // positions by sequence
-    MapPositionsBySeq m_ranged_sequence_positions;
-
-    MapBlockedSequencesByLength m_solid_blocked_sequences;
 };
 
 #endif

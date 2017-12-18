@@ -28,6 +28,7 @@
 #include <string>
 
 #include "database_loader.h"
+#include "patterns_saver.h"
 #include "Database.h"
 #include "STSM.h"
 
@@ -97,7 +98,7 @@ int main(int _argn, char * _argv[])
         std::cout << "Saving results to "
                   << result_json << "..." << std::endl;
         begin = clock();
-        stsm.saveJSON(result_json);
+        savePatterns(result_json, stsm.getPatterns());
         elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
         std::cout << "        save clock time: "
                   << elapsed_s << "s" << std::endl;

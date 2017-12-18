@@ -94,12 +94,12 @@ TEST_CASE_METHOD(
 
     // Assert
 
-    CHECK(m_solid_ranged_sequences.size() > 0);
-    CHECK(m_solid_ranged_sequences[2].size() > 0);
-    CHECK(m_solid_ranged_sequences[3].size() > 0);
-    CHECK(m_solid_ranged_sequences[4].size() > 0);
-    CHECK(m_solid_ranged_sequences[5].size() == 1);
-    CHECK(m_solid_ranged_sequences[6].size() == 0);
+    CHECK(m_patterns.m_solid_ranged_sequences.size() > 0);
+    CHECK(m_patterns.m_solid_ranged_sequences[2].size() > 0);
+    CHECK(m_patterns.m_solid_ranged_sequences[3].size() > 0);
+    CHECK(m_patterns.m_solid_ranged_sequences[4].size() > 0);
+    CHECK(m_patterns.m_solid_ranged_sequences[5].size() == 1);
+    CHECK(m_patterns.m_solid_ranged_sequences[6].size() == 0);
 
     // Cleanup
 
@@ -143,9 +143,9 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_ranged_sequences[4].size() == 1);
+    CHECK(m_patterns.m_solid_ranged_sequences[4].size() == 1);
 
-    RangedSequence & rs = m_solid_ranged_sequences[4].back();
+    RangedSequence & rs = m_patterns.m_solid_ranged_sequences[4].back();
 
     // testing synthetic known data
     CHECK(rs.sequence().toStringOfItems() == "ABCD");
@@ -196,10 +196,10 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_ranged_sequences[4].size() == 1);
+    CHECK(m_patterns.m_solid_ranged_sequences[4].size() == 1);
 
-    RangedSequence & rs = m_solid_ranged_sequences[4].back();
-    ListPositions & positions = m_ranged_sequence_positions[&rs];
+    RangedSequence & rs = m_patterns.m_solid_ranged_sequences[4].back();
+    ListPositions & positions = m_patterns.m_ranged_sequence_positions[&rs];
     std::vector < Position > v_pos (positions.begin(), positions.end());
 
     // testing expected positions
@@ -255,9 +255,9 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_ranged_sequences[4].size() == 1);
+    CHECK(m_patterns.m_solid_ranged_sequences[4].size() == 1);
 
-    RangedSequence & rs = m_solid_ranged_sequences[4].back();
+    RangedSequence & rs = m_patterns.m_solid_ranged_sequences[4].back();
 
     // testing synthetic known data
     CHECK(rs.sequence().toStringOfItems() == "EFGH");
@@ -308,9 +308,9 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_ranged_sequences[4].size() == 1);
+    CHECK(m_patterns.m_solid_ranged_sequences[4].size() == 1);
 
-    RangedSequence & rs = m_solid_ranged_sequences[4].back();
+    RangedSequence & rs = m_patterns.m_solid_ranged_sequences[4].back();
 
     // testing defined min frequency
     CHECK(rs.frequency() >= (min_spatial - FREQ_EPSILON));
@@ -364,11 +364,11 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_ranged_sequences[5].size() == 1);
-    CHECK(m_solid_blocked_sequences[5].size() == 1);
+    CHECK(m_patterns.m_solid_ranged_sequences[5].size() == 1);
+    CHECK(m_patterns.m_solid_blocked_sequences[5].size() == 1);
 
-    RangedSequence & rs = m_solid_ranged_sequences[5].back();
-    BlockedSequence & bs = m_solid_blocked_sequences[5].back();
+    RangedSequence & rs = m_patterns.m_solid_ranged_sequences[5].back();
+    BlockedSequence & bs = m_patterns.m_solid_blocked_sequences[5].back();
 
     // testing synthetic known data
     CHECK(rs.sequence().toStringOfItems() == "EFGHI");
@@ -427,13 +427,13 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_blocked_sequences[5].size() == 3);
+    CHECK(m_patterns.m_solid_blocked_sequences[5].size() == 3);
 
     ListBlockedSequences::const_iterator it;
 
     for(
-        it = m_solid_blocked_sequences[5].begin();
-        it != m_solid_blocked_sequences[5].end();
+        it = m_patterns.m_solid_blocked_sequences[5].begin();
+        it != m_patterns.m_solid_blocked_sequences[5].end();
         ++it)
     {
         CHECK(it->sequence().toStringOfItems() == "EFGHI");
@@ -482,9 +482,9 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_blocked_sequences[5].size() == 1);
+    CHECK(m_patterns.m_solid_blocked_sequences[5].size() == 1);
 
-    BlockedSequence & bs = m_solid_blocked_sequences[5].back();
+    BlockedSequence & bs = m_patterns.m_solid_blocked_sequences[5].back();
 
     // testing synthetic known data
     CHECK(bs.sequence().toStringOfItems() == "EFGHI");
@@ -537,9 +537,9 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_blocked_sequences[5].size() == 1);
+    CHECK(m_patterns.m_solid_blocked_sequences[5].size() == 1);
 
-    BlockedSequence & bs = m_solid_blocked_sequences[5].back();
+    BlockedSequence & bs = m_patterns.m_solid_blocked_sequences[5].back();
 
     // testing synthetic known data
     CHECK(bs.sequence().toStringOfItems() == "EFGHI");
@@ -592,9 +592,9 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_blocked_sequences[5].size() == 1);
+    CHECK(m_patterns.m_solid_blocked_sequences[5].size() == 1);
 
-    BlockedSequence & bs = m_solid_blocked_sequences[5].back();
+    BlockedSequence & bs = m_patterns.m_solid_blocked_sequences[5].back();
 
     // testing synthetic known data
     CHECK(bs.sequence().toStringOfItems() == "EFGHI");
@@ -647,9 +647,9 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_blocked_sequences[4].size() == 1);
+    CHECK(m_patterns.m_solid_blocked_sequences[4].size() == 1);
 
-    BlockedSequence & bs = m_solid_blocked_sequences[4].back();
+    BlockedSequence & bs = m_patterns.m_solid_blocked_sequences[4].back();
 
     // testing synthetic known data
     CHECK(bs.sequence().toStringOfItems() == "ABCD");
