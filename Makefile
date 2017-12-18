@@ -23,7 +23,7 @@
 
 
 # version of this Makefile
-MAKEFILE_VER =			1.0.0
+MAKEFILE_VER =			1.1.1
 
 # make options
 MAKEFLAGS +=			-s
@@ -40,7 +40,7 @@ TARGET_LIB =			libSTSM.so
 
 # CUSTOM paths
 INC_DIRS =				inc ext
-SRC_DIRS =				src/stsm
+SRC_DIRS =				src/stsm src/utils
 MAIN = 					src/main.cpp
 TEST_DIRS =				src/tests
 LIB_DIRS =				lib
@@ -95,7 +95,7 @@ TARGETS =				release static debug profile test library
 
 # defining default target
 ifeq ($(MAKECMDGOALS),)
-	MAKECMDGOALS :=		release
+	MAKECMDGOALS =		release
 endif
 
 ifeq ($(MAKECMDGOALS), release)
@@ -154,10 +154,16 @@ DEPS :=					$(OBJS:.o=.d)
 -include $(DEPS)		# include dependencies
 
 # targets
-$(TARGETS):				INFO_TRG INFO_CMDS $(TARGET)
+$(TARGETS):				INFO_TRG INFO_CMDS $(TARGET) cleandeps
+
+.PHONY:					$(TARGETS) clean cleandeps
+
 clean:					INFO_TRG
 	@echo Removing $(ROOT_BUILD_DIR)
 	$(if $(ROOT_BUILD_DIR),($(RM) -r $(ROOT_BUILD_DIR)),)
+
+cleandeps:
+	$(RM) $(DEPS)
 
 
 
