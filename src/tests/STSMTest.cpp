@@ -27,9 +27,10 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include <STSM.h>
 
-#include "Kernel.h"
+#include "database_loader.h"
+#include "Database.h"
+#include "STSM.h"
 
 namespace
 {
@@ -56,10 +57,6 @@ namespace
         REQUIRE(system(("rmdir " + TEST_FOLDER + "/").c_str()) == 0);
     }
 }
-
-// class STSMTest : public STSM
-// {
-// };
 
 TEST_CASE_METHOD(
     STSM,
@@ -91,7 +88,9 @@ TEST_CASE_METHOD(
 
     // Act
 
-    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    Database database;
+    loadDatabase(input_file, database);
+    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -137,7 +136,9 @@ TEST_CASE_METHOD(
 
     // Act
 
-    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    Database database;
+    loadDatabase(input_file, database);
+    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -188,7 +189,9 @@ TEST_CASE_METHOD(
 
     // Act
 
-    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    Database database;
+    loadDatabase(input_file, database);
+    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -245,7 +248,9 @@ TEST_CASE_METHOD(
 
     // Act
 
-    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    Database database;
+    loadDatabase(input_file, database);
+    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -296,7 +301,9 @@ TEST_CASE_METHOD(
 
     // Act
 
-    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    Database database;
+    loadDatabase(input_file, database);
+    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -350,7 +357,9 @@ TEST_CASE_METHOD(
 
     // Act
 
-    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    Database database;
+    loadDatabase(input_file, database);
+    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -411,7 +420,9 @@ TEST_CASE_METHOD(
 
     // Act
 
-    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    Database database;
+    loadDatabase(input_file, database);
+    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -464,7 +475,9 @@ TEST_CASE_METHOD(
 
     // Act
 
-    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    Database database;
+    loadDatabase(input_file, database);
+    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -517,7 +530,9 @@ TEST_CASE_METHOD(
 
     // Act
 
-    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    Database database;
+    loadDatabase(input_file, database);
+    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -570,7 +585,9 @@ TEST_CASE_METHOD(
 
     // Act
 
-    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    Database database;
+    loadDatabase(input_file, database);
+    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -623,7 +640,9 @@ TEST_CASE_METHOD(
 
     // Act
 
-    STSM::run(input_file, log_file, min_spatial * 100, min_block * 100);
+    Database database;
+    loadDatabase(input_file, database);
+    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
 
     // Assert
 

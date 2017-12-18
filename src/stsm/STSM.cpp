@@ -25,7 +25,6 @@
 #include <algorithm>
 #include <ctime>
 #include <json.hpp>
-#include <rapidcsv.h>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -62,22 +61,12 @@ STSM::~STSM()
 {
 }
 
-void STSM::clear()
-{
-    m_database.clear();
-    m_solid_sequences.clear();
-    m_ranged_sequence_positions.clear();
-    m_solid_sequence_blocks.clear();
-}
-
 void STSM::run(
-    const std::string & _input_filename,
+    const Database & _database,
     const std::string & _log_filename,
     const unsigned int & _min_spatial_freq_perc,
     const unsigned int & _min_block_freq_perc)
 {
-    clear();
-
     setMinSpatialFreq(float(_min_spatial_freq_perc) / 100.0);
     setMinBlockFreq(float(_min_block_freq_perc) / 100.0);
 
@@ -87,7 +76,6 @@ void STSM::run(
     m_log_stream.open(_log_filename.c_str());
 
     // logging info
-    m_log_stream << "Input: " << _input_filename << std::endl;
     m_log_stream << "Log: " << _log_filename << std::endl;
     m_log_stream << "Min Spatial Frequency value: "
                  << m_min_spatial_freq << std::endl;
@@ -95,13 +83,11 @@ void STSM::run(
                  << m_min_block_freq << std::endl;
     m_log_stream << std::endl;
 
-    loadDatabase(_input_filename);
-
     SetItems items;
-    generateTheSetOfAllDatabaseItems(m_database, items);
+    generateTheSetOfAllDatabaseItems(_database, items);
 
     ListCandidates candidates;
-    generate1SizeCandidates(items, 0, m_database.size() - 1, candidates);
+    generate1SizeCandidates(items, 0, _database.size() - 1, candidates);
 
     Size seq_size = 1;
 
@@ -113,13 +99,13 @@ void STSM::run(
         ListRangedSequence & solid_sequences_k =
             m_solid_sequences[seq_size] = ListRangedSequence();
 
-        updateKernelsOfAllCandidates(candidates);
+        updateKernelsOfAllCandidates(_database, candidates);
         mergeKernelsOfAllCandidates(candidates, solid_sequences_k);
 
         cleanupSolidSequencesWithSmallRangeSize(
             MIN_RANGE_SIZE, solid_sequences_k);
 
-        updateMatchingPositions(solid_sequences_k);
+        updateMatchingPositions(_database, solid_sequences_k);
 
         candidates.clear();
         generateCandidates(solid_sequences_k, candidates);
@@ -144,7 +130,9 @@ void STSM::run(
     m_log_stream.close();
 }
 
-void STSM::updateKernelsOfAllCandidates(ListCandidates & _candidates)
+void STSM::updateKernelsOfAllCandidates(
+    const Database & _database,
+    ListCandidates & _candidates)
 {
     clock_t time = clock();
     m_log_stream << " - Updating candidate kernels...";
@@ -154,7 +142,7 @@ void STSM::updateKernelsOfAllCandidates(ListCandidates & _candidates)
     ListCandidates::iterator cand_it;
 
     // for each Database series
-    for(db_it = m_database.begin(); db_it != m_database.end(); ++db_it)
+    for(db_it = _database.begin(); db_it != _database.end(); ++db_it)
     {
         // for each candidate...
         for(cand_it = _candidates.begin();
@@ -243,32 +231,6 @@ void STSM::detectBlocksOfAllSolidSequences()
             detectSolidSequenceBlocksFromSolidSequence(
                 *it_ss, m_min_block_freq, sequence_blocks);
         }
-    }
-
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
-}
-
-void STSM::loadDatabase(const std::string & _input_filename)
-{
-    clock_t time = clock();
-    m_log_stream << "Loading database...";
-
-    rapidcsv::Document doc(
-        rapidcsv::Properties(_input_filename, 0, -1));
-
-    //TODO [CMP] now we should rotate the csv to the expected order
-    // unsigned int i, cols = doc.GetColumnCount();
-
-    // for(i = 0; i < cols; ++i)
-    // {
-    //     m_database.push_back(doc.GetColumn<char>(i));
-    // }
-
-    unsigned int i, rows = doc.GetRowCount();
-
-    for(i = 0; i < rows; ++i)
-    {
-        m_database.push_back(doc.GetRow<char>(i));
     }
 
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
@@ -442,7 +404,9 @@ void STSM::setMinBlockFreq(const Frequency & _min_block_freq)
     m_min_block_freq = _min_block_freq;
 }
 
-void STSM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
+void STSM::updateMatchingPositions(
+    const Database & _database,
+    const ListRangedSequence & _solid_sequences)
 {
     clock_t time = clock();
     m_log_stream << " - Detecting sequence positions in the database...";
@@ -452,7 +416,7 @@ void STSM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
     std::string str_seq_rep;
     std::stringstream ss_tmp;
     std::string::iterator str_it;
-    unsigned int tot_rows = m_database.size();
+    unsigned int tot_rows = _database.size();
     unsigned int tot_cols;
     unsigned int col;
     unsigned int start_match_col;
@@ -464,9 +428,9 @@ void STSM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
     {
         // [CMP] for debug
         // m_log_stream << std::string(
-        //     m_database[row].begin(), m_database[row].end()) << std::endl;
+        //     _database[row].begin(), _database[row].end()) << std::endl;
 
-        tot_cols = m_database[row].size();
+        tot_cols = _database[row].size();
 
         // for each sequence candidate
         for(
@@ -534,7 +498,7 @@ void STSM::updateMatchingPositions(const ListRangedSequence & _solid_sequences)
                     continue;
                 }
 
-                Item & item = m_database[row][col];
+                const Item & item = _database[row][col];
 
                 // if match, go to next item of the sequence
                 if(item == *str_it)
