@@ -145,14 +145,14 @@ TEST_CASE_METHOD(
     // testing number and last expected results
     CHECK(m_solid_sequences[4].size() == 1);
 
-    RangedSequence & rg = m_solid_sequences[4].back();
+    RangedSequence & rs = m_solid_sequences[4].back();
 
     // testing synthetic known data
-    CHECK(rg.sequence().toStringOfItems() == "ABCD");
-    CHECK(rg.range().start() == 0);
-    CHECK(rg.range().end() == 3);
-    CHECK(rg.support() == 4);
-    CHECK((rg.frequency() - min_spatial) < FREQ_EPSILON);
+    CHECK(rs.sequence().toStringOfItems() == "ABCD");
+    CHECK(rs.range().start() == 0);
+    CHECK(rs.range().end() == 3);
+    CHECK(rs.support() == 4);
+    CHECK((rs.frequency() - min_spatial) < FREQ_EPSILON);
 
     // Cleanup
 
@@ -198,8 +198,8 @@ TEST_CASE_METHOD(
     // testing number and last expected results
     CHECK(m_solid_sequences[4].size() == 1);
 
-    RangedSequence & rg = m_solid_sequences[4].back();
-    ListPositions & positions = m_ranged_sequence_positions[&rg];
+    RangedSequence & rs = m_solid_sequences[4].back();
+    ListPositions & positions = m_ranged_sequence_positions[&rs];
     std::vector < Position > v_pos (positions.begin(), positions.end());
 
     // testing expected positions
@@ -220,7 +220,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f75 does get EFGH75 solidSequence",
+    "Run f75 does get EFGH75 solid RangedSequence",
     "[Run]")
 {
     // Arrange
@@ -257,14 +257,14 @@ TEST_CASE_METHOD(
     // testing number and last expected results
     CHECK(m_solid_sequences[4].size() == 1);
 
-    RangedSequence & rg = m_solid_sequences[4].back();
+    RangedSequence & rs = m_solid_sequences[4].back();
 
     // testing synthetic known data
-    CHECK(rg.sequence().toStringOfItems() == "EFGH");
-    CHECK(rg.range().start() == 4);
-    CHECK(rg.range().end() == 7);
-    CHECK(rg.support() == 3);
-    CHECK((rg.frequency() - min_spatial) < FREQ_EPSILON);
+    CHECK(rs.sequence().toStringOfItems() == "EFGH");
+    CHECK(rs.range().start() == 4);
+    CHECK(rs.range().end() == 7);
+    CHECK(rs.support() == 3);
+    CHECK((rs.frequency() - min_spatial) < FREQ_EPSILON);
 
     // Cleanup
 
@@ -273,7 +273,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f90 does not get EFGH75 solidSequence",
+    "Run f90 does not get EFGH75 solid RangesSequence",
     "[Run]")
 {
     // Arrange
@@ -310,17 +310,17 @@ TEST_CASE_METHOD(
     // testing number and last expected results
     CHECK(m_solid_sequences[4].size() == 1);
 
-    RangedSequence & rg = m_solid_sequences[4].back();
+    RangedSequence & rs = m_solid_sequences[4].back();
 
     // testing defined min frequency
-    CHECK(rg.frequency() >= (min_spatial - FREQ_EPSILON));
+    CHECK(rs.frequency() >= (min_spatial - FREQ_EPSILON));
 
     // testing synthetic known data
-    CHECK(rg.sequence().toStringOfItems() == "EFGH");
-    CHECK(rg.range().start() == 6);
-    CHECK(rg.range().end() == 7);
-    CHECK(rg.support() == 2);
-    CHECK((rg.frequency() - 1.0) < FREQ_EPSILON);
+    CHECK(rs.sequence().toStringOfItems() == "EFGH");
+    CHECK(rs.range().start() == 6);
+    CHECK(rs.range().end() == 7);
+    CHECK(rs.support() == 2);
+    CHECK((rs.frequency() - 1.0) < FREQ_EPSILON);
 
     // Cleanup
 
@@ -329,7 +329,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f100 b100 does get EFGHI solidBlock",
+    "Run f100 b100 does get EFGHI solid BlockedSequence",
     "[Run]")
 {
     // Arrange
@@ -365,25 +365,25 @@ TEST_CASE_METHOD(
 
     // testing number and last expected results
     CHECK(m_solid_sequences[5].size() == 1);
-    CHECK(m_solid_sequence_blocks[5].size() == 1);
+    CHECK(m_solid_blocked_sequences[5].size() == 1);
 
-    RangedSequence & rg = m_solid_sequences[5].back();
-    SequenceBlock & sb = m_solid_sequence_blocks[5].back();
+    RangedSequence & rs = m_solid_sequences[5].back();
+    BlockedSequence & bs = m_solid_blocked_sequences[5].back();
 
     // testing synthetic known data
-    CHECK(rg.sequence().toStringOfItems() == "EFGHI");
-    CHECK(rg.range().start() == 4);
-    CHECK(rg.range().end() == 6);
-    CHECK(rg.support() == 3);
-    CHECK((rg.frequency() - min_spatial) < FREQ_EPSILON);
+    CHECK(rs.sequence().toStringOfItems() == "EFGHI");
+    CHECK(rs.range().start() == 4);
+    CHECK(rs.range().end() == 6);
+    CHECK(rs.support() == 3);
+    CHECK((rs.frequency() - min_spatial) < FREQ_EPSILON);
 
-    CHECK(sb.sequence().toStringOfItems() == "EFGHI");
-    CHECK(sb.range().start() == 4);
-    CHECK(sb.range().end() == 6);
-    CHECK(sb.interval().start() == 13);
-    CHECK(sb.interval().end() == 17);
-    CHECK(sb.support() == 15);
-    CHECK((sb.frequency() - min_block) < FREQ_EPSILON);
+    CHECK(bs.sequence().toStringOfItems() == "EFGHI");
+    CHECK(bs.range().start() == 4);
+    CHECK(bs.range().end() == 6);
+    CHECK(bs.interval().start() == 13);
+    CHECK(bs.interval().end() == 17);
+    CHECK(bs.support() == 15);
+    CHECK((bs.frequency() - min_block) < FREQ_EPSILON);
 
     // Cleanup
 
@@ -427,13 +427,13 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_sequence_blocks[5].size() == 3);
+    CHECK(m_solid_blocked_sequences[5].size() == 3);
 
-    ListSequenceBlocks::const_iterator it;
+    ListBlockedSequences::const_iterator it;
 
     for(
-        it = m_solid_sequence_blocks[5].begin();
-        it != m_solid_sequence_blocks[5].end();
+        it = m_solid_blocked_sequences[5].begin();
+        it != m_solid_blocked_sequences[5].end();
         ++it)
     {
         CHECK(it->sequence().toStringOfItems() == "EFGHI");
@@ -447,7 +447,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f75 b75 does get EFGHI7575 solidBlock",
+    "Run f75 b75 does get EFGHI7575 solid BlockedSequence",
     "[Run]")
 {
     // Arrange
@@ -482,18 +482,18 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_sequence_blocks[5].size() == 1);
+    CHECK(m_solid_blocked_sequences[5].size() == 1);
 
-    SequenceBlock & sb = m_solid_sequence_blocks[5].back();
+    BlockedSequence & bs = m_solid_blocked_sequences[5].back();
 
     // testing synthetic known data
-    CHECK(sb.sequence().toStringOfItems() == "EFGHI");
-    CHECK(sb.range().start() == 4);
-    CHECK(sb.range().end() == 7);
-    CHECK(sb.interval().start() == 13);
-    CHECK(sb.interval().end() == 17);
-    CHECK(sb.support() == 15);
-    CHECK((sb.frequency() - min_block) < FREQ_EPSILON);
+    CHECK(bs.sequence().toStringOfItems() == "EFGHI");
+    CHECK(bs.range().start() == 4);
+    CHECK(bs.range().end() == 7);
+    CHECK(bs.interval().start() == 13);
+    CHECK(bs.interval().end() == 17);
+    CHECK(bs.support() == 15);
+    CHECK((bs.frequency() - min_block) < FREQ_EPSILON);
 
     // Cleanup
 
@@ -502,7 +502,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f100 b50 does get EFGHI10025 solidBlock",
+    "Run f100 b50 does get EFGHI10025 solid BlockedSequence",
     "[Run]")
 {
     // Arrange
@@ -537,18 +537,18 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_sequence_blocks[5].size() == 1);
+    CHECK(m_solid_blocked_sequences[5].size() == 1);
 
-    SequenceBlock & sb = m_solid_sequence_blocks[5].back();
+    BlockedSequence & bs = m_solid_blocked_sequences[5].back();
 
     // testing synthetic known data
-    CHECK(sb.sequence().toStringOfItems() == "EFGHI");
-    CHECK(sb.range().start() == 4);
-    CHECK(sb.range().end() == 7);
-    CHECK(sb.interval().start() == 13);
-    CHECK(sb.interval().end() == 22);
-    CHECK(sb.support() == 20);
-    CHECK((sb.frequency() - min_block) < FREQ_EPSILON);
+    CHECK(bs.sequence().toStringOfItems() == "EFGHI");
+    CHECK(bs.range().start() == 4);
+    CHECK(bs.range().end() == 7);
+    CHECK(bs.interval().start() == 13);
+    CHECK(bs.interval().end() == 22);
+    CHECK(bs.support() == 20);
+    CHECK((bs.frequency() - min_block) < FREQ_EPSILON);
 
     // Cleanup
 
@@ -557,7 +557,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f100 b75 same line does get EFGHI10034 solidBlock",
+    "Run f100 b75 same line does get EFGHI10034 solid BlockedSequence",
     "[Run]")
 {
     // Arrange
@@ -592,18 +592,18 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_sequence_blocks[5].size() == 1);
+    CHECK(m_solid_blocked_sequences[5].size() == 1);
 
-    SequenceBlock & sb = m_solid_sequence_blocks[5].back();
+    BlockedSequence & bs = m_solid_blocked_sequences[5].back();
 
     // testing synthetic known data
-    CHECK(sb.sequence().toStringOfItems() == "EFGHI");
-    CHECK(sb.range().start() == 4);
-    CHECK(sb.range().end() == 5);
-    CHECK(sb.interval().start() == 13);
-    CHECK(sb.interval().end() == 22);
-    CHECK(sb.support() == 15);
-    CHECK((sb.frequency() - min_block) < FREQ_EPSILON);
+    CHECK(bs.sequence().toStringOfItems() == "EFGHI");
+    CHECK(bs.range().start() == 4);
+    CHECK(bs.range().end() == 5);
+    CHECK(bs.interval().start() == 13);
+    CHECK(bs.interval().end() == 22);
+    CHECK(bs.support() == 15);
+    CHECK((bs.frequency() - min_block) < FREQ_EPSILON);
 
     // Cleanup
 
@@ -612,7 +612,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f100 b50 does get ABCD big solidBlock",
+    "Run f100 b50 does get ABCD big solid BlockedSequence",
     "[Run]")
 {
     // Arrange
@@ -647,18 +647,18 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_sequence_blocks[4].size() == 1);
+    CHECK(m_solid_blocked_sequences[4].size() == 1);
 
-    SequenceBlock & sb = m_solid_sequence_blocks[4].back();
+    BlockedSequence & bs = m_solid_blocked_sequences[4].back();
 
     // testing synthetic known data
-    CHECK(sb.sequence().toStringOfItems() == "ABCD");
-    CHECK(sb.range().start() == 0);
-    CHECK(sb.range().end() == 6);
-    CHECK(sb.interval().start() == 9);
-    CHECK(sb.interval().end() == 18);
-    CHECK(sb.support() == 36);
-    CHECK((sb.frequency() - (36.0/70.0)) < FREQ_EPSILON);
+    CHECK(bs.sequence().toStringOfItems() == "ABCD");
+    CHECK(bs.range().start() == 0);
+    CHECK(bs.range().end() == 6);
+    CHECK(bs.interval().start() == 9);
+    CHECK(bs.interval().end() == 18);
+    CHECK(bs.support() == 36);
+    CHECK((bs.frequency() - (36.0/70.0)) < FREQ_EPSILON);
 
     // Cleanup
 

@@ -1,3 +1,4 @@
+
 // Copyright (C) 2017 Riccardo Campisano <riccardo.campisano@gmail.com>
 //               2017 Fabio Porto
 //               2017 Fabio Perosi
@@ -222,14 +223,14 @@ void STSM::detectBlocksOfAllSolidSequences()
         const Size & size = it_ss_by_len->first;
         const ListRangedSequence & sequences = it_ss_by_len->second;
 
-        ListSequenceBlocks & sequence_blocks =
-            m_solid_sequence_blocks[size] = ListSequenceBlocks();
+        ListBlockedSequences & blocked_sequences =
+            m_solid_blocked_sequences[size] = ListBlockedSequences();
 
         // for each sequence of that length
         for(it_ss = sequences.begin(); it_ss != sequences.end(); ++it_ss)
         {
-            detectSolidSequenceBlocksFromSolidSequence(
-                *it_ss, m_min_block_freq, sequence_blocks);
+            detectSolidBlockedSequencesFromSolidSequence(
+                *it_ss, m_min_block_freq, blocked_sequences);
         }
     }
 
@@ -562,10 +563,10 @@ void STSM::cleanupSolidSequencesWithSmallRangeSize(
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
 }
 
-void STSM::detectSolidSequenceBlocksFromSolidSequence(
+void STSM::detectSolidBlockedSequencesFromSolidSequence(
     const RangedSequence & _solid_sequence,
     const Frequency & _min_block_freq,
-    ListSequenceBlocks & _sequence_blocks)
+    ListBlockedSequences & _blocked_sequences)
 {
     if(
         _solid_sequence.sequence().size() <
@@ -591,7 +592,7 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
         _solid_sequence,
         positions);
 
-    ListSequenceBlocks sb_candidates;
+    ListBlockedSequences sb_candidates;
     generate1SizeBlockCandidatesForEachSequenceOccurrence(
         positions,
         _solid_sequence,
@@ -600,15 +601,15 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
     m_log_stream << "\tinit.size: " << sb_candidates.size();
     m_log_stream.flush();
 
-    ListSequenceBlocks to_add;
-    ListSequenceBlocks::iterator it_sb_to_add;
+    ListBlockedSequences to_add;
+    ListBlockedSequences::iterator it_sb_to_add;
 
     typedef std::set <
-        ListSequenceBlocks::iterator, SequenceBlock::LessThanComparer > DelIt;
+        ListBlockedSequences::iterator, BlockedSequence::LessThanComparer > DelIt;
     DelIt to_del;
     DelIt::iterator it_sb_to_del;
 
-    ListSequenceBlocks::iterator it_sb_q, it_sb_r;
+    ListBlockedSequences::iterator it_sb_q, it_sb_r;
 
     Range new_range(0, 0);
     Interval new_interval(0,0);
@@ -619,8 +620,8 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
     bool is_contained;
     size_t additional_erased;
     size_t skipped;
-    ListSequenceBlocks::iterator chk_toadd_bigger_it;
-    ListSequenceBlocks::iterator chk_cand_bigger_it;
+    ListBlockedSequences::iterator chk_toadd_bigger_it;
+    ListBlockedSequences::iterator chk_cand_bigger_it;
 
 	if(
         _solid_sequence.sequence().size() >=
@@ -634,8 +635,8 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
         m_log_stream.flush();
 
         // TODO [CMP] sort disabled: is wrost
-        // ListSequenceBlocks sb_sub_sort;
-        // ListSequenceBlocks::iterator it_sort_start, it_sort_end;
+        // ListBlockedSequences sb_sub_sort;
+        // ListBlockedSequences::iterator it_sort_start, it_sort_end;
 
         // merge the Sequence Block candidates to obtain Solid Sequence Blocks
         // that respect Θ
@@ -649,7 +650,7 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
             // sort candidates to be ordered by Manhattan distance
             // from 0,0 point
             // sb_candidates.sort(
-            //     SequenceBlock::PositionComparer(0, 0));
+            //     BlockedSequence::PositionComparer(0, 0));
 
             // m_log_stream << " sort"<< " (" << getSecs(mid_time) << "s)";
             // m_log_stream.flush();
@@ -678,7 +679,7 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
 
                 // // sort
                 // sb_sub_sort.sort(
-                //     SequenceBlock::PositionComparer(
+                //     BlockedSequence::PositionComparer(
                 //         it_sb_q->range().start(),
                 //         it_sb_q->interval().start()));
 
@@ -726,7 +727,7 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
                         // the num of all items in the block is >= Θ
                         if((float(new_support) / new_area) >= _min_block_freq)
                         {
-                            SequenceBlock merged(
+                            BlockedSequence merged(
                                 _solid_sequence.sequence(),
                                 new_range,
                                 new_interval,
@@ -896,7 +897,7 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
                     // the num of all items in the block is >= Θ
                     if((float(new_support) / new_area) >= _min_block_freq)
                     {
-                        SequenceBlock merged(
+                        BlockedSequence merged(
                             _solid_sequence.sequence(),
                             new_range,
                             new_interval,
@@ -1040,8 +1041,8 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
     m_log_stream << std::endl;
     m_log_stream.flush();
 
-    _sequence_blocks.insert(
-        _sequence_blocks.end(),
+    _blocked_sequences.insert(
+        _blocked_sequences.end(),
         sb_candidates.begin(),
         sb_candidates.end());
 }
@@ -1049,7 +1050,7 @@ void STSM::detectSolidSequenceBlocksFromSolidSequence(
 void STSM::generate1SizeBlockCandidatesForEachSequenceOccurrence(
     const ListPositions & _positions,
     const RangedSequence & _solid_sequence,
-    ListSequenceBlocks & _sb_candidates) const
+    ListBlockedSequences & _sb_candidates) const
 {
     const Size seq_size =  _solid_sequence.sequence().size();
     ListPositions::const_iterator it_pos;
@@ -1057,7 +1058,7 @@ void STSM::generate1SizeBlockCandidatesForEachSequenceOccurrence(
     for(it_pos = _positions.begin(); it_pos != _positions.end(); ++it_pos)
     {
         _sb_candidates.push_back(
-            SequenceBlock(
+            BlockedSequence(
                 _solid_sequence.sequence(),
                 Range(it_pos->first, it_pos->first),
                 Interval(it_pos->second, it_pos->second + seq_size - 1),
@@ -1097,16 +1098,16 @@ void STSM::printSolidBlocks()
 {
     m_log_stream << std::endl << "Printing solid blocks:" << std::endl;
 
-    MapSequenceBlocksByLength::const_iterator it_sb_by_len;
-    ListSequenceBlocks::const_iterator it_sb;
+    MapBlockedSequencesByLength::const_iterator it_sb_by_len;
+    ListBlockedSequences::const_iterator it_sb;
 
     for(
-        it_sb_by_len = m_solid_sequence_blocks.begin();
-        it_sb_by_len != m_solid_sequence_blocks.end();
+        it_sb_by_len = m_solid_blocked_sequences.begin();
+        it_sb_by_len != m_solid_blocked_sequences.end();
         ++it_sb_by_len
         )
     {
-        const ListSequenceBlocks & blocks = it_sb_by_len->second;
+        const ListBlockedSequences & blocks = it_sb_by_len->second;
 
         for(it_sb = blocks.begin(); it_sb != blocks.end(); ++it_sb)
         {
@@ -1232,18 +1233,18 @@ void STSM::saveJSON(const std::string & _output_filename)
 
     nlohmann::json solid_blocks = nlohmann::json::array();
 
-    MapSequenceBlocksByLength::const_iterator it_sb_by_len;
-    ListSequenceBlocks::const_iterator it_sb;
+    MapBlockedSequencesByLength::const_iterator it_sb_by_len;
+    ListBlockedSequences::const_iterator it_sb;
 
     // for each length in m_solid_blocks
     for(
-        it_sb_by_len = m_solid_sequence_blocks.begin();
-        it_sb_by_len != m_solid_sequence_blocks.end();
+        it_sb_by_len = m_solid_blocked_sequences.begin();
+        it_sb_by_len != m_solid_blocked_sequences.end();
         ++it_sb_by_len
         )
     {
         const Size & size = it_sb_by_len->first;
-        const ListSequenceBlocks & lst_blocks = it_sb_by_len->second;
+        const ListBlockedSequences & lst_blocks = it_sb_by_len->second;
 
         nlohmann::json sb;
         sb["length"] = size;

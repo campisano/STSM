@@ -20,8 +20,8 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with STSM.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef SEQUENCE_BLOCK__H__
-#define SEQUENCE_BLOCK__H__
+#ifndef BLOCKED_SEQUENCE__H__
+#define BLOCKED_SEQUENCE__H__
 
 #include <list>
 #include <map>
@@ -33,21 +33,21 @@
 #include "Size.h"
 #include "Support.h"
 
-class SequenceBlock;
-typedef std::list < SequenceBlock > ListSequenceBlocks;
-typedef std::map < Size, ListSequenceBlocks > MapSequenceBlocksByLength;
+class BlockedSequence;
+typedef std::list < BlockedSequence > ListBlockedSequences;
+typedef std::map < Size, ListBlockedSequences > MapBlockedSequencesByLength;
 
-class SequenceBlock
+class BlockedSequence
 {
 public:
-    explicit SequenceBlock(
+    explicit BlockedSequence(
         const Sequence & _sequence,
         const Range & _range,
         const Interval & _interval,
         const Support & _support);
 
-    bool operator==(const SequenceBlock & _other) const;
-    bool operator!=(const SequenceBlock & _other) const;
+    bool operator==(const BlockedSequence & _other) const;
+    bool operator!=(const BlockedSequence & _other) const;
 
     const Sequence & sequence() const;
     const Range & range() const;
@@ -57,18 +57,18 @@ public:
     Frequency frequency() const;
     Size area() const;
 
-    bool contains(const SequenceBlock & _other) const;
+    bool contains(const BlockedSequence & _other) const;
     bool contains(
         const Range & _other_range,
         const Interval & _other_interval) const;
 
-    bool hasSameCoordinates(const SequenceBlock & _other) const;
+    bool hasSameCoordinates(const BlockedSequence & _other) const;
 
     struct LessThanComparer
     {
         bool operator() (
-            const ListSequenceBlocks::iterator & _left,
-            const ListSequenceBlocks::iterator & _right) const;
+            const ListBlockedSequences::iterator & _left,
+            const ListBlockedSequences::iterator & _right) const;
     };
 
     struct PositionComparer
@@ -76,8 +76,8 @@ public:
         explicit PositionComparer(size_t _x_start, size_t _y_start);
 
         bool operator() (
-            const SequenceBlock & _left,
-            const SequenceBlock & _right) const;
+            const BlockedSequence & _left,
+            const BlockedSequence & _right) const;
 
         size_t m_x_start;
         size_t m_y_start;

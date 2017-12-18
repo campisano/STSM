@@ -20,9 +20,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with STSM.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "SequenceBlock.h"
+#include "BlockedSequence.h"
 
-SequenceBlock::SequenceBlock(
+BlockedSequence::BlockedSequence(
     const Sequence & _sequence,
     const Range & _range,
     const Interval & _interval,
@@ -34,7 +34,7 @@ SequenceBlock::SequenceBlock(
 {
 }
 
-bool SequenceBlock::operator==(const SequenceBlock & _other) const
+bool BlockedSequence::operator==(const BlockedSequence & _other) const
 {
     return (
         m_range == _other.m_range &&
@@ -42,49 +42,49 @@ bool SequenceBlock::operator==(const SequenceBlock & _other) const
         m_sequence == _other.m_sequence);
 }
 
-bool SequenceBlock::operator!=(const SequenceBlock & _other) const
+bool BlockedSequence::operator!=(const BlockedSequence & _other) const
 {
     return ! ((*this) == _other);
 }
 
-const Sequence & SequenceBlock::sequence() const
+const Sequence & BlockedSequence::sequence() const
 {
     return m_sequence;
 }
 
-const Range & SequenceBlock::range() const
+const Range & BlockedSequence::range() const
 {
     return m_range;
 }
 
-const Interval & SequenceBlock::interval() const
+const Interval & BlockedSequence::interval() const
 {
     return m_interval;
 }
 
-Support SequenceBlock::support() const
+Support BlockedSequence::support() const
 {
     return m_support;
 }
 
-Frequency SequenceBlock::frequency() const
+Frequency BlockedSequence::frequency() const
 {
     return float(m_support) / (m_range.size() * m_interval.size());
 }
 
-Size SequenceBlock::area() const
+Size BlockedSequence::area() const
 {
     return m_range.size() * m_interval.size();
 }
 
-bool SequenceBlock::contains(const SequenceBlock & _other) const
+bool BlockedSequence::contains(const BlockedSequence & _other) const
 {
     return (
         m_range.contains(_other.m_range) &&
         m_interval.contains(_other.m_interval));
 }
 
-bool SequenceBlock::contains(
+bool BlockedSequence::contains(
     const Range & _other_range,
     const Interval & _other_interval) const
 {
@@ -93,16 +93,16 @@ bool SequenceBlock::contains(
         m_interval.contains(_other_interval));
 }
 
-bool SequenceBlock::hasSameCoordinates(const SequenceBlock & _other) const
+bool BlockedSequence::hasSameCoordinates(const BlockedSequence & _other) const
 {
     return (
         m_range == _other.m_range &&
         m_interval == _other.m_interval);
 }
 
-bool SequenceBlock::LessThanComparer::operator() (
-    const ListSequenceBlocks::iterator & _left,
-    const ListSequenceBlocks::iterator & _right) const
+bool BlockedSequence::LessThanComparer::operator() (
+    const ListBlockedSequences::iterator & _left,
+    const ListBlockedSequences::iterator & _right) const
 {
     if(_left->m_range.start() == _right->m_range.start())
     {
@@ -135,15 +135,15 @@ bool SequenceBlock::LessThanComparer::operator() (
 }
 
 
-SequenceBlock::PositionComparer::PositionComparer(
+BlockedSequence::PositionComparer::PositionComparer(
     size_t _x_start, size_t _y_start):
     m_x_start(_x_start), m_y_start(_y_start)
 {
 }
 
-bool SequenceBlock::PositionComparer::operator() (
-    const SequenceBlock & _left,
-    const SequenceBlock & _right) const
+bool BlockedSequence::PositionComparer::operator() (
+    const BlockedSequence & _left,
+    const BlockedSequence & _right) const
 {
     size_t left_distance =
         - m_x_start - m_y_start

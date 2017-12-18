@@ -29,6 +29,7 @@
 #include <string>
 #include <utility>
 
+#include "BlockedSequence.h"
 #include "Candidate.h"
 #include "Database.h"
 #include "Frequency.h"
@@ -36,7 +37,6 @@
 #include "Point.h"
 #include "Position.h"
 #include "RangedSequence.h"
-#include "SequenceBlock.h"
 
 class STSM
 {
@@ -86,15 +86,15 @@ protected:
 
     void detectBlocksOfAllSolidSequences();
 
-    void detectSolidSequenceBlocksFromSolidSequence(
+    void detectSolidBlockedSequencesFromSolidSequence(
         const RangedSequence & _solid_sequence,
         const Frequency & _min_block_freq,
-        ListSequenceBlocks & _sequence_blocks);
+        ListBlockedSequences & _blocked_sequences);
 
     void generate1SizeBlockCandidatesForEachSequenceOccurrence(
         const ListPositions & _positions,
         const RangedSequence & _solid_sequence,
-        ListSequenceBlocks & _sb_candidates) const;
+        ListBlockedSequences & _sb_candidates) const;
 
     void printSolidSequences();
     void printSolidBlocks();
@@ -112,7 +112,7 @@ protected:
         > MapPositionsBySeq;                        // positions by sequence
     MapPositionsBySeq m_ranged_sequence_positions;
 
-    MapSequenceBlocksByLength m_solid_sequence_blocks;
+    MapBlockedSequencesByLength m_solid_blocked_sequences;
 };
 
 #endif
