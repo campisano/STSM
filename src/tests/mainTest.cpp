@@ -20,13 +20,5 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with STSM.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef STSM_TEST__H__
-#define STSM_TEST__H__
-
-#include "STSM.h"
-
-class STSMTest : public STSM
-{
-};
-
-#endif
+#define CATCH_CONFIG_MAIN
+#include <catch.hpp>

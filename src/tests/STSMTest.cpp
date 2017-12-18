@@ -20,23 +20,16 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with STSM.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "STSMTest.h"
-
+#include <catch.hpp>
 #include <cstdlib>
 #include <cmath>
 #include <fstream>
-#include <map>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
+#include <STSM.h>
 
-#include "Candidate.h"
 #include "Kernel.h"
-#include "Sequence.h"
-
-#define CATCH_CONFIG_MAIN
-#include <catch.hpp>
 
 namespace
 {
@@ -64,342 +57,12 @@ namespace
     }
 }
 
-
-TEST_CASE("Sequence equality operator", "[Sequence]")
-{
-    // Arrange
-    Sequence seq1, seq2;
-    seq1.set("<abcdefghilm>");
-    seq2.set("<abcdefghilm>");
-
-    // Assert
-    CHECK(seq1 == seq2);
-}
-
-TEST_CASE("Sequence string representation", "[Sequence]")
-{
-    // Arrange
-    Sequence seq1;
-    std::string str_items = "abcdefghilm";
-    std::string str_seq = "<" + str_items + ">";
-    seq1.set(str_seq);
-
-    // Assert
-    CHECK(seq1.toString() == str_seq);
-    CHECK(seq1.toStringOfItems() == str_items);
-}
-
-TEST_CASE("mergeKernels f100 size1 adjacent -> does joins", "[Kernel]")
-{
-    // Arrange
-    Kernel k1(0, 0);
-    k1.frequency(1.0);
-    k1.support(1);
-    Kernel k2(1, 1);
-    k2.frequency(1.0);
-    k2.support(1);
-
-    ListKernels kernels;
-    kernels.push_back(k1);
-    kernels.push_back(k2);
-
-    Candidate cand(
-        Sequence("<aaa>"),
-        Range(0, 1),
-        kernels);
-
-    // Act
-    cand.mergeKernels(1.0);
-
-    // Assert
-    CHECK(cand.kernels().size() == 1);
-    CHECK(cand.kernels().back().start() == 0);
-    CHECK(cand.kernels().back().end() == 1);
-    CHECK(cand.kernels().back().support() == 2);
-    CHECK(std::abs(cand.kernels().back().frequency() - 1.0) < FREQ_EPSILON);
-}
-
-TEST_CASE("mergeKernels f100 size2 adjacent -> does joins", "[Kernel]")
-{
-    // Arrange
-    Kernel k1(0, 1);
-    k1.frequency(1.0);
-    k1.support(2);
-    Kernel k2(2, 3);
-    k2.frequency(1.0);
-    k2.support(2);
-
-    ListKernels kernels;
-    kernels.push_back(k1);
-    kernels.push_back(k2);
-
-    Candidate cand(
-        Sequence("<aaa>"),
-        Range(0, 3),
-        kernels);
-
-    // Act
-    cand.mergeKernels(1.0);
-
-    // Assert
-    CHECK(cand.kernels().size() == 1);
-    CHECK(cand.kernels().back().start() == 0);
-    CHECK(cand.kernels().back().end() == 3);
-    CHECK(cand.kernels().back().support() == 4);
-    CHECK(std::abs(cand.kernels().back().frequency() - 1.0) < FREQ_EPSILON);
-}
-
-TEST_CASE("mergeKernels f100 size1 not adjacent -> does not joins", "[Kernel]")
-{
-    // Arrange
-    Kernel k1(0, 0);
-    k1.frequency(1.0);
-    k1.support(1);
-    Kernel k2(2, 2);
-    k2.frequency(1.0);
-    k2.support(1);
-
-    ListKernels kernels;
-    kernels.push_back(k1);
-    kernels.push_back(k2);
-
-    Candidate cand(
-        Sequence("<aaa>"),
-        Range(0, 2),
-        kernels);
-
-    // Act
-    cand.mergeKernels(1.0);
-
-    // Assert
-    CHECK(cand.kernels().size() == 2);
-
-    CHECK(cand.kernels().front().start() == 0);
-    CHECK(cand.kernels().front().end() == 0);
-    CHECK(cand.kernels().front().support() == 1);
-    CHECK(std::abs(cand.kernels().front().frequency() - 1.0) < FREQ_EPSILON);
-
-    CHECK(cand.kernels().back().start() == 2);
-    CHECK(cand.kernels().back().end() == 2);
-    CHECK(cand.kernels().back().support() == 1);
-    CHECK(std::abs(cand.kernels().back().frequency() - 1.0) < FREQ_EPSILON);
-}
-
-TEST_CASE("mergeKernels f100 size2 not adjacent -> does not joins", "[Kernel]")
-{
-    // Arrange
-    Kernel k1(0, 1);
-    k1.frequency(1.0);
-    k1.support(2);
-    Kernel k2(3, 4);
-    k2.frequency(1.0);
-    k2.support(2);
-
-    ListKernels kernels;
-    kernels.push_back(k1);
-    kernels.push_back(k2);
-
-    Candidate cand(
-        Sequence("<aaa>"),
-        Range(0, 4),
-        kernels);
-
-    // Act
-    cand.mergeKernels(1.0);
-
-    // Assert
-    CHECK(cand.kernels().size() == 2);
-
-    CHECK(cand.kernels().front().start() == 0);
-    CHECK(cand.kernels().front().end() == 1);
-    CHECK(cand.kernels().front().support() == 2);
-    CHECK(std::abs(cand.kernels().front().frequency() - 1.0) < FREQ_EPSILON);
-
-    CHECK(cand.kernels().back().start() == 3);
-    CHECK(cand.kernels().back().end() == 4);
-    CHECK(cand.kernels().back().support() == 2);
-    CHECK(std::abs(cand.kernels().back().frequency() - 1.0) < FREQ_EPSILON);
-}
-
-TEST_CASE(
-    "mergeKernels f75 nearby 2 1 2 that should joins -> does joins",
-    "[Kernel]")
-{
-    // Arrange
-    Kernel k1(0, 1);
-    k1.frequency(1.0);
-    k1.support(2);
-    Kernel k2(3, 4);
-    k2.frequency(1.0);
-    k2.support(2);
-
-    ListKernels kernels;
-    kernels.push_back(k1);
-    kernels.push_back(k2);
-
-    Candidate cand(
-        Sequence("<aaa>"),
-        Range(0, 4),
-        kernels);
-
-    // Act
-    cand.mergeKernels(0.75);
-
-    // Assert
-    CHECK(cand.kernels().size() == 1);
-
-    CHECK(cand.kernels().back().start() == 0);
-    CHECK(cand.kernels().back().end() == 4);
-    CHECK(cand.kernels().back().support() == 4);
-    CHECK(
-        std::abs(cand.kernels().back().frequency() - (4.0 / 5.0))
-        < FREQ_EPSILON);
-}
-
-TEST_CASE(
-    "mergeKernels f75 nearby 3 1 3 that should joins -> does joins",
-    "[Kernel]")
-{
-    // Arrange
-    Kernel k1(0, 2);
-    k1.frequency(1.0);
-    k1.support(3);
-    Kernel k2(4, 6);
-    k2.frequency(1.0);
-    k2.support(3);
-
-    ListKernels kernels;
-    kernels.push_back(k1);
-    kernels.push_back(k2);
-
-    Candidate cand(
-        Sequence("<aaa>"),
-        Range(0, 6),
-        kernels);
-
-    // Act
-    cand.mergeKernels(0.75);
-
-    // Assert
-    CHECK(cand.kernels().size() == 1);
-
-    CHECK(cand.kernels().back().start() == 0);
-    CHECK(cand.kernels().back().end() == 6);
-    CHECK(cand.kernels().back().support() == 6);
-    CHECK(
-        std::abs(cand.kernels().back().frequency() - (6.0 / 7.0))
-        < FREQ_EPSILON);
-}
-
-TEST_CASE(
-    "mergeKernels f50 nearby half 3 1 3 that should joins -> does joins",
-    "[Kernel]")
-{
-    // Arrange
-    Kernel k1(0, 2);
-    k1.frequency(2.0 / 3.0);
-    k1.support(2);
-    Kernel k2(4, 6);
-    k2.frequency(2.0 / 3.0);
-    k2.support(2);
-
-    ListKernels kernels;
-    kernels.push_back(k1);
-    kernels.push_back(k2);
-
-    Candidate cand(
-        Sequence("<aaa>"),
-        Range(0, 6),
-        kernels);
-
-    // Act
-    cand.mergeKernels(0.50);
-
-    // Assert
-    CHECK(cand.kernels().size() == 1);
-
-    CHECK(cand.kernels().back().start() == 0);
-    CHECK(cand.kernels().back().end() == 6);
-    CHECK(cand.kernels().back().support() == 4);
-    CHECK(
-        std::abs(cand.kernels().back().frequency() - (4.0 / 7.0))
-        < FREQ_EPSILON);
-}
-
-TEST_CASE(
-    "mergeKernels f75 nearby 1 1 2 that should joins -> does joins",
-    "[Kernel]")
-{
-    // Arrange
-    Kernel k1(0, 0);
-    k1.frequency(1.0);
-    k1.support(1);
-    Kernel k2(2, 3);
-    k2.frequency(1.0);
-    k2.support(2);
-
-    ListKernels kernels;
-    kernels.push_back(k1);
-    kernels.push_back(k2);
-
-    Candidate cand(
-        Sequence("<aaa>"),
-        Range(0, 3),
-        kernels);
-
-    // Act
-    cand.mergeKernels(0.75);
-
-    // Assert
-    CHECK(cand.kernels().size() == 1);
-
-    CHECK(cand.kernels().back().start() == 0);
-    CHECK(cand.kernels().back().end() == 3);
-    CHECK(cand.kernels().back().support() == 3);
-    CHECK(
-        std::abs(cand.kernels().back().frequency() - (3.0 / 4.0))
-        < FREQ_EPSILON);
-}
-
-TEST_CASE("mergeKernels f90 nearby 1 1 2 that should not joins -> does not joins",
-    "[Kernel]")
-{
-    // Arrange
-    Kernel k1(0, 0);
-    k1.frequency(1.0);
-    k1.support(1);
-    Kernel k2(2, 3);
-    k2.frequency(1.0);
-    k2.support(2);
-
-    ListKernels kernels;
-    kernels.push_back(k1);
-    kernels.push_back(k2);
-
-    Candidate cand(
-        Sequence("<aaa>"),
-        Range(0, 3),
-        kernels);
-
-    // Act
-    cand.mergeKernels(0.90);
-
-    // Assert
-    CHECK(cand.kernels().size() == 2);
-
-    CHECK(cand.kernels().front().start() == 0);
-    CHECK(cand.kernels().front().end() == 0);
-    CHECK(cand.kernels().front().support() == 1);
-    CHECK(std::abs(cand.kernels().front().frequency() - 1.0) < FREQ_EPSILON);
-
-    CHECK(cand.kernels().back().start() == 2);
-    CHECK(cand.kernels().back().end() == 3);
-    CHECK(cand.kernels().back().support() == 2);
-    CHECK(std::abs(cand.kernels().back().frequency() - 1.0) < FREQ_EPSILON);
-}
+// class STSMTest : public STSM
+// {
+// };
 
 TEST_CASE_METHOD(
-    STSMTest,
+    STSM,
     "Run obtaining single 5_solid_sequence result",
     "[Run]")
 {
@@ -445,7 +108,7 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(
-    STSMTest,
+    STSM,
     "Run f100 gets only single ABCD100 solidSequence",
     "[Run]")
 {
@@ -496,7 +159,7 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(
-    STSMTest,
+    STSM,
     "Run f100 testing ABCD100 positions",
     "[Run]")
 {
@@ -553,7 +216,7 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(
-    STSMTest,
+    STSM,
     "Run f75 does get EFGH75 solidSequence",
     "[Run]")
 {
@@ -604,7 +267,7 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(
-    STSMTest,
+    STSM,
     "Run f90 does not get EFGH75 solidSequence",
     "[Run]")
 {
@@ -658,7 +321,7 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(
-    STSMTest,
+    STSM,
     "Run f100 b100 does get EFGHI solidBlock",
     "[Run]")
 {
@@ -719,7 +382,7 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(
-    STSMTest,
+    STSM,
     "Run f100 b100 does not get diagonal EFGHI",
     "[Run]")
 {
@@ -772,7 +435,7 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(
-    STSMTest,
+    STSM,
     "Run f75 b75 does get EFGHI7575 solidBlock",
     "[Run]")
 {
@@ -825,7 +488,7 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(
-    STSMTest,
+    STSM,
     "Run f100 b50 does get EFGHI10025 solidBlock",
     "[Run]")
 {
@@ -878,7 +541,7 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(
-    STSMTest,
+    STSM,
     "Run f100 b75 same line does get EFGHI10034 solidBlock",
     "[Run]")
 {
@@ -931,7 +594,7 @@ TEST_CASE_METHOD(
 }
 
 TEST_CASE_METHOD(
-    STSMTest,
+    STSM,
     "Run f100 b50 does get ABCD big solidBlock",
     "[Run]")
 {
