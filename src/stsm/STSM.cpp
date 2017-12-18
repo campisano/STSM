@@ -40,8 +40,8 @@ namespace
         MIN_RANGE_SIZE = 2,
         BLOCK_MERGE_MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2,
         BLOCK_MERGE_FULL_MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2,
-        BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 5000,
-        BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE = 10000;
+        BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGED_SEQUENCE = 5000,
+        BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_RANGED_SEQUENCE = 10000;
 
     //TODO [CMP] to implement
     // a solid block sequence must contains more than 1 sequence position
@@ -97,19 +97,19 @@ void STSM::run(
         m_log_stream << "* Iteration for sequence of size: "
                      << seq_size << std::endl;
 
-        ListRangedSequence & solid_sequences_k =
-            m_solid_sequences[seq_size] = ListRangedSequence();
+        ListRangedSequence & solid_ranged_sequences_k =
+            m_solid_ranged_sequences[seq_size] = ListRangedSequence();
 
         updateKernelsOfAllCandidates(_database, candidates);
-        mergeKernelsOfAllCandidates(candidates, solid_sequences_k);
+        mergeKernelsOfAllCandidates(candidates, solid_ranged_sequences_k);
 
         cleanupSolidSequencesWithSmallRangeSize(
-            MIN_RANGE_SIZE, solid_sequences_k);
+            MIN_RANGE_SIZE, solid_ranged_sequences_k);
 
-        updateMatchingPositions(_database, solid_sequences_k);
+        updateMatchingPositions(_database, solid_ranged_sequences_k);
 
         candidates.clear();
-        generateCandidates(solid_sequences_k, candidates);
+        generateCandidates(solid_ranged_sequences_k, candidates);
 
         ++seq_size;
     }
@@ -167,7 +167,7 @@ void STSM::updateKernelsOfAllCandidates(
 
 void STSM::mergeKernelsOfAllCandidates(
     ListCandidates & _candidates,
-    ListRangedSequence & _solid_sequences_k)
+    ListRangedSequence & _solid_ranged_sequences_k)
 {
     clock_t time = clock();
     m_log_stream << " - Merging kernels and creating solid sequences...";
@@ -191,7 +191,7 @@ void STSM::mergeKernelsOfAllCandidates(
         {
             // defining a new Ranged Sequence
             // that is also a Solid Sequence for this kernel range
-            _solid_sequences_k.push_back(
+            _solid_ranged_sequences_k.push_back(
                 RangedSequence(
                     cand_it->sequence(),
                     Range(kern_it->start(), kern_it->end()),
@@ -202,7 +202,7 @@ void STSM::mergeKernelsOfAllCandidates(
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
     m_log_stream << "   (Num of solid sequences (with range size > 1)"
                  << " for this iteration: "
-                 << _solid_sequences_k.size() << ")" << std::endl;
+                 << _solid_ranged_sequences_k.size() << ")" << std::endl;
 }
 
 void STSM::detectBlocksOfAllSolidSequences()
@@ -215,8 +215,8 @@ void STSM::detectBlocksOfAllSolidSequences()
 
     // for each length
     for(
-        it_ss_by_len = m_solid_sequences.begin();
-        it_ss_by_len != m_solid_sequences.end();
+        it_ss_by_len = m_solid_ranged_sequences.begin();
+        it_ss_by_len != m_solid_ranged_sequences.end();
         ++it_ss_by_len
         )
     {
@@ -289,7 +289,7 @@ void STSM::generate1SizeCandidates(
 }
 
 void STSM::generateCandidates(
-    const ListRangedSequence & _solid_sequences,
+    const ListRangedSequence & _solid_ranged_sequences,
     ListCandidates & _candidates)
 {
     clock_t time = clock();
@@ -316,14 +316,14 @@ void STSM::generateCandidates(
     // and skipping generation of candidates
     // with ranges containing just one time series
     for(
-        x_it = _solid_sequences.begin();
-        x_it != _solid_sequences.end();
+        x_it = _solid_ranged_sequences.begin();
+        x_it != _solid_ranged_sequences.end();
         ++x_it
         )
     {
         for(
-            y_it = _solid_sequences.begin();
-            y_it != _solid_sequences.end();
+            y_it = _solid_ranged_sequences.begin();
+            y_it != _solid_ranged_sequences.end();
             ++y_it
             )
         {
@@ -407,7 +407,7 @@ void STSM::setMinBlockFreq(const Frequency & _min_block_freq)
 
 void STSM::updateMatchingPositions(
     const Database & _database,
-    const ListRangedSequence & _solid_sequences)
+    const ListRangedSequence & _solid_ranged_sequences)
 {
     clock_t time = clock();
     m_log_stream << " - Detecting sequence positions in the database...";
@@ -435,8 +435,8 @@ void STSM::updateMatchingPositions(
 
         // for each sequence candidate
         for(
-            it_seq = _solid_sequences.begin();
-            it_seq != _solid_sequences.end();
+            it_seq = _solid_ranged_sequences.begin();
+            it_seq != _solid_ranged_sequences.end();
             ++it_seq
             )
         {
@@ -541,18 +541,18 @@ void STSM::updateMatchingPositions(
 }
 
 void STSM::cleanupSolidSequencesWithSmallRangeSize(
-    const Size & _min_size, ListRangedSequence & _solid_sequences)
+    const Size & _min_size, ListRangedSequence & _solid_ranged_sequences)
 {
     clock_t time = clock();
     m_log_stream << " - Clean up solid sequences with small range size...";
 
-    ListRangedSequence::iterator it = _solid_sequences.begin();
+    ListRangedSequence::iterator it = _solid_ranged_sequences.begin();
 
-    while(it != _solid_sequences.end())
+    while(it != _solid_ranged_sequences.end())
     {
         if(it->range().size() < _min_size)
         {
-            it = _solid_sequences.erase(it);
+            it = _solid_ranged_sequences.erase(it);
         }
         else
         {
@@ -564,12 +564,12 @@ void STSM::cleanupSolidSequencesWithSmallRangeSize(
 }
 
 void STSM::detectSolidBlockedSequencesFromSolidSequence(
-    const RangedSequence & _solid_sequence,
+    const RangedSequence & _solid_ranged_sequence,
     const Frequency & _min_block_freq,
     ListBlockedSequences & _blocked_sequences)
 {
     if(
-        _solid_sequence.sequence().size() <
+        _solid_ranged_sequence.sequence().size() <
         BLOCK_MERGE_MIN_SOLID_BLOCK_SEQUENCE_SIZE
     )
     {
@@ -580,22 +580,22 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
     time_t mid_time;
 
     m_log_stream << '\t'
-                 << _solid_sequence.sequence().toStringOfItems() << '('
-                 << _solid_sequence.range().start() << ','
-                 << _solid_sequence.range().end() << ')';
+                 << _solid_ranged_sequence.sequence().toStringOfItems() << '('
+                 << _solid_ranged_sequence.range().start() << ','
+                 << _solid_ranged_sequence.range().end() << ')';
     m_log_stream.flush();
 
     const ListPositions & positions = m_ranged_sequence_positions.find(
-        & _solid_sequence)->second;
+        & _solid_ranged_sequence)->second;
 
     OccurrenceMatrix occurr_matrix(
-        _solid_sequence,
+        _solid_ranged_sequence,
         positions);
 
     ListBlockedSequences sb_candidates;
     generate1SizeBlockCandidatesForEachSequenceOccurrence(
         positions,
-        _solid_sequence,
+        _solid_ranged_sequence,
         sb_candidates);
 
     m_log_stream << "\tinit.size: " << sb_candidates.size();
@@ -605,7 +605,8 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
     ListBlockedSequences::iterator it_sb_to_add;
 
     typedef std::set <
-        ListBlockedSequences::iterator, BlockedSequence::LessThanComparer > DelIt;
+        ListBlockedSequences::iterator, BlockedSequence::LessThanComparer
+        > DelIt;
     DelIt to_del;
     DelIt::iterator it_sb_to_del;
 
@@ -624,11 +625,11 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
     ListBlockedSequences::iterator chk_cand_bigger_it;
 
 	if(
-        _solid_sequence.sequence().size() >=
+        _solid_ranged_sequence.sequence().size() >=
         BLOCK_MERGE_FULL_MIN_SOLID_BLOCK_SEQUENCE_SIZE
         &&
         sb_candidates.size() <=
-        BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE
+        BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGED_SEQUENCE
     )
     {
         m_log_stream << "\t full merges:";
@@ -728,7 +729,7 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
                         if((float(new_support) / new_area) >= _min_block_freq)
                         {
                             BlockedSequence merged(
-                                _solid_sequence.sequence(),
+                                _solid_ranged_sequence.sequence(),
                                 new_range,
                                 new_interval,
                                 new_support);
@@ -842,7 +843,7 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
 
             if(
                 sb_candidates.size() >
-                BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE
+                BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGED_SEQUENCE
             )
             {
                 m_log_stream << " [WARN] max full blocks per sequence "
@@ -898,7 +899,7 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
                     if((float(new_support) / new_area) >= _min_block_freq)
                     {
                         BlockedSequence merged(
-                            _solid_sequence.sequence(),
+                            _solid_ranged_sequence.sequence(),
                             new_range,
                             new_interval,
                             new_support);
@@ -1025,7 +1026,7 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
 
             if(
                 sb_candidates.size() >
-                BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_SEQUENCE
+                BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_RANGED_SEQUENCE
             )
             {
                 m_log_stream << " [WARN] max fast blocks per sequence "
@@ -1049,17 +1050,17 @@ void STSM::detectSolidBlockedSequencesFromSolidSequence(
 
 void STSM::generate1SizeBlockCandidatesForEachSequenceOccurrence(
     const ListPositions & _positions,
-    const RangedSequence & _solid_sequence,
+    const RangedSequence & _solid_ranged_sequence,
     ListBlockedSequences & _sb_candidates) const
 {
-    const Size seq_size =  _solid_sequence.sequence().size();
+    const Size seq_size =  _solid_ranged_sequence.sequence().size();
     ListPositions::const_iterator it_pos;
 
     for(it_pos = _positions.begin(); it_pos != _positions.end(); ++it_pos)
     {
         _sb_candidates.push_back(
             BlockedSequence(
-                _solid_sequence.sequence(),
+                _solid_ranged_sequence.sequence(),
                 Range(it_pos->first, it_pos->first),
                 Interval(it_pos->second, it_pos->second + seq_size - 1),
                 seq_size));
@@ -1074,8 +1075,8 @@ void STSM::printSolidSequences()
     ListRangedSequence::const_iterator it_ss;
 
     for(
-        it_ss_by_len = m_solid_sequences.begin();
-        it_ss_by_len != m_solid_sequences.end();
+        it_ss_by_len = m_solid_ranged_sequences.begin();
+        it_ss_by_len != m_solid_ranged_sequences.end();
         ++it_ss_by_len
         )
     {
@@ -1131,17 +1132,17 @@ void STSM::saveJSON(const std::string & _output_filename)
 
     nlohmann::json root;
 
-    nlohmann::json solid_sequences = nlohmann::json::array();
+    nlohmann::json solid_ranged_sequences = nlohmann::json::array();
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
     MapPositionsBySeq::const_iterator it_list_pos;
     ListPositions::const_iterator it_pos;
 
-    // for each length in m_solid_sequences
+    // for each length in m_solid_ranged_sequences
     for(
-        it_ss_by_len = m_solid_sequences.begin();
-        it_ss_by_len != m_solid_sequences.end();
+        it_ss_by_len = m_solid_ranged_sequences.begin();
+        it_ss_by_len != m_solid_ranged_sequences.end();
         ++it_ss_by_len
         )
     {
@@ -1226,10 +1227,11 @@ void STSM::saveJSON(const std::string & _output_filename)
 
         ss["sequences"] = sequences;
 
-        solid_sequences.push_back(ss);
+        solid_ranged_sequences.push_back(ss);
     }
 
-    root["solid_sequences"] = solid_sequences;
+    //TODO [CMP] rename solid_sequences to solid_ranged_sequences
+    root["solid_sequences"] = solid_ranged_sequences;
 
     nlohmann::json solid_blocks = nlohmann::json::array();
 

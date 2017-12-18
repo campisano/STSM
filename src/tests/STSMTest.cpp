@@ -60,7 +60,7 @@ namespace
 
 TEST_CASE_METHOD(
     STSM,
-    "Run obtaining single 5_solid_sequence result",
+    "Run obtaining single 5-SolidRangedSequence result",
     "[Run]")
 {
     // Arrange
@@ -94,12 +94,12 @@ TEST_CASE_METHOD(
 
     // Assert
 
-    CHECK(m_solid_sequences.size() > 0);
-    CHECK(m_solid_sequences[2].size() > 0);
-    CHECK(m_solid_sequences[3].size() > 0);
-    CHECK(m_solid_sequences[4].size() > 0);
-    CHECK(m_solid_sequences[5].size() == 1);
-    CHECK(m_solid_sequences[6].size() == 0);
+    CHECK(m_solid_ranged_sequences.size() > 0);
+    CHECK(m_solid_ranged_sequences[2].size() > 0);
+    CHECK(m_solid_ranged_sequences[3].size() > 0);
+    CHECK(m_solid_ranged_sequences[4].size() > 0);
+    CHECK(m_solid_ranged_sequences[5].size() == 1);
+    CHECK(m_solid_ranged_sequences[6].size() == 0);
 
     // Cleanup
 
@@ -108,7 +108,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f100 gets only single ABCD100 solidSequence",
+    "Run f100 gets only single ABCD100 SolidRangedSequence",
     "[Run]")
 {
     // Arrange
@@ -143,9 +143,9 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_sequences[4].size() == 1);
+    CHECK(m_solid_ranged_sequences[4].size() == 1);
 
-    RangedSequence & rs = m_solid_sequences[4].back();
+    RangedSequence & rs = m_solid_ranged_sequences[4].back();
 
     // testing synthetic known data
     CHECK(rs.sequence().toStringOfItems() == "ABCD");
@@ -196,9 +196,9 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_sequences[4].size() == 1);
+    CHECK(m_solid_ranged_sequences[4].size() == 1);
 
-    RangedSequence & rs = m_solid_sequences[4].back();
+    RangedSequence & rs = m_solid_ranged_sequences[4].back();
     ListPositions & positions = m_ranged_sequence_positions[&rs];
     std::vector < Position > v_pos (positions.begin(), positions.end());
 
@@ -220,7 +220,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f75 does get EFGH75 solid RangedSequence",
+    "Run f75 does get EFGH75 SolidRangedSequence",
     "[Run]")
 {
     // Arrange
@@ -255,9 +255,9 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_sequences[4].size() == 1);
+    CHECK(m_solid_ranged_sequences[4].size() == 1);
 
-    RangedSequence & rs = m_solid_sequences[4].back();
+    RangedSequence & rs = m_solid_ranged_sequences[4].back();
 
     // testing synthetic known data
     CHECK(rs.sequence().toStringOfItems() == "EFGH");
@@ -273,7 +273,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f90 does not get EFGH75 solid RangesSequence",
+    "Run f90 does not get EFGH75 SolidRangesSequence",
     "[Run]")
 {
     // Arrange
@@ -308,9 +308,9 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_sequences[4].size() == 1);
+    CHECK(m_solid_ranged_sequences[4].size() == 1);
 
-    RangedSequence & rs = m_solid_sequences[4].back();
+    RangedSequence & rs = m_solid_ranged_sequences[4].back();
 
     // testing defined min frequency
     CHECK(rs.frequency() >= (min_spatial - FREQ_EPSILON));
@@ -329,7 +329,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f100 b100 does get EFGHI solid BlockedSequence",
+    "Run f100 b100 does get EFGHI SolidBlockedSequence",
     "[Run]")
 {
     // Arrange
@@ -364,10 +364,10 @@ TEST_CASE_METHOD(
     // Assert
 
     // testing number and last expected results
-    CHECK(m_solid_sequences[5].size() == 1);
+    CHECK(m_solid_ranged_sequences[5].size() == 1);
     CHECK(m_solid_blocked_sequences[5].size() == 1);
 
-    RangedSequence & rs = m_solid_sequences[5].back();
+    RangedSequence & rs = m_solid_ranged_sequences[5].back();
     BlockedSequence & bs = m_solid_blocked_sequences[5].back();
 
     // testing synthetic known data
@@ -392,7 +392,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f100 b100 does not get diagonal EFGHI",
+    "Run f100 b100 does not get diagonal EFGHI SolidBlockedSequence",
     "[Run]")
 {
     // Arrange
@@ -447,7 +447,7 @@ TEST_CASE_METHOD(
 
 TEST_CASE_METHOD(
     STSM,
-    "Run f75 b75 does get EFGHI7575 solid BlockedSequence",
+    "Run f75 b75 does get EFGHI7575 SolidBlockedSequence",
     "[Run]")
 {
     // Arrange

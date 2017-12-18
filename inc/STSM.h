@@ -71,29 +71,29 @@ protected:
         ListCandidates & _candidates);
     void mergeKernelsOfAllCandidates(
         ListCandidates & _candidates,
-        ListRangedSequence & _solid_sequences_k);
+        ListRangedSequence & _solid_ranged_sequences_k);
 
     void updateMatchingPositions(
         const Database & _database,
-        const ListRangedSequence & _solid_sequences);
+        const ListRangedSequence & _solid_ranged_sequences);
 
     void generateCandidates(
-        const ListRangedSequence & _solid_sequences,
+        const ListRangedSequence & _solid_ranged_sequences,
         ListCandidates & _candidates);
 
     void cleanupSolidSequencesWithSmallRangeSize(
-        const Size & _min_size, ListRangedSequence & _solid_sequences);
+        const Size & _min_size, ListRangedSequence & _solid_ranged_sequences);
 
     void detectBlocksOfAllSolidSequences();
 
     void detectSolidBlockedSequencesFromSolidSequence(
-        const RangedSequence & _solid_sequence,
+        const RangedSequence & _solid_ranged_sequence,
         const Frequency & _min_block_freq,
         ListBlockedSequences & _blocked_sequences);
 
     void generate1SizeBlockCandidatesForEachSequenceOccurrence(
         const ListPositions & _positions,
-        const RangedSequence & _solid_sequence,
+        const RangedSequence & _solid_ranged_sequence,
         ListBlockedSequences & _sb_candidates) const;
 
     void printSolidSequences();
@@ -106,7 +106,7 @@ private:
     Frequency m_min_block_freq;
 
 protected:
-    MapRangedSequencesByLength m_solid_sequences;
+    MapRangedSequencesByLength m_solid_ranged_sequences;
     typedef std::map <
         const RangedSequence *, ListPositions
         > MapPositionsBySeq;                        // positions by sequence
