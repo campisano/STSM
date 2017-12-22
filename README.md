@@ -2,9 +2,9 @@
 
 # STSM (Spatio-Temporal Sequence Miner)
 
-#### *Spatio-Temporal Sequence Miner* (*STSM*) is a new algorithm to discover tight space-time sequences.
+#### *Spatio-Temporal Sequence Miner* (*STSM*): a novel algorithm to discover tight sequential patterns in spatiotemporal sequences.
 
-In a broad range of scientific and industrial applications, data is collected as spatiotemporal sequences that associate to each item in the sequence a time and a spatial position. This leads to an appealing new challenge for this domain, namely i) frequent sequences constrained in space and time that may not be frequent in the entire dataset and ii) the time interval and space range where these sequences are frequent. We introduce a new Spatio-Temporal Sequence Miner (*STSM*) algorithm for such purpose. *STSM* first detects spatial ranges where sequences are frequent. Next, it composes all detected sequences inside each range to discover the ones constrained in space and time where these sequences are frequent.
+In a broad range of scientific and industrial applications, data is collected as spatiotemporal sequences, i.e, sequences of items with a time and a spatial position associated to each item. This leads to an appealing new challenge for this domain, namely i) frequent sequences constrained in space and time that may not be frequent in the entire dataset and ii) the time interval and space range where these sequences are frequent. We introduce a new Spatio-Temporal Sequence Miner (*STSM*) algorithm for such purpose. *STSM* first detects spatial ranges where sequences are frequent. Next, it composes all detected sequences inside each range to discover the ones constrained in space and time where these sequences are frequent.
 
 ## Example: Seismic use-case
 
