@@ -169,20 +169,20 @@ utils$change_extension = function(path, ext) {
 
 
 
-utils$readCSV = function(file_name, header=TRUE) {
+utils$readCSV = function(file_name, header=TRUE, sep=",") {
     data = read.table(
         file=file_name, header=header, fill=TRUE, as.is=TRUE,
-        stringsAsFactors=FALSE, sep=",", quote="");
+        stringsAsFactors=FALSE, sep=sep, quote="");
 
     return(data);
 }
 
 
 
-utils$writeCSV = function(data_frame, file_name, header=TRUE) {
+utils$writeCSV = function(data_frame, file_name, header=TRUE, sep=",") {
     write.table(
         data_frame, file=file_name, col.names=header,
-        append=FALSE, row.names=FALSE, quote=FALSE, sep=",");
+        append=FALSE, row.names=FALSE, quote=FALSE, sep=sep);
 }
 
 
