@@ -20,6 +20,36 @@ Starting from a discretized spatio-temporal dataset, *STSM* first detects the sp
 ![Alt text](/doc/README.md/best_ranked_patterns.jpg?raw=true "Seismic best ranked results")
 Identified sequences ranked according to their density for inline 401, alphabet size 10, solid range threshold γ 80% and solid block threshold δ 20%. Images from (a) to (d), (e) to (h), and (i) to (l) respectively present the four best ranked patterns for sequences of size two, three, and four.
 
+### Notes
+
+To reproduce the proposed experiment, download the [seismic dataset](https://opendtect.org/osr/pmwiki.php/Main/NetherlandsOffshoreF3BlockComplete4GB), get the [OpendTect software](https://dgbes.com/index.php/download) and export the 401 inline using the follow menu entry:
+```
+    Survey -> Export -> Seismic -> Simple File -> 3D
+```
+
+selecting the follow options:
+```
+    Input Cube:         1OriginalSeismic
+    Volume Selection:   401/300-401/1250
+    Put Sampling Info:  No
+    Output File:        401.dat
+```
+
+Then, convert the 'dat' file to an usable 'CSV' file using the follow command:
+```
+    R --vanilla --slave --file=R/dat2csv_converter.r --args 401.dat 401.csv
+```
+
+Next, discretize the 'CSV' data using the follow command:
+```
+    R --vanilla --slave --file=R/sax_converter.r --args 401.csv 401_sax10.csv 10
+```
+
+And finally, run STSM with the follow command:
+```
+   ./BUILD/release/stsm -i 401_sax10.csv -o results.json -l stsm.log -s 80 -b 20
+```
+
 ## License
 
 ![Alt text](/doc/README.md/COPYING.png?raw=true "License")
