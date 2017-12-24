@@ -174,7 +174,7 @@ ifneq (,$(findstring /cygdrive,$(PATH)))
 	MKDIR =			mkdir -p
 	RM =			rm -f
 	RMALL =			rm -rf
-ifneq (,$(findstring /mingw,$(PATH)))
+else ifneq (,$(findstring /mingw,$(PATH)))
 # mingw
 	MKDIR =			mkdir -p
 	RM =			rm -f
