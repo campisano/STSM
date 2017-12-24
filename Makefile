@@ -23,7 +23,7 @@
 
 
 # version of this Makefile
-MAKEFILE_VER =			1.1.3
+MAKEFILE_VER =			1.1.4
 
 # make options
 MAKEFLAGS +=			-s
@@ -188,11 +188,13 @@ DEPS :=					$(OBJS:.o=.d)
 $(TARGETS):				INFO_TRG INFO_CMDS FORMAT $(TARGET) cleandeps
 
 FORMAT:
-	which astyle > /dev/null && astyle --options=none --quiet --style=allman \
+	which astyle > /dev/null \
+&& astyle --options=none --quiet --style=allman \
 --indent=spaces=4 --lineend=linux --align-pointer=middle \
 --pad-oper --pad-comma --unpad-paren \
 --add-brackets --convert-tabs --max-code-length=80 \
---suffix=none --recursive $(FORMAT_INC_DIRS:%='%/*.h') $(FORMAT_SRC_DIRS:%='%/*.cpp')
+--suffix=none --recursive $(FORMAT_INC_DIRS:%='%/*.h') $(FORMAT_SRC_DIRS:%='%/*.cpp') \
+|| true
 
 .PHONY:					$(TARGETS) clean cleandeps
 
