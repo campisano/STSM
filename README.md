@@ -1,4 +1,7 @@
-[![Build Status](https://travis-ci.org/campisano/STSM.svg?branch=master)](https://travis-ci.org/campisano/STSM)
+###### *Tests:* linux: [![Build Status](https://travis-ci.org/campisano/STSM.svg?branch=master "Linux build")](https://travis-ci.org/campisano/STSM), windows: [![Build Status](https://tea-ci.org/api/badges/campisano/STSM/status.svg "Windows build")](https://tea-ci.org/campisano/STSM)
+
+---
+
 
 # STSM (Spatio-Temporal Sequence Miner)
 
