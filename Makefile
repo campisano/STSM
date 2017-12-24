@@ -23,7 +23,7 @@
 
 
 # version of this Makefile
-MAKEFILE_VER =			1.1.6
+MAKEFILE_VER =			1.1.7
 
 # make options
 MAKEFLAGS +=			-s
@@ -169,8 +169,13 @@ ifeq ("$(PROGRAMFILES)$(ProgramFiles)","")
 	BLUE =			"\\033[1;34m"
 else
 	SEPCHR =		\\\\
-ifneq ("$(OSTYPE)","")
+ifneq (,$(findstring /cygdrive,$(PATH)))
 # cygwin
+	MKDIR =			mkdir -p
+	RM =			rm -f
+	RMALL =			rm -rf
+ifneq (,$(findstring /mingw,$(PATH)))
+# mingw
 	MKDIR =			mkdir -p
 	RM =			rm -f
 	RMALL =			rm -rf
