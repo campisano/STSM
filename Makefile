@@ -23,7 +23,7 @@
 
 
 # version of this Makefile
-MAKEFILE_VER =			1.1.1
+MAKEFILE_VER =			1.1.2
 
 # make options
 MAKEFLAGS +=			-s
@@ -43,6 +43,8 @@ INC_DIRS =				inc ext
 SRC_DIRS =				src/stsm src/utils
 MAIN = 					src/main.cpp
 TEST_DIRS =				src/tests
+FORMAT_INC_DIRS = 		inc
+FORMAT_SRC_DIRS = 		src
 LIB_DIRS =				lib
 ROOT_BUILD_DIR =		BUILD
 
@@ -154,7 +156,14 @@ DEPS :=					$(OBJS:.o=.d)
 -include $(DEPS)		# include dependencies
 
 # targets
-$(TARGETS):				INFO_TRG INFO_CMDS $(TARGET) cleandeps
+$(TARGETS):				INFO_TRG INFO_CMDS FORMAT $(TARGET) cleandeps
+
+FORMAT:
+	which astyle > /dev/null && astyle --options=none --quiet --style=allman \
+--indent=spaces=4 --lineend=linux --align-pointer=middle \
+--pad-oper --pad-comma --unpad-paren \
+--add-brackets --convert-tabs --max-code-length=80 \
+--suffix=none --recursive $(FORMAT_INC_DIRS:%='%/*.h') $(FORMAT_SRC_DIRS:%='%/*.cpp')
 
 .PHONY:					$(TARGETS) clean cleandeps
 
