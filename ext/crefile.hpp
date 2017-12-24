@@ -389,7 +389,7 @@ void winerror(int error_code, String&& win_error, const char* file, int line) {
 
 #define WINCHECK(ret_code, exc, win_error) { if (!(ret_code)) { priv::winerror<exc>(GetLastError(), (win_error), __FILE__, __LINE__); } }
 
-}; // namespace priv {
+} // namespace priv {
 
 
 class FileIterImplWin32 {
@@ -623,7 +623,7 @@ public:
         return found;
     }
 
-    bool is_directory() {
+    bool is_directory() const {
         return FileIterImplWin32(this->str()).is_directory();
     }
 
