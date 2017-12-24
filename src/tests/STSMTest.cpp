@@ -21,10 +21,11 @@
 // along with STSM.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <catch.hpp>
+#include <crefile.hpp>
 #include <cstdlib>
 #include <cmath>
-#include <fstream>
 #include <sstream>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -35,27 +36,47 @@
 namespace
 {
 const double FREQ_EPSILON = 0.0001;
-const std::string TEST_FOLDER = "test_output";
 
-void prepareTestFolder(
-    const std::string & _data,
-    std::string & _input_file,
-    std::string & _log_file)
+class TmpData
 {
-    _input_file = TEST_FOLDER + "/" + "input.csv";
-    _log_file = TEST_FOLDER + "/" + "output.log";
-    REQUIRE(system(("mkdir -p " + TEST_FOLDER).c_str()) == 0);
+public:
+    explicit TmpData(const std::stringstream & _data)
+    {
+        m_folder = "test_folder";
+        m_input = crefile::join(m_folder, "input.csv");
+        m_log = crefile::join(m_folder, "output.log");
 
-    std::ofstream ofs(_input_file.c_str());
-    ofs << _data;
-    ofs.close();
-}
+        crefile::Path{m_folder} .mkdir_if_not_exists();
 
-void cleanupTestFolder()
-{
-    REQUIRE(system(("rm -f " + TEST_FOLDER + "/*").c_str()) == 0);
-    REQUIRE(system(("rmdir " + TEST_FOLDER + "/").c_str()) == 0);
-}
+        std::ofstream ofs(m_input.c_str());
+        ofs << _data.str();
+        ofs.close();
+
+        REQUIRE(crefile::Path{m_input} .exists() == 1);
+    }
+
+    ~TmpData()
+    {
+        if(crefile::Path{m_folder} .exists())
+        {
+            if(crefile::Path{m_input} .exists())
+            {
+                crefile::Path{m_input} .rm();
+            }
+            if(crefile::Path{m_log} .exists())
+            {
+                crefile::Path{m_log} .rm();
+            }
+            crefile::Path{m_folder} .rm();
+        }
+
+        REQUIRE(crefile::Path{m_folder} .exists() == 0);
+    }
+
+    std::string m_folder;
+    std::string m_input;
+    std::string m_log;
+};
 }
 
 TEST_CASE_METHOD(
@@ -67,8 +88,6 @@ TEST_CASE_METHOD(
 
     Frequency min_spatial = 1.0;
     Frequency min_block = 1.0;
-    std::string input_file;
-    std::string log_file;
 
     std::stringstream ss;
     ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
@@ -84,13 +103,13 @@ TEST_CASE_METHOD(
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,E,F,G,H,I,l,l,l,l" << std::endl;
 
-    prepareTestFolder(ss.str(), input_file, log_file);
+    TmpData data = TmpData(ss);
 
     // Act
 
     Database database;
-    loadDatabase(input_file, database);
-    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
+    loadDatabase(data.m_input, database);
+    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -100,10 +119,6 @@ TEST_CASE_METHOD(
     CHECK(m_patterns.m_solid_ranged_sequences[4].size() > 0);
     CHECK(m_patterns.m_solid_ranged_sequences[5].size() == 1);
     CHECK(m_patterns.m_solid_ranged_sequences[6].size() == 0);
-
-    // Cleanup
-
-    cleanupTestFolder();
 }
 
 TEST_CASE_METHOD(
@@ -115,8 +130,6 @@ TEST_CASE_METHOD(
 
     Frequency min_spatial = 1.0;
     Frequency min_block = 1.0;
-    std::string input_file;
-    std::string log_file;
 
     std::stringstream ss;
     ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
@@ -132,13 +145,13 @@ TEST_CASE_METHOD(
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
 
-    prepareTestFolder(ss.str(), input_file, log_file);
+    TmpData data = TmpData(ss);
 
     // Act
 
     Database database;
-    loadDatabase(input_file, database);
-    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
+    loadDatabase(data.m_input, database);
+    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -153,10 +166,6 @@ TEST_CASE_METHOD(
     CHECK(rs.range().end() == 3);
     CHECK(rs.support() == 4);
     CHECK((rs.frequency() - min_spatial) < FREQ_EPSILON);
-
-    // Cleanup
-
-    cleanupTestFolder();
 }
 
 TEST_CASE_METHOD(
@@ -168,8 +177,6 @@ TEST_CASE_METHOD(
 
     Frequency min_spatial = 1.0;
     Frequency min_block = 1.0;
-    std::string input_file;
-    std::string log_file;
 
     std::stringstream ss;
     ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
@@ -185,13 +192,13 @@ TEST_CASE_METHOD(
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
 
-    prepareTestFolder(ss.str(), input_file, log_file);
+    TmpData data = TmpData(ss);
 
     // Act
 
     Database database;
-    loadDatabase(input_file, database);
-    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
+    loadDatabase(data.m_input, database);
+    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -212,10 +219,6 @@ TEST_CASE_METHOD(
     CHECK(v_pos[2].second == 5);
     CHECK(v_pos[3].first == 3);
     CHECK(v_pos[3].second == 1);
-
-    // Cleanup
-
-    cleanupTestFolder();
 }
 
 TEST_CASE_METHOD(
@@ -227,8 +230,6 @@ TEST_CASE_METHOD(
 
     Frequency min_spatial = 0.75;
     Frequency min_block = 1.0;
-    std::string input_file;
-    std::string log_file;
 
     std::stringstream ss;
     ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
@@ -244,13 +245,13 @@ TEST_CASE_METHOD(
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
 
-    prepareTestFolder(ss.str(), input_file, log_file);
+    TmpData data = TmpData(ss);
 
     // Act
 
     Database database;
-    loadDatabase(input_file, database);
-    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
+    loadDatabase(data.m_input, database);
+    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -265,10 +266,6 @@ TEST_CASE_METHOD(
     CHECK(rs.range().end() == 7);
     CHECK(rs.support() == 3);
     CHECK((rs.frequency() - min_spatial) < FREQ_EPSILON);
-
-    // Cleanup
-
-    cleanupTestFolder();
 }
 
 TEST_CASE_METHOD(
@@ -280,8 +277,6 @@ TEST_CASE_METHOD(
 
     Frequency min_spatial = 0.9;
     Frequency min_block = 1.0;
-    std::string input_file;
-    std::string log_file;
 
     std::stringstream ss;
     ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
@@ -297,13 +292,13 @@ TEST_CASE_METHOD(
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
 
-    prepareTestFolder(ss.str(), input_file, log_file);
+    TmpData data = TmpData(ss);
 
     // Act
 
     Database database;
-    loadDatabase(input_file, database);
-    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
+    loadDatabase(data.m_input, database);
+    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -321,10 +316,6 @@ TEST_CASE_METHOD(
     CHECK(rs.range().end() == 7);
     CHECK(rs.support() == 2);
     CHECK((rs.frequency() - 1.0) < FREQ_EPSILON);
-
-    // Cleanup
-
-    cleanupTestFolder();
 }
 
 TEST_CASE_METHOD(
@@ -336,8 +327,6 @@ TEST_CASE_METHOD(
 
     Frequency min_spatial = 1.0;
     Frequency min_block = 1.0;
-    std::string input_file;
-    std::string log_file;
 
     std::stringstream ss;
     ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
@@ -353,13 +342,13 @@ TEST_CASE_METHOD(
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
 
-    prepareTestFolder(ss.str(), input_file, log_file);
+    TmpData data = TmpData(ss);
 
     // Act
 
     Database database;
-    loadDatabase(input_file, database);
-    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
+    loadDatabase(data.m_input, database);
+    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -384,10 +373,6 @@ TEST_CASE_METHOD(
     CHECK(bs.interval().end() == 17);
     CHECK(bs.support() == 15);
     CHECK((bs.frequency() - min_block) < FREQ_EPSILON);
-
-    // Cleanup
-
-    cleanupTestFolder();
 }
 
 TEST_CASE_METHOD(
@@ -399,8 +384,6 @@ TEST_CASE_METHOD(
 
     Frequency min_spatial = 1.0;
     Frequency min_block = 1.0;
-    std::string input_file;
-    std::string log_file;
 
     std::stringstream ss;
     ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
@@ -416,13 +399,13 @@ TEST_CASE_METHOD(
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
 
-    prepareTestFolder(ss.str(), input_file, log_file);
+    TmpData data = TmpData(ss);
 
     // Act
 
     Database database;
-    loadDatabase(input_file, database);
-    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
+    loadDatabase(data.m_input, database);
+    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -439,10 +422,6 @@ TEST_CASE_METHOD(
         CHECK(it->sequence().toStringOfItems() == "EFGHI");
         CHECK(it->range().size() == 1);
     }
-
-    // Cleanup
-
-    cleanupTestFolder();
 }
 
 TEST_CASE_METHOD(
@@ -454,8 +433,6 @@ TEST_CASE_METHOD(
 
     Frequency min_spatial = 0.75;
     Frequency min_block = 0.75;
-    std::string input_file;
-    std::string log_file;
 
     std::stringstream ss;
     ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
@@ -471,13 +448,13 @@ TEST_CASE_METHOD(
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
 
-    prepareTestFolder(ss.str(), input_file, log_file);
+    TmpData data = TmpData(ss);
 
     // Act
 
     Database database;
-    loadDatabase(input_file, database);
-    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
+    loadDatabase(data.m_input, database);
+    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -494,10 +471,6 @@ TEST_CASE_METHOD(
     CHECK(bs.interval().end() == 17);
     CHECK(bs.support() == 15);
     CHECK((bs.frequency() - min_block) < FREQ_EPSILON);
-
-    // Cleanup
-
-    cleanupTestFolder();
 }
 
 TEST_CASE_METHOD(
@@ -509,8 +482,6 @@ TEST_CASE_METHOD(
 
     Frequency min_spatial = 1.0;
     Frequency min_block = 0.50;
-    std::string input_file;
-    std::string log_file;
 
     std::stringstream ss;
     ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
@@ -526,13 +497,13 @@ TEST_CASE_METHOD(
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
 
-    prepareTestFolder(ss.str(), input_file, log_file);
+    TmpData data = TmpData(ss);
 
     // Act
 
     Database database;
-    loadDatabase(input_file, database);
-    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
+    loadDatabase(data.m_input, database);
+    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -549,10 +520,6 @@ TEST_CASE_METHOD(
     CHECK(bs.interval().end() == 22);
     CHECK(bs.support() == 20);
     CHECK((bs.frequency() - min_block) < FREQ_EPSILON);
-
-    // Cleanup
-
-    cleanupTestFolder();
 }
 
 TEST_CASE_METHOD(
@@ -564,8 +531,6 @@ TEST_CASE_METHOD(
 
     Frequency min_spatial = 1.0;
     Frequency min_block = 0.75;
-    std::string input_file;
-    std::string log_file;
 
     std::stringstream ss;
     ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
@@ -581,13 +546,13 @@ TEST_CASE_METHOD(
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
 
-    prepareTestFolder(ss.str(), input_file, log_file);
+    TmpData data = TmpData(ss);
 
     // Act
 
     Database database;
-    loadDatabase(input_file, database);
-    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
+    loadDatabase(data.m_input, database);
+    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -604,10 +569,6 @@ TEST_CASE_METHOD(
     CHECK(bs.interval().end() == 22);
     CHECK(bs.support() == 15);
     CHECK((bs.frequency() - min_block) < FREQ_EPSILON);
-
-    // Cleanup
-
-    cleanupTestFolder();
 }
 
 TEST_CASE_METHOD(
@@ -619,8 +580,6 @@ TEST_CASE_METHOD(
 
     Frequency min_spatial = 1.0;
     Frequency min_block = 0.5;
-    std::string input_file;
-    std::string log_file;
 
     std::stringstream ss;
     ss  << "X1,X2,X3,X4,X5,X6,X7,X8,X9,X10,X11,X12,X13,X14,X15,"
@@ -636,13 +595,13 @@ TEST_CASE_METHOD(
         << "i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i,i" << std::endl
         << "l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l,l" << std::endl;
 
-    prepareTestFolder(ss.str(), input_file, log_file);
+    TmpData data = TmpData(ss);
 
     // Act
 
     Database database;
-    loadDatabase(input_file, database);
-    STSM::run(database, log_file, min_spatial * 100, min_block * 100);
+    loadDatabase(data.m_input, database);
+    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -659,8 +618,4 @@ TEST_CASE_METHOD(
     CHECK(bs.interval().end() == 18);
     CHECK(bs.support() == 36);
     CHECK((bs.frequency() - (36.0 / 70.0)) < FREQ_EPSILON);
-
-    // Cleanup
-
-    cleanupTestFolder();
 }
