@@ -153,7 +153,7 @@ endif
 ifdef COMSPEC
 # windows
 # common binaries
-	MKDIR =			md
+	MKDIR =			mkdir
 	MV =			move
 	RM =			del
 	RMALL =			rd /s /q
