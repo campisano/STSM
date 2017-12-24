@@ -34,8 +34,8 @@
 
 namespace
 {
-double FREQ_EPSILON = 0.0001;
-std::string TEST_FOLDER = "test_output";
+const double FREQ_EPSILON = 0.0001;
+const std::string TEST_FOLDER = "test_output";
 
 void prepareTestFolder(
     const std::string & _data,
