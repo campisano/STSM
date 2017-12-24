@@ -23,7 +23,7 @@
 
 
 # version of this Makefile
-MAKEFILE_VER =			1.1.4
+MAKEFILE_VER =			1.1.5
 
 # make options
 MAKEFLAGS +=			-s
@@ -150,18 +150,12 @@ endif
 
 ################################################################################
 # platform specifics
-ifdef COMSPEC
-# windows
-# common binaries
-	MKDIR =			mkdir
-	MV =			move
-	RM =			del
-	RMALL =			rd /s /q
-else
+
+ifeq ("$(PROGRAMFILES)$(ProgramFiles)","")
 # linux
+	SEPCHR = 		/
 # common binaries
 	MKDIR =			mkdir -p
-	MV = 			mv -f
 	RM = 			rm -f
     RMALL = 		rm -rf
 # colors and terminal details
@@ -173,6 +167,19 @@ else
 	YELLOW =		"\\033[1;33m"
 	RED =			"\\033[1;31m"
 	BLUE =			"\\033[1;34m"
+else
+	SEPCHR =		\\\\
+ifneq ("$(BASH)","")
+# cygwin
+	MKDIR =			mkdir -p
+	RM =			rm -f
+	RMALL =			rm -rf
+else
+# windows
+	MKDIR =			md
+	RM =			del
+	RMALL =			rd /s /q
+endif
 endif
 
 
