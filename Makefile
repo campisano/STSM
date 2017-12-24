@@ -23,7 +23,7 @@
 
 
 # version of this Makefile
-MAKEFILE_VER =			1.1.5
+MAKEFILE_VER =			1.1.6
 
 # make options
 MAKEFLAGS +=			-s
@@ -169,7 +169,7 @@ ifeq ("$(PROGRAMFILES)$(ProgramFiles)","")
 	BLUE =			"\\033[1;34m"
 else
 	SEPCHR =		\\\\
-ifneq ("$(BASH)","")
+ifneq ("$(OSTYPE)","")
 # cygwin
 	MKDIR =			mkdir -p
 	RM =			rm -f
