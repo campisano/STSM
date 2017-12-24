@@ -78,7 +78,7 @@ void OccurrenceMatrix::detectBorders(
 
     size_t min_x, max_x, min_y, max_y;
     min_x = max_x = it_pos->first;
-    min_y = max_y= it_pos->second;
+    min_y = max_y = it_pos->second;
 
     while(it_pos != _positions.end())
     {
@@ -120,7 +120,8 @@ void OccurrenceMatrix::initMatrix()
 {
     m_matrix = new bool * [m_width];
 
-    for(size_t x = 0; x < m_width; ++x) {
+    for(size_t x = 0; x < m_width; ++x)
+    {
         m_matrix[x] = new bool[m_height](); // () initialize all to false
     }
 }
@@ -129,7 +130,8 @@ void OccurrenceMatrix::clearMatrix()
 {
     if(m_matrix)
     {
-        for(size_t x = 0; x < m_width; ++x) {
+        for(size_t x = 0; x < m_width; ++x)
+        {
             delete [] m_matrix[x];
         }
 

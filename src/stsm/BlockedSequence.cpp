@@ -37,14 +37,14 @@ BlockedSequence::BlockedSequence(
 bool BlockedSequence::operator==(const BlockedSequence & _other) const
 {
     return (
-        m_range == _other.m_range &&
-        m_interval == _other.m_interval &&
-        m_sequence == _other.m_sequence);
+               m_range == _other.m_range &&
+               m_interval == _other.m_interval &&
+               m_sequence == _other.m_sequence);
 }
 
 bool BlockedSequence::operator!=(const BlockedSequence & _other) const
 {
-    return ! ((*this) == _other);
+    return !((*this) == _other);
 }
 
 const Sequence & BlockedSequence::sequence() const
@@ -80,8 +80,8 @@ Size BlockedSequence::area() const
 bool BlockedSequence::contains(const BlockedSequence & _other) const
 {
     return (
-        m_range.contains(_other.m_range) &&
-        m_interval.contains(_other.m_interval));
+               m_range.contains(_other.m_range) &&
+               m_interval.contains(_other.m_interval));
 }
 
 bool BlockedSequence::contains(
@@ -89,18 +89,18 @@ bool BlockedSequence::contains(
     const Interval & _other_interval) const
 {
     return (
-        m_range.contains(_other_range) &&
-        m_interval.contains(_other_interval));
+               m_range.contains(_other_range) &&
+               m_interval.contains(_other_interval));
 }
 
 bool BlockedSequence::hasSameCoordinates(const BlockedSequence & _other) const
 {
     return (
-        m_range == _other.m_range &&
-        m_interval == _other.m_interval);
+               m_range == _other.m_range &&
+               m_interval == _other.m_interval);
 }
 
-bool BlockedSequence::LessThanComparer::operator() (
+bool BlockedSequence::LessThanComparer::operator()(
     const ListBlockedSequences::iterator & _left,
     const ListBlockedSequences::iterator & _right) const
 {
@@ -111,21 +111,21 @@ bool BlockedSequence::LessThanComparer::operator() (
             if(_left->m_range.end() == _right->m_range.end())
             {
                 return (
-                    _left->m_interval.end()
-                    < _right->m_interval.end());
+                           _left->m_interval.end()
+                           < _right->m_interval.end());
             }
             else
             {
                 return (
-                    _left->m_range.end()
-                    < _right->m_range.end());
+                           _left->m_range.end()
+                           < _right->m_range.end());
             }
         }
         else
         {
             return (
-                _left->m_interval.start()
-                < _right->m_interval.start());
+                       _left->m_interval.start()
+                       < _right->m_interval.start());
         }
     }
     else
@@ -141,7 +141,7 @@ BlockedSequence::PositionComparer::PositionComparer(
 {
 }
 
-bool BlockedSequence::PositionComparer::operator() (
+bool BlockedSequence::PositionComparer::operator()(
     const BlockedSequence & _left,
     const BlockedSequence & _right) const
 {

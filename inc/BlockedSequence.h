@@ -66,7 +66,7 @@ public:
 
     struct LessThanComparer
     {
-        bool operator() (
+        bool operator()(
             const ListBlockedSequences::iterator & _left,
             const ListBlockedSequences::iterator & _right) const;
     };
@@ -75,7 +75,7 @@ public:
     {
         explicit PositionComparer(size_t _x_start, size_t _y_start);
 
-        bool operator() (
+        bool operator()(
             const BlockedSequence & _left,
             const BlockedSequence & _right) const;
 

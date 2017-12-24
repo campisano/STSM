@@ -43,7 +43,7 @@ void savePatterns(
         it_ss_by_len = _patterns.m_solid_ranged_sequences.begin();
         it_ss_by_len != _patterns.m_solid_ranged_sequences.end();
         ++it_ss_by_len
-        )
+    )
     {
         const Size & size = it_ss_by_len->first;
         const ListRangedSequence & lst_sequences = it_ss_by_len->second;
@@ -67,7 +67,7 @@ void savePatterns(
             seq["end"] = it_ss->range().end();
 
             it_list_pos = _patterns.m_ranged_sequence_positions.find(
-                & (*it_ss));
+                              & (*it_ss));
 
             if(it_list_pos == _patterns.m_ranged_sequence_positions.end())
             {
@@ -100,7 +100,7 @@ void savePatterns(
                     it_pos = lst_positions.begin();
                     it_pos != lst_positions.end();
                     ++it_pos
-                    )
+                )
                 {
                     spaces.push_back(it_pos->first);
                 }
@@ -114,7 +114,7 @@ void savePatterns(
                     it_pos = lst_positions.begin();
                     it_pos != lst_positions.end();
                     ++it_pos
-                    )
+                )
                 {
                     times.push_back(it_pos->second);
                 }
@@ -143,7 +143,7 @@ void savePatterns(
         it_sb_by_len = _patterns.m_solid_blocked_sequences.begin();
         it_sb_by_len != _patterns.m_solid_blocked_sequences.end();
         ++it_sb_by_len
-        )
+    )
     {
         const Size & size = it_sb_by_len->first;
         const ListBlockedSequences & lst_blocks = it_sb_by_len->second;

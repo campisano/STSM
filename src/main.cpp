@@ -44,12 +44,16 @@ int main(int _argn, char * _argv[])
 
         cxxopts::Options options(_argv[0], "Spatio-Temporal Sequence Miner");
         options.add_options()
-            ("h,help", "Print help")
-            ("i,input", "Input", cxxopts::value<std::string>(input_data_csv))
-            ("o,output", "Output file", cxxopts::value<std::string>(result_json)->default_value("result.json"))
-            ("l,log", "Log file", cxxopts::value<std::string>(output_log)->default_value("stsm.log"))
-            ("s,spatial", "Minimum spatial frequency", cxxopts::value<float>(min_spatial_frequency))
-            ("b,block", "Minimum block frequency", cxxopts::value<float>(min_block_frequency));
+        ("h,help", "Print help")
+        ("i,input", "Input", cxxopts::value<std::string>(input_data_csv))
+        ("o,output", "Output file",
+         cxxopts::value<std::string>(result_json)->default_value("result.json"))
+        ("l,log", "Log file", cxxopts::value<std::string>
+         (output_log)->default_value("stsm.log"))
+        ("s,spatial", "Minimum spatial frequency",
+         cxxopts::value<float>(min_spatial_frequency))
+        ("b,block", "Minimum block frequency",
+         cxxopts::value<float>(min_block_frequency));
         cxxopts::ParseResult parsed = options.parse(_argn, _argv);
 
         if(parsed.count("h"))
@@ -60,7 +64,8 @@ int main(int _argn, char * _argv[])
 
         if(parsed.count("i") != 1 || parsed.count("s") != 1 || parsed.count("b") != 1)
         {
-            std::cout << "Error: 'input', 'spatial' and 'block' argument are mandatory." << std::endl;
+            std::cout << "Error: 'input', 'spatial' and 'block' arguments"
+                      << " are mandatory." << std::endl;
             return 1;
         }
 

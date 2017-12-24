@@ -35,9 +35,9 @@ public:
     MapRangedSequencesByLength m_solid_ranged_sequences;
 
     typedef std::map <
-        const RangedSequence *,
-        ListPositions
-        > MapPositionsBySeq;            // mapping positions by sequence
+    const RangedSequence *,
+          ListPositions
+          > MapPositionsBySeq;            // mapping positions by sequence
     MapPositionsBySeq m_ranged_sequence_positions;
 
     MapBlockedSequencesByLength m_solid_blocked_sequences;

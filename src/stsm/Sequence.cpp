@@ -57,7 +57,7 @@ bool Sequence::operator==(const Sequence & _other) const
 
     Size size = m_items.size();
 
-    for(Size i=0; i < size; ++i)
+    for(Size i = 0; i < size; ++i)
     {
         if(m_items[i] != _other.m_items[i])
         {
@@ -70,7 +70,7 @@ bool Sequence::operator==(const Sequence & _other) const
 
 bool Sequence::operator!=(const Sequence & _other) const
 {
-    return ! ((*this) == _other);
+    return !((*this) == _other);
 }
 
 void Sequence::set(const std::string & _string_representation)
@@ -198,8 +198,8 @@ void Sequence::getSubsequenceDroppingLastItem(Sequence & _subseq) const
 bool Sequence::supportedBy(const Serie & _serie) const
 {
     Serie::const_iterator match = std::search(
-        _serie.begin(), _serie.end(),
-        m_items.begin(), m_items.end());
+                                      _serie.begin(), _serie.end(),
+                                      m_items.begin(), m_items.end());
 
     return match != _serie.end();
 

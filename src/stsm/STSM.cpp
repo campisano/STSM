@@ -36,20 +36,20 @@
 // TODO [CMP] put in a good place
 namespace
 {
-    const unsigned long
-        MIN_RANGE_SIZE = 2,
-        BLOCK_MERGE_MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2,
-        BLOCK_MERGE_FULL_MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2,
-        BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGES = 5000,
-        BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_RANGES = 10000;
+const unsigned long
+MIN_RANGE_SIZE = 2,
+BLOCK_MERGE_MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2,
+BLOCK_MERGE_FULL_MIN_SOLID_BLOCK_SEQUENCE_SIZE = 2,
+BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGES = 5000,
+BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_RANGES = 10000;
 
-    //TODO [CMP] to implement
-    // a solid block sequence must contains more than 1 sequence position
+//TODO [CMP] to implement
+// a solid block sequence must contains more than 1 sequence position
 
-    float getSecs(const time_t _time)
-    {
-        return floor(double(clock() - _time) / CLOCKS_PER_SEC * 100) / 100;
-    }
+float getSecs(const time_t _time)
+{
+    return floor(double(clock() - _time) / CLOCKS_PER_SEC * 100) / 100;
+}
 }
 
 STSM::STSM()
@@ -99,7 +99,7 @@ void STSM::run(
 
         ListRangedSequence & solid_ranged_sequences_k =
             m_patterns.m_solid_ranged_sequences[seq_size] =
-            ListRangedSequence();
+                ListRangedSequence();
 
         updateKernelsOfAllCandidates(_database, candidates);
         mergeKernelsOfAllCandidates(candidates, solid_ranged_sequences_k);
@@ -153,7 +153,7 @@ void STSM::updateKernelsOfAllCandidates(
     {
         // for each candidate...
         for(cand_it = _candidates.begin();
-            cand_it != _candidates.end(); ++cand_it)
+                cand_it != _candidates.end(); ++cand_it)
         {
             // ... having range containing the current series
             if(cand_it->range().contains(db_position))
@@ -224,14 +224,14 @@ void STSM::detectBlocksOfAllSolidRangedSequences()
         it_ss_by_len = m_patterns.m_solid_ranged_sequences.begin();
         it_ss_by_len != m_patterns.m_solid_ranged_sequences.end();
         ++it_ss_by_len
-        )
+    )
     {
         const Size & size = it_ss_by_len->first;
         const ListRangedSequence & sequences = it_ss_by_len->second;
 
         ListBlockedSequences & blocked_sequences =
             m_patterns.m_solid_blocked_sequences[size] =
-            ListBlockedSequences();
+                ListBlockedSequences();
 
         // for each sequence of that length
         for(it_ss = sequences.begin(); it_ss != sequences.end(); ++it_ss)
@@ -287,7 +287,7 @@ void STSM::generate1SizeCandidates(
                 Sequence(*it),
                 Range(_start, _end),
                 ListKernels()
-                ));
+            ));
     }
 
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
@@ -326,17 +326,17 @@ void STSM::generateCandidates(
         x_it = _solid_ranged_sequences.begin();
         x_it != _solid_ranged_sequences.end();
         ++x_it
-        )
+    )
     {
         for(
             y_it = _solid_ranged_sequences.begin();
             y_it != _solid_ranged_sequences.end();
             ++y_it
-            )
+        )
         {
             if(x_it->range().intersects(y_it->range(), rg_intersect) &&
-               rg_intersect.size() > 1
-                )
+                    rg_intersect.size() > 1
+              )
             {
                 seq1_without_first_item.clear();
                 x_it->sequence().getSubsequenceDroppingFirstItem(
@@ -355,7 +355,7 @@ void STSM::generateCandidates(
                             seq_joined,
                             rg_intersect,
                             ListKernels())
-                        );
+                    );
                 }
             }
         }
@@ -363,12 +363,12 @@ void STSM::generateCandidates(
 
     m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
     m_log_stream << "   (Num of candidates: " <<
-        _candidates.size() << ")" << std::endl;
+                 _candidates.size() << ")" << std::endl;
 }
 
 void STSM::setMinSpatialFreq(const Frequency & _min_spatial_freq)
 {
-    if(_min_spatial_freq <=0 )
+    if(_min_spatial_freq <= 0)
     {
         std::stringstream msg;
         msg << "Minumum Spatial Frequency parameter value ("
@@ -445,7 +445,7 @@ void STSM::updateMatchingPositions(
             it_seq = _solid_ranged_sequences.begin();
             it_seq != _solid_ranged_sequences.end();
             ++it_seq
-            )
+        )
         {
             if(! it_seq->range().contains(row))
             {
@@ -467,7 +467,7 @@ void STSM::updateMatchingPositions(
             // }
 
             if(m_patterns.m_ranged_sequence_positions.find(& (*it_seq))
-               == m_patterns.m_ranged_sequence_positions.end())
+                    == m_patterns.m_ranged_sequence_positions.end())
             {
                 m_patterns.m_ranged_sequence_positions[& (*it_seq)] =
                     ListPositions();
@@ -496,7 +496,7 @@ void STSM::updateMatchingPositions(
                     // (col - start_match_col) >= (
                     //     m_max_time_window + str_seq_size)
                     (col - start_match_col >= str_seq_size)
-                    )
+                )
                 {
                     // rewind to start_match_col + 1
                     col = start_match_col + 1;
@@ -526,7 +526,7 @@ void STSM::updateMatchingPositions(
                     if(str_it == str_seq_rep.end())
                     {
                         m_patterns.m_ranged_sequence_positions[& (*it_seq)]
-                            .push_back(Position(row, col - str_seq_size + 1));
+                        .push_back(Position(row, col - str_seq_size + 1));
 
                         // rewind to start_match_col + 1
                         col = start_match_col + 1;
@@ -613,15 +613,15 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
     ListBlockedSequences::iterator it_sb_to_add;
 
     typedef std::set <
-        ListBlockedSequences::iterator, BlockedSequence::LessThanComparer
-        > DelIt;
+    ListBlockedSequences::iterator, BlockedSequence::LessThanComparer
+    > DelIt;
     DelIt to_del;
     DelIt::iterator it_sb_to_del;
 
     ListBlockedSequences::iterator it_sb_q, it_sb_r;
 
     Range new_range(0, 0);
-    Interval new_interval(0,0);
+    Interval new_interval(0, 0);
     Support new_support;
     Size new_area;
 
@@ -632,7 +632,7 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
     ListBlockedSequences::iterator chk_toadd_bigger_it;
     ListBlockedSequences::iterator chk_cand_bigger_it;
 
-	if(
+    if(
         _solid_ranged_sequence.sequence().size() >=
         BLOCK_MERGE_FULL_MIN_SOLID_BLOCK_SEQUENCE_SIZE
         &&
@@ -719,7 +719,7 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
                         ++chk_toadd_bigger_it)
                     {
                         if(chk_toadd_bigger_it->contains(
-                               new_range, new_interval))
+                                    new_range, new_interval))
                         {
                             is_contained = true;
                             break;
@@ -729,7 +729,7 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
                     if(! is_contained)
                     {
                         new_support = occurr_matrix.getSupport(
-                            new_range, new_interval);
+                                          new_range, new_interval);
                         new_area = new_range.size() * new_interval.size();
 
                         // if num of sequence items in the block divided by
@@ -769,8 +769,8 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
                                         is_contained = true;
                                         ++chk_toadd_bigger_it;
                                     }
-                                    else if (merged.contains(
-                                                 * chk_toadd_bigger_it))
+                                    else if(merged.contains(
+                                                * chk_toadd_bigger_it))
                                     {
                                         to_add.erase(chk_toadd_bigger_it++);
                                     }
@@ -826,7 +826,7 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
                         ++chk_cand_bigger_it;
                         ++skipped;
                     }
-                    else if (it_sb_to_add->contains(* chk_cand_bigger_it))
+                    else if(it_sb_to_add->contains(* chk_cand_bigger_it))
                     {
                         sb_candidates.erase(chk_cand_bigger_it++);
                         ++additional_erased;
@@ -861,9 +861,9 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
             }
         }
         while(did_any_merge);
-	}
-	else
-	{
+    }
+    else
+    {
         m_log_stream << "\t fast merges:";
         m_log_stream.flush();
 
@@ -938,8 +938,8 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
                                     is_contained = true;
                                     ++chk_toadd_bigger_it;
                                 }
-                                else if (merged.contains(
-                                             * chk_toadd_bigger_it))
+                                else if(merged.contains(
+                                            * chk_toadd_bigger_it))
                                 {
                                     to_add.erase(chk_toadd_bigger_it++);
                                 }
@@ -1010,7 +1010,7 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
                         ++chk_cand_bigger_it;
                         ++skipped;
                     }
-                    else if (it_sb_to_add->contains(* chk_cand_bigger_it))
+                    else if(it_sb_to_add->contains(* chk_cand_bigger_it))
                     {
                         sb_candidates.erase(chk_cand_bigger_it++);
                         ++additional_erased;
@@ -1045,7 +1045,7 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
             }
         }
         while(did_any_merge);
-	}
+    }
 
     m_log_stream << " total: " << getSecs(start_time) << "s.";
     m_log_stream << std::endl;
@@ -1087,19 +1087,19 @@ void STSM::printSolidRangedSequences()
         it_ss_by_len = m_patterns.m_solid_ranged_sequences.begin();
         it_ss_by_len != m_patterns.m_solid_ranged_sequences.end();
         ++it_ss_by_len
-        )
+    )
     {
         const ListRangedSequence & sequences = it_ss_by_len->second;
 
         for(it_ss = sequences.begin(); it_ss != sequences.end(); ++it_ss)
         {
             m_log_stream
-                << '\t' << it_ss->sequence().toStringOfItems()
-                << '\t' << "len: " << it_ss->sequence().size()
-                << '\t' << "sup: " << it_ss->support()
-                << '\t' << "r.s: " << it_ss->range().start()
-                << '\t' << "r.e: " << it_ss->range().end()
-                << std::endl;
+                    << '\t' << it_ss->sequence().toStringOfItems()
+                    << '\t' << "len: " << it_ss->sequence().size()
+                    << '\t' << "sup: " << it_ss->support()
+                    << '\t' << "r.s: " << it_ss->range().start()
+                    << '\t' << "r.e: " << it_ss->range().end()
+                    << std::endl;
         }
     }
 }
@@ -1115,21 +1115,21 @@ void STSM::printSolidBlockedSequences()
         it_sb_by_len = m_patterns.m_solid_blocked_sequences.begin();
         it_sb_by_len != m_patterns.m_solid_blocked_sequences.end();
         ++it_sb_by_len
-        )
+    )
     {
         const ListBlockedSequences & blocks = it_sb_by_len->second;
 
         for(it_sb = blocks.begin(); it_sb != blocks.end(); ++it_sb)
         {
             m_log_stream
-                << '\t' << it_sb->sequence().toStringOfItems()
-                << '\t' << "len: " << it_sb->sequence().size()
-                << '\t' << "sup: " << it_sb->support()
-                << '\t' << "r.s: " << it_sb->range().start()
-                << '\t' << "r.e: " << it_sb->range().end()
-                << '\t' << "i.s: " << it_sb->interval().start()
-                << '\t' << "i.e: " << it_sb->interval().end()
-                << std::endl;
+                    << '\t' << it_sb->sequence().toStringOfItems()
+                    << '\t' << "len: " << it_sb->sequence().size()
+                    << '\t' << "sup: " << it_sb->support()
+                    << '\t' << "r.s: " << it_sb->range().start()
+                    << '\t' << "r.e: " << it_sb->range().end()
+                    << '\t' << "i.s: " << it_sb->interval().start()
+                    << '\t' << "i.e: " << it_sb->interval().end()
+                    << std::endl;
         }
     }
 }

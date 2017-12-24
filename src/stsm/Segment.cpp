@@ -45,7 +45,7 @@ bool Segment::operator==(const Segment & _other) const
 
 bool Segment::operator!=(const Segment & _other) const
 {
-    return ! ((*this) == _other);
+    return !((*this) == _other);
 }
 
 const Point & Segment::start() const
@@ -76,9 +76,9 @@ bool Segment::contains(const Point & _point) const
 bool Segment::contains(const Segment & _other) const
 {
     return (
-        m_start <= _other.m_start &&
-        m_end >= _other.m_end
-        );
+               m_start <= _other.m_start &&
+               m_end >= _other.m_end
+           );
 }
 
 Size Segment::size() const

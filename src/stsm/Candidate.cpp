@@ -90,7 +90,7 @@ void Candidate::updateCandidateKernels(
         Frequency frequency = float(m_current->support()) / range.size();
 
         // check validity of current kernel
-        if (frequency < _min_spatial_freq)
+        if(frequency < _min_spatial_freq)
         {
             m_kernel_closed = true;
         }
@@ -182,5 +182,5 @@ void Candidate::mergeKernels(
 
         to_add.clear();
     }
-    while (did_any_merge);
+    while(did_any_merge);
 }

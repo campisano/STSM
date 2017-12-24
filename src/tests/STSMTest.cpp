@@ -34,28 +34,28 @@
 
 namespace
 {
-    double FREQ_EPSILON = 0.0001;
-    std::string TEST_FOLDER = "test_output";
+double FREQ_EPSILON = 0.0001;
+std::string TEST_FOLDER = "test_output";
 
-    void prepareTestFolder(
-        const std::string & _data,
-        std::string & _input_file,
-        std::string & _log_file)
-    {
-        _input_file = TEST_FOLDER + "/" + "input.csv";
-        _log_file = TEST_FOLDER + "/" + "output.log";
-        REQUIRE(system(("mkdir -p " + TEST_FOLDER).c_str()) == 0);
+void prepareTestFolder(
+    const std::string & _data,
+    std::string & _input_file,
+    std::string & _log_file)
+{
+    _input_file = TEST_FOLDER + "/" + "input.csv";
+    _log_file = TEST_FOLDER + "/" + "output.log";
+    REQUIRE(system(("mkdir -p " + TEST_FOLDER).c_str()) == 0);
 
-        std::ofstream ofs(_input_file.c_str());
-        ofs << _data;
-        ofs.close();
-    }
+    std::ofstream ofs(_input_file.c_str());
+    ofs << _data;
+    ofs.close();
+}
 
-    void cleanupTestFolder()
-    {
-        REQUIRE(system(("rm -f " + TEST_FOLDER + "/*").c_str()) == 0);
-        REQUIRE(system(("rmdir " + TEST_FOLDER + "/").c_str()) == 0);
-    }
+void cleanupTestFolder()
+{
+    REQUIRE(system(("rm -f " + TEST_FOLDER + "/*").c_str()) == 0);
+    REQUIRE(system(("rmdir " + TEST_FOLDER + "/").c_str()) == 0);
+}
 }
 
 TEST_CASE_METHOD(
@@ -200,7 +200,7 @@ TEST_CASE_METHOD(
 
     RangedSequence & rs = m_patterns.m_solid_ranged_sequences[4].back();
     ListPositions & positions = m_patterns.m_ranged_sequence_positions[&rs];
-    std::vector < Position > v_pos (positions.begin(), positions.end());
+    std::vector < Position > v_pos(positions.begin(), positions.end());
 
     // testing expected positions
     CHECK(positions.size() == 4);
@@ -658,7 +658,7 @@ TEST_CASE_METHOD(
     CHECK(bs.interval().start() == 9);
     CHECK(bs.interval().end() == 18);
     CHECK(bs.support() == 36);
-    CHECK((bs.frequency() - (36.0/70.0)) < FREQ_EPSILON);
+    CHECK((bs.frequency() - (36.0 / 70.0)) < FREQ_EPSILON);
 
     // Cleanup
 

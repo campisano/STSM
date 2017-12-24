@@ -29,7 +29,7 @@
 
 namespace
 {
-    double FREQ_EPSILON = 0.0001;
+double FREQ_EPSILON = 0.0001;
 }
 
 TEST_CASE(
