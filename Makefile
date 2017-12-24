@@ -23,7 +23,7 @@
 
 
 # version of this Makefile
-MAKEFILE_VER =			1.1.2
+MAKEFILE_VER =			1.1.3
 
 # make options
 MAKEFLAGS +=			-s
@@ -149,6 +149,35 @@ endif
 
 
 ################################################################################
+# platform specifics
+ifdef COMSPEC
+# windows
+# common binaries
+	MKDIR =			md
+	MV =			move
+	RM =			del
+	RMALL =			rd /s /q
+else
+# linux
+# common binaries
+	MKDIR =			mkdir -p
+	MV = 			mv -f
+	RM = 			rm -f
+    RMALL = 		rm -rf
+# colors and terminal details
+# https://wiki.archlinux.org/index.php/Bash/Prompt_customization#Escapes_between_command_input_and_output
+# https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_codes
+	NORMAL =		"\\033[0;39m"
+	GREEN =			"\\033[1;32m"
+	WHITE =			"\\033[1;37m"
+	YELLOW =		"\\033[1;33m"
+	RED =			"\\033[1;31m"
+	BLUE =			"\\033[1;34m"
+endif
+
+
+
+################################################################################
 
 # obtaining list of objs and deps to produce
 OBJS :=					$(SRCS:%=$(BUILD_DIR)/%.o)
@@ -169,7 +198,7 @@ FORMAT:
 
 clean:					INFO_TRG
 	@echo Removing $(ROOT_BUILD_DIR)
-	$(if $(ROOT_BUILD_DIR),($(RM) -r $(ROOT_BUILD_DIR)),)
+	$(if $(ROOT_BUILD_DIR),($(RMALL) $(ROOT_BUILD_DIR)),)
 
 cleandeps:
 	$(RM) $(DEPS)
@@ -209,27 +238,6 @@ INFO_CMDS:
 	@echo $(YELLOW)"Command arguments used to"$(NORMAL)
 	@echo $(YELLOW)" compile: "$(BLUE)$(CXX)" <FILE> "$(CXX_CMD_ARGS)" -c"$(NORMAL)
 	@echo $(YELLOW)" link:    "$(BLUE)$(LD)" <FILE> "$(LD_CMD_ARGS)$(NORMAL)
-
-
-
-################################################################################
-# common binaries
-MKDIR =				mkdir -p
-RM =				rm -f
-
-
-
-################################################################################
-# colors and terminal details
-
-# https://wiki.archlinux.org/index.php/Bash/Prompt_customization#Escapes_between_command_input_and_output
-# https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_codes
-NORMAL =			"\\033[0;39m"
-GREEN =				"\\033[1;32m"
-WHITE =				"\\033[1;37m"
-YELLOW =			"\\033[1;33m"
-RED =				"\\033[1;31m"
-BLUE =				"\\033[1;34m"
 
 
 
