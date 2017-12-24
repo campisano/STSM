@@ -623,6 +623,10 @@ public:
         return found;
     }
 
+    bool is_directory() {
+        return FileIterImplWin32(this->str()).is_directory();
+    }
+
 private:
     static PathImplWin32 tmp_dir_impl() {
         TCHAR buffer[MAX_PATH + 1];
