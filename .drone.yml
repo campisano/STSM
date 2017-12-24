@@ -1,0 +1,8 @@
+build:
+    image: teaci/msys64
+    shell: mingw64
+    pull: true
+    commands:
+        - pacman -S --needed --noconfirm --noprogressbar mingw-w64-gcc
+        - make test
+        - ./BUILD/test/stsm
