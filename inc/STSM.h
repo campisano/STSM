@@ -23,8 +23,8 @@
 #ifndef STSM__H__
 #define STSM__H__
 
-#include <fstream>
 #include <list>
+#include <ostream>
 #include <string>
 
 #include "BlockedSequence.h"
@@ -45,7 +45,12 @@ public:
 
     void run(
         const Database & _database,
-        const std::string & _log_filename,
+        const unsigned int & _min_spatial_freq_perc,
+        const unsigned int & _min_block_freq_perc,
+        std::ostream & _log_stream);
+
+    void run(
+        const Database & _database,
         const unsigned int & _min_spatial_freq_perc,
         const unsigned int & _min_block_freq_perc);
 
@@ -102,7 +107,7 @@ protected:
     Patterns m_patterns;                // resulting patterns
 
 private:
-    std::ofstream m_log_stream;
+    std::ostream * m_log_stream;
 
     Frequency m_min_spatial_freq;
     Frequency m_min_block_freq;

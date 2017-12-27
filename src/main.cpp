@@ -23,6 +23,7 @@
 #include <cmath>
 #include <ctime>
 #include <cxxopts.hpp>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -48,65 +49,110 @@ int main(int _argn, char * _argv[])
         ("i,input", "Input", cxxopts::value<std::string>(input_data_csv))
         ("o,output", "Output file",
          cxxopts::value<std::string>(result_json)->default_value("result.json"))
-        ("l,log", "Log file", cxxopts::value<std::string>
-         (output_log)->default_value("stsm.log"))
+        ("l,log", "Log file", cxxopts::value<std::string>(output_log))
         ("s,spatial", "Minimum spatial frequency",
          cxxopts::value<float>(min_spatial_frequency))
         ("b,block", "Minimum block frequency",
-         cxxopts::value<float>(min_block_frequency));
+         cxxopts::value<float>(min_block_frequency))
+        ("v,verbose", "Verbose output");
         cxxopts::ParseResult parsed = options.parse(_argn, _argv);
 
-        if(parsed.count("h"))
+        if(parsed.count("h") != 0)
         {
             std::cout << options.help({"", "Group"}) << std::endl;
             return 0;
         }
 
-        if(parsed.count("i") != 1 || parsed.count("s") != 1 || parsed.count("b") != 1)
+        if(
+            parsed.count("i") == 0 ||
+            parsed.count("s") == 0 ||
+            parsed.count("b") == 0
+        )
         {
-            std::cout << "Error: 'input', 'spatial' and 'block' arguments"
+            std::cerr << "Error: 'input', 'spatial' and 'block' arguments"
                       << " are mandatory." << std::endl;
             return 1;
         }
 
-        std::cout << "    args:"
-                  << " " << input_data_csv
-                  << " " << result_json
-                  << " " << output_log
-                  << " " << min_spatial_frequency
-                  << " " << min_block_frequency
-                  << std::endl;
+        if(parsed.count("v") != 0)
+        {
+            std::cout << "    args:"
+                      << " " << input_data_csv
+                      << " " << result_json
+                      << " " << output_log
+                      << " " << min_spatial_frequency
+                      << " " << min_block_frequency
+                      << std::endl;
+        }
 
         Database database;
         STSM stsm;
 
-        clock_t begin;
+        clock_t begin = clock();
         int elapsed_s;
 
-        std::cout << "Loading database from "
-                  << input_data_csv << "..." << std::endl;
-        begin = clock();
+        if(parsed.count("v") != 0)
+        {
+            std::cout << "Loading database from "
+                      << input_data_csv << "..." << std::endl;
+        }
+
         loadDatabase(input_data_csv, database);
-        elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
-        std::cout << "        load clock time: "
-                  << elapsed_s << "s" << std::endl;
 
-        std::cout << "Runnin STSM ..." << std::endl;
-        begin = clock();
-        stsm.run(
-            database, output_log,
-            min_spatial_frequency, min_block_frequency);
-        elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
-        std::cout << "        run clock time: "
-                  << elapsed_s << "s" << std::endl;
+        if(parsed.count("v") != 0)
+        {
+            elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
+            std::cout << "        load clock time: "
+                      << elapsed_s << "s" << std::endl;
 
-        std::cout << "Saving results to "
-                  << result_json << "..." << std::endl;
-        begin = clock();
+            std::cout << "Runnin STSM ..." << std::endl;
+            begin = clock();
+        }
+
+        if(parsed.count("l") == 0)
+        {
+            if(parsed.count("v") == 0)
+            {
+                stsm.run(database, min_spatial_frequency, min_block_frequency);
+            }
+            else
+            {
+                stsm.run(
+                    database,
+                    min_spatial_frequency, min_block_frequency,
+                    std::cout);
+            }
+        }
+        else
+        {
+            std::ofstream log_stream;
+            log_stream.open(output_log.c_str());
+            stsm.run(
+                database,
+                min_spatial_frequency, min_block_frequency,
+                log_stream);
+            log_stream.close();
+        }
+
+        if(parsed.count("v") != 0)
+        {
+            elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
+            std::cout << "        run clock time: "
+                      << elapsed_s << "s" << std::endl;
+
+            std::cout << "Saving results to "
+                      << result_json << "..." << std::endl;
+            begin = clock();
+        }
+
         savePatterns(result_json, stsm.getPatterns());
-        elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
-        std::cout << "        save clock time: "
-                  << elapsed_s << "s" << std::endl;
+
+        if(parsed.count("v") != 0)
+        {
+            elapsed_s = floor(double(clock() - begin) / CLOCKS_PER_SEC);
+            std::cout << "        save clock time: "
+                      << elapsed_s << "s" << std::endl;
+        }
 
         return 0;
     }

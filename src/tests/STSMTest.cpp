@@ -24,8 +24,8 @@
 #include <crefile.hpp>
 #include <cstdlib>
 #include <cmath>
+#include <fstream>
 #include <sstream>
-#include <ostream>
 #include <string>
 #include <vector>
 
@@ -44,7 +44,6 @@ public:
     {
         m_folder = "test_folder";
         m_input = crefile::join(m_folder, "input.csv");
-        m_log = crefile::join(m_folder, "output.log");
 
         crefile::Path{m_folder} .mkdir_if_not_exists();
 
@@ -63,10 +62,6 @@ public:
             {
                 crefile::Path{m_input} .rm();
             }
-            if(crefile::Path{m_log} .exists())
-            {
-                crefile::Path{m_log} .rm();
-            }
             crefile::Path{m_folder} .rm();
         }
 
@@ -75,7 +70,6 @@ public:
 
     std::string m_folder;
     std::string m_input;
-    std::string m_log;
 };
 }
 
@@ -109,7 +103,7 @@ TEST_CASE_METHOD(
 
     Database database;
     loadDatabase(data.m_input, database);
-    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
+    STSM::run(database, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -151,7 +145,7 @@ TEST_CASE_METHOD(
 
     Database database;
     loadDatabase(data.m_input, database);
-    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
+    STSM::run(database, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -198,7 +192,7 @@ TEST_CASE_METHOD(
 
     Database database;
     loadDatabase(data.m_input, database);
-    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
+    STSM::run(database, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -251,7 +245,7 @@ TEST_CASE_METHOD(
 
     Database database;
     loadDatabase(data.m_input, database);
-    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
+    STSM::run(database, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -298,7 +292,7 @@ TEST_CASE_METHOD(
 
     Database database;
     loadDatabase(data.m_input, database);
-    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
+    STSM::run(database, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -348,7 +342,7 @@ TEST_CASE_METHOD(
 
     Database database;
     loadDatabase(data.m_input, database);
-    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
+    STSM::run(database, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -405,7 +399,7 @@ TEST_CASE_METHOD(
 
     Database database;
     loadDatabase(data.m_input, database);
-    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
+    STSM::run(database, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -454,7 +448,7 @@ TEST_CASE_METHOD(
 
     Database database;
     loadDatabase(data.m_input, database);
-    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
+    STSM::run(database, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -503,7 +497,7 @@ TEST_CASE_METHOD(
 
     Database database;
     loadDatabase(data.m_input, database);
-    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
+    STSM::run(database, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -552,7 +546,7 @@ TEST_CASE_METHOD(
 
     Database database;
     loadDatabase(data.m_input, database);
-    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
+    STSM::run(database, min_spatial * 100, min_block * 100);
 
     // Assert
 
@@ -601,7 +595,7 @@ TEST_CASE_METHOD(
 
     Database database;
     loadDatabase(data.m_input, database);
-    STSM::run(database, data.m_log, min_spatial * 100, min_block * 100);
+    STSM::run(database, min_spatial * 100, min_block * 100);
 
     // Assert
 

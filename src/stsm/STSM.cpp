@@ -56,6 +56,7 @@ STSM::STSM()
 {
     m_min_spatial_freq = 0.0;
     m_min_block_freq = 0.0;
+    m_log_stream = NULL;
 }
 
 STSM::~STSM()
@@ -64,7 +65,17 @@ STSM::~STSM()
 
 void STSM::run(
     const Database & _database,
-    const std::string & _log_filename,
+    const unsigned int & _min_spatial_freq_perc,
+    const unsigned int & _min_block_freq_perc,
+    std::ostream & _log_stream)
+{
+    m_log_stream = & _log_stream;
+
+    run(_database, _min_spatial_freq_perc, _min_block_freq_perc);
+}
+
+void STSM::run(
+    const Database & _database,
     const unsigned int & _min_spatial_freq_perc,
     const unsigned int & _min_block_freq_perc)
 {
@@ -73,16 +84,15 @@ void STSM::run(
 
     clock_t start_time = clock();
 
-    // initialize the logger
-    m_log_stream.open(_log_filename.c_str());
-
-    // logging info
-    m_log_stream << "Log: " << _log_filename << std::endl;
-    m_log_stream << "Min Spatial Frequency value: "
-                 << m_min_spatial_freq << std::endl;
-    m_log_stream << "Min Block Frequency value: "
-                 << m_min_block_freq << std::endl;
-    m_log_stream << std::endl;
+    if(m_log_stream)
+    {
+        // logging info
+        (*m_log_stream) << "Min Spatial Frequency value: "
+                        << m_min_spatial_freq << std::endl;
+        (*m_log_stream) << "Min Block Frequency value: "
+                        << m_min_block_freq << std::endl;
+        (*m_log_stream) << std::endl;
+    }
 
     SetItems items;
     generateTheSetOfAllDatabaseItems(_database, items);
@@ -94,8 +104,11 @@ void STSM::run(
 
     do
     {
-        m_log_stream << "* Iteration for sequence of size: "
-                     << seq_size << std::endl;
+        if(m_log_stream)
+        {
+            (*m_log_stream) << "* Iteration for sequence of size: "
+                            << seq_size << std::endl;
+        }
 
         ListRangedSequence & solid_ranged_sequences_k =
             m_patterns.m_solid_ranged_sequences[seq_size] =
@@ -124,12 +137,12 @@ void STSM::run(
     // print solid blocked sequences data and positions
     // printSolidBlockedSequences();
 
-    m_log_stream << "* Total run time: "
-                 << getSecs(start_time)
-                 << " secs." << std::endl;
-
-    // close the logger
-    m_log_stream.close();
+    if(m_log_stream)
+    {
+        (*m_log_stream) << "* Total run time: "
+                        << getSecs(start_time)
+                        << " secs." << std::endl;
+    }
 }
 
 const Patterns & STSM::getPatterns() const
@@ -142,7 +155,11 @@ void STSM::updateKernelsOfAllCandidates(
     ListCandidates & _candidates)
 {
     clock_t time = clock();
-    m_log_stream << " - Updating candidate kernels...";
+
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " - Updating candidate kernels...";
+    }
 
     Point db_position = 0;
     Database::const_iterator db_it;
@@ -168,7 +185,10 @@ void STSM::updateKernelsOfAllCandidates(
         ++db_position;
     }
 
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " (" << getSecs(time) << "s)." << std::endl;
+    }
 }
 
 void STSM::mergeKernelsOfAllCandidates(
@@ -176,7 +196,12 @@ void STSM::mergeKernelsOfAllCandidates(
     ListRangedSequence & _solid_ranged_sequences_k)
 {
     clock_t time = clock();
-    m_log_stream << " - Merging kernels and creating solid ranged sequences...";
+
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " - Merging kernels"
+                        << " and creating solid ranged sequences...";
+    }
 
     ListKernels::const_iterator kern_it;
     ListCandidates::iterator cand_it;
@@ -205,16 +230,24 @@ void STSM::mergeKernelsOfAllCandidates(
         }
     }
 
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
-    m_log_stream << "   (Num of solid ranged sequences (with range size > 1)"
-                 << " for this iteration: "
-                 << _solid_ranged_sequences_k.size() << ")" << std::endl;
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " (" << getSecs(time) << "s)." << std::endl;
+        (*m_log_stream) << "   (Num of solid ranged sequences"
+                        << " (with range size > 1) for this iteration: "
+                        << _solid_ranged_sequences_k.size() << ")" << std::endl;
+    }
 }
 
 void STSM::detectBlocksOfAllSolidRangedSequences()
 {
     clock_t time = clock();
-    m_log_stream << " - Detecting solid ranged sequence blocks..." << std::endl;
+
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " - Detecting solid ranged sequence blocks..."
+                        << std::endl;
+    }
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
@@ -241,7 +274,10 @@ void STSM::detectBlocksOfAllSolidRangedSequences()
         }
     }
 
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " (" << getSecs(time) << "s)." << std::endl;
+    }
 }
 
 void STSM::generateTheSetOfAllDatabaseItems(
@@ -249,7 +285,11 @@ void STSM::generateTheSetOfAllDatabaseItems(
     SetItems & _items)
 {
     clock_t time = clock();
-    m_log_stream << "Generating a set with all database items...";
+
+    if(m_log_stream)
+    {
+        (*m_log_stream) << "Generating a set with all database items...";
+    }
 
     // from http://stackoverflow.com/a/1041939/846686
     // and http://stackoverflow.com/a/24477023/846686
@@ -264,7 +304,10 @@ void STSM::generateTheSetOfAllDatabaseItems(
         }
     }
 
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " (" << getSecs(time) << "s)." << std::endl;
+    }
 }
 
 void STSM::generate1SizeCandidates(
@@ -274,7 +317,11 @@ void STSM::generate1SizeCandidates(
     ListCandidates & _candidates)
 {
     clock_t time = clock();
-    m_log_stream << "Generating 1-size candidates...";
+
+    if(m_log_stream)
+    {
+        (*m_log_stream) << "Generating 1-size candidates...";
+    }
 
     SetItems::const_iterator it;
 
@@ -290,9 +337,12 @@ void STSM::generate1SizeCandidates(
             ));
     }
 
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
-    m_log_stream << "(Num of candidates: "
-                 << _candidates.size() << ")" << std::endl;
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " (" << getSecs(time) << "s)." << std::endl;
+        (*m_log_stream) << "(Num of candidates: "
+                        << _candidates.size() << ")" << std::endl;
+    }
 }
 
 void STSM::generateCandidates(
@@ -300,7 +350,11 @@ void STSM::generateCandidates(
     ListCandidates & _candidates)
 {
     clock_t time = clock();
-    m_log_stream << " - Generating candidates...";
+
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " - Generating candidates...";
+    }
 
     ListRangedSequence::const_iterator x_it, y_it;
     Sequence seq1_without_first_item;
@@ -361,9 +415,12 @@ void STSM::generateCandidates(
         }
     }
 
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
-    m_log_stream << "   (Num of candidates: " <<
-                 _candidates.size() << ")" << std::endl;
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " (" << getSecs(time) << "s)." << std::endl;
+        (*m_log_stream) << "   (Num of candidates: " << _candidates.size()
+                        << ")" << std::endl;
+    }
 }
 
 void STSM::setMinSpatialFreq(const Frequency & _min_spatial_freq)
@@ -417,7 +474,12 @@ void STSM::updateMatchingPositions(
     const ListRangedSequence & _solid_ranged_sequences)
 {
     clock_t time = clock();
-    m_log_stream << " - Detecting sequence positions in the database...";
+
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " - Detecting sequence positions"
+                        << " in the database...";
+    }
 
     ListRangedSequence::const_iterator it_seq;
     unsigned int str_seq_size;
@@ -435,8 +497,11 @@ void STSM::updateMatchingPositions(
     for(unsigned int row = 0; row < tot_rows; ++row)
     {
         // [CMP] for debug
-        // m_log_stream << std::string(
-        //     _database[row].begin(), _database[row].end()) << std::endl;
+        // if(m_log_stream)
+        // {
+        //     (*m_log_stream) << std::string(
+        //         _database[row].begin(), _database[row].end()) << std::endl;
+        // }
 
         tot_cols = _database[row].size();
 
@@ -544,14 +609,22 @@ void STSM::updateMatchingPositions(
         }
     }
 
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " (" << getSecs(time) << "s)." << std::endl;
+    }
 }
 
 void STSM::cleanupSolidRangedSequencesWithSmallRangeSize(
     const Size & _min_size, ListRangedSequence & _solid_ranged_sequences)
 {
     clock_t time = clock();
-    m_log_stream << " - Clean up solid ranged sequences with small range size...";
+
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " - Clean up solid ranged sequences"
+                        << " with small range size...";
+    }
 
     ListRangedSequence::iterator it = _solid_ranged_sequences.begin();
 
@@ -567,7 +640,10 @@ void STSM::cleanupSolidRangedSequencesWithSmallRangeSize(
         }
     }
 
-    m_log_stream << " (" << getSecs(time) << "s)." << std::endl;
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " (" << getSecs(time) << "s)." << std::endl;
+    }
 }
 
 void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
@@ -586,11 +662,14 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
     time_t start_time = clock();
     time_t mid_time;
 
-    m_log_stream << '\t'
-                 << _solid_ranged_sequence.sequence().toStringOfItems() << '('
-                 << _solid_ranged_sequence.range().start() << ','
-                 << _solid_ranged_sequence.range().end() << ')';
-    m_log_stream.flush();
+    if(m_log_stream)
+    {
+        (*m_log_stream) << '\t'
+                        << _solid_ranged_sequence.sequence().toStringOfItems()
+                        << '(' << _solid_ranged_sequence.range().start() << ','
+                        << _solid_ranged_sequence.range().end() << ')';
+        m_log_stream->flush();
+    }
 
     const ListPositions & positions =
         m_patterns.m_ranged_sequence_positions.find(
@@ -606,8 +685,11 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
         _solid_ranged_sequence,
         sb_candidates);
 
-    m_log_stream << "\tinit.size: " << sb_candidates.size();
-    m_log_stream.flush();
+    if(m_log_stream)
+    {
+        (*m_log_stream) << "\tinit.size: " << sb_candidates.size();
+        m_log_stream->flush();
+    }
 
     ListBlockedSequences to_add;
     ListBlockedSequences::iterator it_sb_to_add;
@@ -640,8 +722,11 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
         BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGES
     )
     {
-        m_log_stream << "\t full merges:";
-        m_log_stream.flush();
+        if(m_log_stream)
+        {
+            (*m_log_stream) << "\t full merges:";
+            m_log_stream->flush();
+        }
 
         // TODO [CMP] sort disabled: is wrost
         // ListBlockedSequences sb_sub_sort;
@@ -661,8 +746,11 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
             // sb_candidates.sort(
             //     BlockedSequence::PositionComparer(0, 0));
 
-            // m_log_stream << " sort"<< " (" << getSecs(mid_time) << "s)";
-            // m_log_stream.flush();
+            // if(m_log_stream)
+            // {
+            //     (*m_log_stream) << " sort"<< " (" << getSecs(mid_time) << "s)";
+            //     m_log_stream->flush();
+            // }
 
             mid_time = clock();
 
@@ -744,12 +832,18 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
 
                             if(merged.hasSameCoordinates(* it_sb_q))
                             {
-                                m_log_stream << "=";
+                                if(m_log_stream)
+                                {
+                                    (*m_log_stream) << "=";
+                                }
                                 to_del.insert(it_sb_r);
                             }
                             else if(merged.hasSameCoordinates(* it_sb_r))
                             {
-                                m_log_stream << "=";
+                                if(m_log_stream)
+                                {
+                                    (*m_log_stream) << "=";
+                                }
                                 to_del.insert(it_sb_q);
                             }
                             else
@@ -791,9 +885,13 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
                 }
             }
 
-            m_log_stream << " +" << to_add.size() << " -" << to_del.size()
-                         << " (" << getSecs(mid_time) << "s)";
-            m_log_stream.flush();
+            if(m_log_stream)
+            {
+                (*m_log_stream) << " +" << to_add.size() << " -"
+                                << to_del.size() << " ("
+                                << getSecs(mid_time) << "s)";
+                m_log_stream->flush();
+            }
 
             for(
                 it_sb_to_del = to_del.begin();
@@ -845,18 +943,26 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
 
             to_add.clear();
 
-            m_log_stream << " --" << additional_erased << " #"
-                         << skipped << " (" << getSecs(mid_time) << "s) |";
-            m_log_stream.flush();
+            if(m_log_stream)
+            {
+                (*m_log_stream) << " --" << additional_erased << " #"
+                                << skipped << " (" << getSecs(mid_time)
+                                << "s) |";
+                m_log_stream->flush();
+            }
 
             if(
                 sb_candidates.size() >
                 BLOCK_MERGE_FULL_MAX_SOLID_BLOCKS_PER_SOLID_RANGES
             )
             {
-                m_log_stream << " [WARN] max full blocks per sequence "
-                             << "exceeded: " << sb_candidates.size()
-                             << ". Skip." << std::endl;
+                if(m_log_stream)
+                {
+                    (*m_log_stream) << " [WARN] max full blocks per sequence "
+                                    << "exceeded: " << sb_candidates.size()
+                                    << ". Skip." << std::endl;
+                }
+
                 return;
             }
         }
@@ -864,8 +970,11 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
     }
     else
     {
-        m_log_stream << "\t fast merges:";
-        m_log_stream.flush();
+        if(m_log_stream)
+        {
+            (*m_log_stream) << "\t fast merges:";
+            m_log_stream->flush();
+        }
 
         Size mid_add_count;
         Size mid_del_count;
@@ -975,9 +1084,13 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
                 mid_del_count += to_del.size();
             }
 
-            // m_log_stream << " +" << mid_add_count << " -" << mid_del_count
-            //              << " (" << getSecs(mid_time) << "s) |";
-            // m_log_stream.flush();
+            // if(m_log_stream)
+            // {
+            //     (*m_log_stream) << " +" << mid_add_count << " -"
+            //                     << mid_del_count << " (" << getSecs(mid_time)
+            //                     << "s) |";
+            //     m_log_stream->flush();
+            // }
 
             for(
                 it_sb_to_del = to_del.begin();
@@ -1029,27 +1142,38 @@ void STSM::detectSolidBlockedSequencesFromSolidRangedSequence(
 
             to_add.clear();
 
-            // m_log_stream << " --" << additional_erased << " #"
-            //              << skipped << " (" << getSecs(mid_time) << "s) |";
-            // m_log_stream.flush();
+            // if(m_log_stream)
+            // {
+            //     (*m_log_stream) << " --" << additional_erased << " #"
+            //                     << skipped << " (" << getSecs(mid_time)
+            //                     << "s) |";
+            //     m_log_stream->flush();
+            // }
 
             if(
                 sb_candidates.size() >
                 BLOCK_MERGE_FAST_MAX_SOLID_BLOCKS_PER_SOLID_RANGES
             )
             {
-                m_log_stream << " [WARN] max fast blocks per sequence "
-                             << "exceeded: " << sb_candidates.size()
-                             << ". Skip." << std::endl;
+                if(m_log_stream)
+                {
+                    (*m_log_stream) << " [WARN] max fast blocks per sequence "
+                                    << "exceeded: " << sb_candidates.size()
+                                    << ". Skip." << std::endl;
+                }
+
                 return;
             }
         }
         while(did_any_merge);
     }
 
-    m_log_stream << " total: " << getSecs(start_time) << "s.";
-    m_log_stream << std::endl;
-    m_log_stream.flush();
+    if(m_log_stream)
+    {
+        (*m_log_stream) << " total: " << getSecs(start_time) << "s."
+                        << std::endl;
+        m_log_stream->flush();
+    }
 
     _blocked_sequences.insert(
         _blocked_sequences.end(),
@@ -1078,7 +1202,11 @@ void STSM::generate1SizeBlockCandidatesForEachSequenceOccurrence(
 
 void STSM::printSolidRangedSequences()
 {
-    m_log_stream << std::endl << "Printing SolidRangedSequences:" << std::endl;
+    if(m_log_stream)
+    {
+        (*m_log_stream) << std::endl
+                        << "Printing SolidRangedSequences:" << std::endl;
+    }
 
     MapRangedSequencesByLength::const_iterator it_ss_by_len;
     ListRangedSequence::const_iterator it_ss;
@@ -1093,20 +1221,26 @@ void STSM::printSolidRangedSequences()
 
         for(it_ss = sequences.begin(); it_ss != sequences.end(); ++it_ss)
         {
-            m_log_stream
-                    << '\t' << it_ss->sequence().toStringOfItems()
-                    << '\t' << "len: " << it_ss->sequence().size()
-                    << '\t' << "sup: " << it_ss->support()
-                    << '\t' << "r.s: " << it_ss->range().start()
-                    << '\t' << "r.e: " << it_ss->range().end()
-                    << std::endl;
+            if(m_log_stream)
+            {
+                (*m_log_stream) << '\t' << it_ss->sequence().toStringOfItems()
+                                << '\t' << "len: " << it_ss->sequence().size()
+                                << '\t' << "sup: " << it_ss->support()
+                                << '\t' << "r.s: " << it_ss->range().start()
+                                << '\t' << "r.e: " << it_ss->range().end()
+                                << std::endl;
+            }
         }
     }
 }
 
 void STSM::printSolidBlockedSequences()
 {
-    m_log_stream << std::endl << "Printing SolidBlockedSequences:" << std::endl;
+    if(m_log_stream)
+    {
+        (*m_log_stream) << std::endl
+                        << "Printing SolidBlockedSequences:" << std::endl;
+    }
 
     MapBlockedSequencesByLength::const_iterator it_sb_by_len;
     ListBlockedSequences::const_iterator it_sb;
@@ -1121,15 +1255,17 @@ void STSM::printSolidBlockedSequences()
 
         for(it_sb = blocks.begin(); it_sb != blocks.end(); ++it_sb)
         {
-            m_log_stream
-                    << '\t' << it_sb->sequence().toStringOfItems()
-                    << '\t' << "len: " << it_sb->sequence().size()
-                    << '\t' << "sup: " << it_sb->support()
-                    << '\t' << "r.s: " << it_sb->range().start()
-                    << '\t' << "r.e: " << it_sb->range().end()
-                    << '\t' << "i.s: " << it_sb->interval().start()
-                    << '\t' << "i.e: " << it_sb->interval().end()
-                    << std::endl;
+            if(m_log_stream)
+            {
+                (*m_log_stream) << '\t' << it_sb->sequence().toStringOfItems()
+                                << '\t' << "len: " << it_sb->sequence().size()
+                                << '\t' << "sup: " << it_sb->support()
+                                << '\t' << "r.s: " << it_sb->range().start()
+                                << '\t' << "r.e: " << it_sb->range().end()
+                                << '\t' << "i.s: " << it_sb->interval().start()
+                                << '\t' << "i.e: " << it_sb->interval().end()
+                                << std::endl;
+            }
         }
     }
 }
