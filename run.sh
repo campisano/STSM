@@ -118,13 +118,13 @@ do
                                 if test ! -f $STATS_OUTPUT_FOLDER"/complete"
                                 then
                                     echo " * Producing Stacked Bar data" 2>&1 | tee -a $RUN_LOG;
-                                    "${TIMECMD[@]}" R --vanilla --slave --file=R/stacked_bar_data.r --args $OUTPUT_FILE $STATS_OUTPUT_FOLDER $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH;
+                                    "${TIMECMD[@]}" R --vanilla --slave --file=R/stacked_bar_data.R --args $OUTPUT_FILE $STATS_OUTPUT_FOLDER $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH;
                                 fi;
 
                                 if test ! -f $IMG_OUTPUT_FOLDER"/complete"
                                 then
                                     echo " * Plotting data $ORIENTATION $SAX $MIN_SPATIAL_FREQ $MIN_BLOCK_FREQ $MAX_STRETCH [...]" 2>&1 | tee -a $RUN_LOG;
-                                    "${TIMECMD[@]}" R --vanilla --slave --file=R/display.r --args $INPUT_FILE $OUTPUT_FILE $IMG_OUTPUT_FOLDER $INPUT_FOLDER"/inline_"$INLINE"_"$BASE_IMG_NAME;
+                                    "${TIMECMD[@]}" R --vanilla --slave --file=R/display.R --args $INPUT_FILE $OUTPUT_FILE $IMG_OUTPUT_FOLDER $INPUT_FOLDER"/inline_"$INLINE"_"$BASE_IMG_NAME;
                                 fi;
                             fi;
                         fi;
@@ -166,13 +166,13 @@ echo "------------------------------------------------------------";
 
 #                 SUP_RANGE=$MIN_SPATIAL_FREQ"-"$MIN_BLOCK_FREQ
 #                 OUTPUT_FILE=$SPEC_OUTPUT_FOLDER"/stackedbar/support_range/"$SUP_RANGE;
-#                 R --vanilla --slave --file=R/stacked_bar_data_plot_supports.r --args $OUTPUT_FILE $SUP_RANGE;
+#                 R --vanilla --slave --file=R/stacked_bar_data_plot_supports.R --args $OUTPUT_FILE $SUP_RANGE;
 #             done;
 
 #             for MAX_STRETCH in "${MAX_STRETCHS[@]}"
 #             do
 #                 OUTPUT_FILE=$SPEC_OUTPUT_FOLDER"/stackedbar/time_window/"$MAX_STRETCH;
-#                 R --vanilla --slave --file=R/stacked_bar_data_plot_times.r --args $OUTPUT_FILE $MAX_STRETCH;
+#                 R --vanilla --slave --file=R/stacked_bar_data_plot_times.R --args $OUTPUT_FILE $MAX_STRETCH;
 #             done;
 #         done;
 #     done;

@@ -20,28 +20,33 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with STSM.  If not, see <http://www.gnu.org/licenses/>.
 
-# include utility file
-source(file="R/utils.r", chdir=TRUE);
 
+
+## include utility file
+source(file="R/utils.R", chdir=TRUE);
+
+## set verbose mode
 utils$setVerbose();
 
-# read arguments
+
+
+## read arguments
 args = commandArgs(TRUE);
 
 if(length(args) != 2) {
-    cat("Usage: R --vanilla --slave --file=dat2csv_converter.r --args input.dat output.csv\n");
+    cat("Usage: R --vanilla --slave --file=dat2csv_converter.R --args input.dat output.csv\n");
     quit(status=1);
 }
 
 input = args[1];
 output = args[2];
 
-# reading input data
+## reading input data
 data = utils$readCSV(input, header=FALSE, sep="\t");
 
 cleaned_data = data[,-c(1,2,3)];
-#transposed_data = t(cleaned_data);   # TODO transpose the data
+## transposed_data = t(cleaned_data);   # TODO transpose the data
 transposed_data = cleaned_data;
 
-# writing output data
-utils$writeCSV(transposed_data, output, header=FALSE, sep=",")
+## writing output data
+utils$writeCSV(transposed_data, output, header=FALSE, sep=",");

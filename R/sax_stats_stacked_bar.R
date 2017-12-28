@@ -20,39 +20,43 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with STSM.  If not, see <http://www.gnu.org/licenses/>.
 
-#setwd("/home/shared/develop/projects/CEFET/mestrado/STSM");
 
-# include utility file
-source(file="R/utils.r", chdir=TRUE);
 
+## include utility file
+source(file="R/utils.R", chdir=TRUE);
+
+## set verbose mode
 utils$setVerbose();
 
-# loading dependences
+
+
+## loading dependences
 loaded_libs = utils$loadLibs(c(
     "rjson:0.2.15",
     "ggplot2:1.0.0",
     "grid:3.1.1",
     "scales:3.1.1",
-    "sqldf:0.4-10"));
+    "sqldf:0.4-10"
+));
 
 
 
-# evaluating arguments
+## evaluating arguments
 args = commandArgs(TRUE);
-#cat("Arguments:\n");
-#cat(args, "\n");
-# examples:
-#args = c();
-#args[1] = "results/matches-by-sax.csv";
-#args[2] = "results/blocks-by-sax.csv";
-#args[3] = "results/sequences-by-sax.csv";
-#args[4] = "results/sequences_with_2width_blocks-by-sax.csv";
-#args[5] = "results/sequences_with_3width_blocks-by-sax.csv";
-#args[6] = "results/sequences_with_4width_blocks-by-sax.csv";
-#args[7] = "results/sequences_with_5width_blocks-by-sax.csv";
-#args[8] = 401;
-#args[9] = "original";
-#cat("    args:", args, "\n");
+## cat("Arguments:\n");
+## cat(args, "\n");
+## examples:
+## args = c();
+## args[1] = "results/matches-by-sax.csv";
+## args[2] = "results/blocks-by-sax.csv";
+## args[3] = "results/sequences-by-sax.csv";
+## args[4] = "results/sequences_with_2width_blocks-by-sax.csv";
+## args[5] = "results/sequences_with_3width_blocks-by-sax.csv";
+## args[6] = "results/sequences_with_4width_blocks-by-sax.csv";
+## args[7] = "results/sequences_with_5width_blocks-by-sax.csv";
+## args[8] = 401;
+## args[9] = "original";
+## cat("    args:", args, "\n");
 
 vars = utils$newDict();
 vars$matches_by_sax = utils$readCSV(args[1]);
@@ -252,3 +256,8 @@ utils$bar_plot(
     y_title="Sequences with s.b.s. (\u2265 5 occur.)    ");
 utils$dev_off();
 rm(df);
+
+
+
+## unloading dependences
+utils$unloadLibs(loaded_libs);

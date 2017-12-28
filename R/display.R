@@ -20,181 +20,70 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with STSM.  If not, see <http://www.gnu.org/licenses/>.
 
-#setwd("/home/shared/develop/projects/CEFET/mestrado/STSM");
 
-# include utility file
-source(file="R/utils.r", chdir=TRUE);
 
+## include utility file
+source(file="R/utils.R", chdir=TRUE);
+
+## set verbose mode
 utils$setVerbose();
 
-# loading dependences
+
+
+## loading dependences
 loaded_libs = utils$loadLibs(c(
-    # basic R packages:
+    ## basic R packages:
     "datasets:3.1.1",
-    "graphics:3.1.1",
-    "grDevices:3.1.1",
     "methods:3.1.1",
     "stats:3.1.1",
     "utils:3.1.1",
-    # custom packages:
-    "compiler:3.1.1",
     "rjson:0.2.15",
-    "TSMining:1.0",
-    "ggplot2:1.0.0",
+    "compiler:3.1.1",
+    ## plot packages:
+    "graphics:3.1.1",
+    "grDevices:3.1.1",
     "grid:3.1.1",
-    "scales:0.2.4"));
+    "scales:0.2.4",
+    "ggplot2:1.0.0"
+));
 
 
 
-# defining a specific plot function
-plotSequencePositionsRangesAndBlocks_src = function(
-    x_points, y_points,
-    xmin_ranges=c(), xmax_ranges=c(),
-    xmin_blocks=c(), xmax_blocks=c(),
-    ymin_blocks=c(), ymax_blocks=c(),
-    lim_x_min=NA, lim_x_max=NA, lim_y_min=-NA, lim_y_max=NA,
-    clean=TRUE, scale=1) {
-
-    df_points = data.frame(x=x_points, y=y_points);
-    df_rectangles = data.frame(xmin=xmin_ranges, xmax=xmax_ranges);
-    df_blocks = data.frame(
-        xmin=xmin_blocks, xmax=xmax_blocks,
-        ymin=ymin_blocks, ymax=ymax_blocks
-        );
-
-    # define limits, if not defined
-    if(is.na(lim_x_min)) {
-        lim_x_min = min(c(df_points$x, df_rectangles$xmin, df_blocks$xmin));
-    }
-
-    if(is.na(lim_x_max)) {
-        lim_x_max = max(c(df_points$x, df_rectangles$xmax, df_blocks$xmax));
-    }
-
-    if(is.na(lim_y_min)) {
-        lim_y_min = min(c(df_points$y, df_rectangles$ymin, df_blocks$ymin));
-    }
-
-    if(is.na(lim_y_max)) {
-        lim_y_max = max(c(df_points$y, df_rectangles$ymax, df_blocks$ymax));
-    }
-
-    gg = ggplot();
-
-    # if defined, print the ranges
-    if(length(xmin_ranges) > 0 && length(xmax_ranges) > 0) {
-        gg = gg + geom_rect(
-            data=df_rectangles,
-            aes_string(
-                xmin="xmin", xmax="xmax",
-                ymin=-Inf, ymax=Inf),
-            size=0.5 * scale,
-            color=alpha("green", 0.5), fill="darkgreen", alpha=0.1);
-    }
-
-    # then print the points
-    if(length(x_points) > 0 && length(y_points) > 0) {
-        gg = gg + geom_point(
-            # shape=15,  # square
-            shape=17,  # triangle
-            # shape=18,  # diamond
-            data=df_points,
-            aes_string("x", "y"),
-            size=2 * scale, color="darkblue");
-    }
-
-    # finally, if defined, print the blocks
-    if(
-        length(xmin_blocks) > 0 && length(xmax_blocks) > 0 &&
-            length(ymin_blocks) > 0 && length(ymax_blocks) > 0
-    ) {
-        gg = gg + geom_rect(
-            data=df_blocks,
-            aes_string(
-                xmin="xmin", xmax="xmax",
-                ymin="ymin", ymax="ymax"),
-            size=0.5 * scale,
-            color=alpha("red", 1), fill="darkred", alpha=0.5);
-    }
-
-    # defines the limites
-    gg = gg + coord_cartesian(
-        xlim=c(lim_x_min, lim_x_max), ylim=c(lim_y_min, lim_y_max));
-
-    if(clean) {
-        gg = gg + scale_x_continuous(expand=c(0,0));
-        # start from the top to the bottom
-        gg = gg + scale_y_continuous(expand=c(0,0), trans="reverse");
-
-        gg = gg + labs(x=NULL, y=NULL, title=NULL);
-        gg = gg + theme(panel.background=element_rect(
-            fill="transparent", colour=NA));
-        gg = gg + theme(plot.background=element_rect(
-            fill="transparent", colour=NA));
-        gg = gg + theme(panel.grid=element_blank());
-        gg = gg + theme(panel.border=element_blank());
-        gg = gg + theme(plot.margin=unit(c(0,0,0,0), "null"));
-        #gg = gg + theme(panel.margin=unit(c(0,0,0,0), "null"));
-        gg = gg + theme(axis.ticks=element_blank());
-        gg = gg + theme(axis.text=element_blank());
-        gg = gg + theme(axis.title=element_blank());
-        gg = gg + theme(axis.line=element_blank());
-        gg = gg + theme(legend.position="none");
-        gg = gg + theme(axis.ticks.length=unit(0, "null"));
-        #gg = gg + theme(legend.margin=unit(0, "null"));
-    } else {
-        # start from the top to the bottom
-        gg = gg + scale_y_continuous(trans="reverse");
-    }
-
-    return(gg);
-}
-plotSequencePositionsRangesAndBlocks = cmpfun(
-    plotSequencePositionsRangesAndBlocks_src);
+## include specific plot funtion
+source(file="R/stsm_plotfn.R", chdir=TRUE);
 
 
 
-# # test plot function
-# plotSequencePositionsRangesAndBlocks(
-#     rnorm(100,2), rnorm(100,2),
-#     xmin_ranges=c(1, 2, 3), xmax_ranges=c(1.5, 2.5, 4),
-#     xmin_blocks=c(3, 6), xmax_blocks=c(4, 8),
-#     ymin_blocks=c(2, 4), ymax_blocks=c(5, 10),
-#     lim_x_min=0, lim_x_max=10, lim_y_min=0, lim_y_max=10,
-#     clean=FALSE, scale=5);
-
-
-
-# configuring variables
+## configuring variables
 config = utils$newDict();
 config$min_sequence_length_to_plot = 2;
 config$max_sequence_length_to_plot = Inf;
 config$plot_scale_preview = 1;
 config$plot_scale = 5;
 config$max_length_plot_limit = 100000;
-config$block_area_start_count_from_y_frac = 0.1;   # 10%
-config$block_area_start_count_from_y = 0;  # will be calculated
+config$block_area_start_count_from_y_frac = 0.1;   ## 10%
+config$block_area_start_count_from_y = 0;  ## will be calculated
 config$per_sequence_plot_block_requires_min_width_to_be_drawn = 5;
 config$plot_only_ranges_that_contains_blocks = TRUE;
 config$per_length_plot_image_type = "png";
 config$per_sequence_plot_preview_image_type = "png";
-config$per_sequence_plot_image_type = "svg";
+config$per_sequence_plot_image_type = "pdf";
 config$preview_img_size = "800px";
 config$full_img_size = "1440px";
 
 
 
-# evaluating arguments
+## evaluating arguments
 args = commandArgs(TRUE);
-#cat("Arguments:\n");
-#cat(args, "\n");
-# examples:
-#args = c();
-#args[1] = "data/401_sax-10_original.csv";
-#args[2] = "results/inline-401_orientation-original/sax-10/json/I401_Ooriginal_S10_FS80_FB20_MS0.json";
-#args[3] = "results/inline-401_orientation-original/sax-10/img/spatial-80/block-20/stretch-0";
-#args[4] = "data/inline_401_951x462.jpg";
-#cat("    args:", args, "\n");
+## cat("Arguments:\n");
+## cat(args, "\n");
+## examples:
+## args = c();
+## args[1] = "data/401_sax-10_original.csv";
+## args[2] = "results/inline-401_orientation-original/sax-10/json/I401_Ooriginal_S10_FS80_FB20_MS0.json";
+## args[3] = "results/inline-401_orientation-original/sax-10/img/spatial-80/block-20/stretch-0";
+## args[4] = "data/inline_401_951x462.jpg";
+## cat("    args:", args, "\n");
 
 vars = utils$newDict();
 vars$csv_database = args[1];
@@ -207,7 +96,7 @@ vars$base_filename = utils$remove_extension(basename(vars$input_file_json));
 
 
 
-# load original database to know it size
+## load original database to know it size
 vars$database = utils$readCSV(vars$csv_database);
 vars$lim_database_x_min = 0;
 vars$lim_database_x_max = nrow(vars$database);
@@ -220,10 +109,10 @@ config$block_area_start_count_from_y =
         vars$database_y_size * config$block_area_start_count_from_y_frac);
 
 
-# loading json data
-#cat("Loading json data", vars$input_file_json, "...");
+## loading json data
+## cat("Loading json data", vars$input_file_json, "...");
 json_data = utils$readJSON(vars$input_file_json);
-#cat(" [DONE]\n")
+## cat(" [DONE]\n")
 
 if(is.null(json_data) || length(json_data) < 1) {
     cat("Empty json data!\n");
@@ -239,16 +128,16 @@ if(length(solid_sequences) != length(solid_blocks)) {
     quit(status=1);
 }
 
-# copy background image for html
+## copy background image for html
 system(paste("cp -f", vars$background_img_src, vars$output_img_dir));
 
-# preparing html initial file
+## preparing html initial file
 per_length_index_file = file(file.path(
     vars$output_img_dir, "index.html"));
 per_length_index_lines = c(
     utils$html.getHTMLpreContentCode(title=vars$base_filename));
 
-# start the iterations, for each json data grouped by length
+## start the iterations, for each json data grouped by length
 for(iteration in 1:length(solid_sequences)) {
     cat("Iteration:", iteration);
 
@@ -261,15 +150,15 @@ for(iteration in 1:length(solid_sequences)) {
     ) {
         cat("\nEmpty sequence data iteration", iteration,
             "of length", sequence_data_by_length$length, "\n");
-        #cat("Data:\n");
-        #dput(sequence_data_by_length);
+        ## cat("Data:\n");
+        ## dput(sequence_data_by_length);
         next;
     }
 
     sequence_length = sequence_data_by_length$length;
     sequence_data = sequence_data_by_length$sequences;
 
-    # limit sequence plot to a length sample
+    ## limit sequence plot to a length sample
 
     if(sequence_length < config$min_sequence_length_to_plot) {
         cat(
@@ -298,13 +187,13 @@ for(iteration in 1:length(solid_sequences)) {
     }
 
     ###
-    # plotting all the sequences of same length
+    ## plotting all the sequences of same length
     ###
 
     cat(", computing per-len data...");
 
-    xmin_ranges = c(); # will be empty, no ranges
-    xmax_ranges = c(); # will be empty, no ranges
+    xmin_ranges = c(); ## will be empty, no ranges
+    xmax_ranges = c(); ## will be empty, no ranges
     x_points = c();
     y_points = c();
 
@@ -372,10 +261,10 @@ for(iteration in 1:length(solid_sequences)) {
         "        </div>");
 
     ####
-    # plot an image with all ranges and blocks for each sequence
+    ## plot an image with all ranges and blocks for each sequence
     ####
 
-    # organize the data by sequence
+    ## organize the data by sequence
 
     cat(", computing per-seq. data...");
 
@@ -384,7 +273,7 @@ for(iteration in 1:length(solid_sequences)) {
 
 
     ####
-    # blocks
+    ## blocks
 
     solid_blocks_data_by_length = solid_blocks[[iteration]];
 
@@ -453,7 +342,7 @@ for(iteration in 1:length(solid_sequences)) {
 
 
     ####
-    # ranges
+    ## ranges
 
     for(j in 1:length(sequence_data)) {
         sequence_data_item = sequence_data[[j]];
@@ -464,7 +353,7 @@ for(iteration in 1:length(solid_sequences)) {
         spaces = sequence_data_item$spaces;
         times = sequence_data_item$times;
 
-        # skip ranges that not conains blocks, if configured
+        ## skip ranges that not conains blocks, if configured
         if(config$plot_only_ranges_that_contains_blocks) {
             if ((! exists(sequence, seq_plotd)) ||
                     (! seq_plotd[[sequence]]$min_width_to_be_drawn)
@@ -515,7 +404,7 @@ for(iteration in 1:length(solid_sequences)) {
 
     cat(", plotting...");
 
-    # plot all sequence data
+    ## plot all sequence data
 
     dir.create(
         file.path(
@@ -524,9 +413,9 @@ for(iteration in 1:length(solid_sequences)) {
         showWarnings=FALSE, recursive=TRUE, mode="2755"
     );
 
-    # producing the entire bunch of plots at one time,
-    # any image with all the points, ranges and block for the related sequence
-    # preview quality images
+    ## producing the entire bunch of plots at one time,
+    ## any image with all the points, ranges and block for the related sequence
+    ## preview quality images
 
     filename_by_seq = file.path(
         vars$output_img_dir, "by_length_and_sequence", sequence_length,
@@ -570,9 +459,9 @@ for(iteration in 1:length(solid_sequences)) {
 
     utils$dev_off();
 
-    # producing the entire bunch of plots at one time,
-    # any image with all the points, ranges and block for the related sequence
-    # full quality images
+    ## producing the entire bunch of plots at one time,
+    ## any image with all the points, ranges and block for the related sequence
+    ## full quality images
 
     filename_by_seq = file.path(
         vars$output_img_dir, "by_length_and_sequence", sequence_length,
@@ -615,7 +504,7 @@ for(iteration in 1:length(solid_sequences)) {
     k = 0;
 
     if(something_plotted) {
-        # renaming to have the sequence name
+        ## renaming to have the sequence name
 
         per_sequence_index_file = file(file.path(
             vars$output_img_dir, "by_length_and_sequence",
@@ -627,7 +516,7 @@ for(iteration in 1:length(solid_sequences)) {
             if(seq_plotd[[key]]$min_width_to_be_drawn) {
                 k = k + 1;
 
-                # rename to final sequence preview image file
+                ## rename to final sequence preview image file
                 file.rename(
                     file.path(
                         vars$output_img_dir, "by_length_and_sequence",
@@ -642,7 +531,7 @@ for(iteration in 1:length(solid_sequences)) {
                               config$per_sequence_plot_preview_image_type,
                               sep="")));
 
-                # rename to final sequence full quality image file
+                ## rename to final sequence full quality image file
                 file.rename(
                     file.path(
                         vars$output_img_dir, "by_length_and_sequence",
@@ -655,7 +544,7 @@ for(iteration in 1:length(solid_sequences)) {
                         paste(key, ".",
                               config$per_sequence_plot_image_type, sep="")));
 
-                # create a separated html for this sequence image
+                ## create a separated html for this sequence image
                 per_len_sequence_index_file = file(file.path(
                     vars$output_img_dir, "by_length_and_sequence",
                     paste(sequence_length, "/", key, ".html", sep="")));
@@ -678,7 +567,7 @@ for(iteration in 1:length(solid_sequences)) {
                     per_len_sequence_index_file);
                 close(per_len_sequence_index_file);
 
-                # add an entry to the per-length html
+                ## add an entry to the per-length html
                 per_sequence_index_lines = c(
                     per_sequence_index_lines,
                     "        <div class=\"content first\">",
@@ -707,7 +596,7 @@ for(iteration in 1:length(solid_sequences)) {
             per_sequence_index_file);
         close(per_sequence_index_file);
 
-        # write an html with link of sequence images ranked by mean_area
+        ## write an html with link of sequence images ranked by mean_area
         {
             sequences = c();
             mean_areas = c();
@@ -731,7 +620,7 @@ for(iteration in 1:length(solid_sequences)) {
             colnames(data_frame) = c("sequences", "mean_areas");
             data_frame = data_frame[with(data_frame, order(-mean_areas)), ];
 
-            # create the html file with all ranks
+            ## create the html file with all ranks
             per_sequence_ranked_index_file = file(file.path(
                 vars$output_img_dir, "by_length_and_sequence",
                 paste(sequence_length, "_ranked.html", sep="")));
@@ -742,7 +631,7 @@ for(iteration in 1:length(solid_sequences)) {
                 sequence = data_frame[i,]$sequences;
                 mean_area = data_frame[i,]$mean_areas;
 
-                # add an entry to the per-length html
+                ## add an entry to the per-length html
                 per_sequence_ranked_index_lines = c(
                     per_sequence_ranked_index_lines,
                     "        <div class=\"content first\">",
@@ -771,7 +660,7 @@ for(iteration in 1:length(solid_sequences)) {
                 per_sequence_ranked_index_file);
             close(per_sequence_ranked_index_file);
 
-            # create the html file with top 10 ranks
+            ## create the html file with top 10 ranks
             per_sequence_ranked_index_file = file(file.path(
                 vars$output_img_dir, "by_length_and_sequence",
                 paste(sequence_length, "_ranked_t10.html", sep="")));
@@ -785,7 +674,7 @@ for(iteration in 1:length(solid_sequences)) {
                 sequence = data_frame[i,]$sequences;
                 mean_area = data_frame[i,]$mean_areas;
 
-                # add an entry to the per-length html
+                ## add an entry to the per-length html
                 per_sequence_ranked_index_lines = c(
                     per_sequence_ranked_index_lines,
                     "        <div class=\"content first\">",
@@ -814,7 +703,7 @@ for(iteration in 1:length(solid_sequences)) {
                 per_sequence_ranked_index_file);
             close(per_sequence_ranked_index_file);
 
-            # create the html file with top 25 ranks
+            ## create the html file with top 25 ranks
             per_sequence_ranked_index_file = file(file.path(
                 vars$output_img_dir, "by_length_and_sequence",
                 paste(sequence_length, "_ranked_t25.html", sep="")));
@@ -828,7 +717,7 @@ for(iteration in 1:length(solid_sequences)) {
                 sequence = data_frame[i,]$sequences;
                 mean_area = data_frame[i,]$mean_areas;
 
-                # add an entry to the per-length html
+                ## add an entry to the per-length html
                 per_sequence_ranked_index_lines = c(
                     per_sequence_ranked_index_lines,
                     "        <div class=\"content first\">",
@@ -857,7 +746,7 @@ for(iteration in 1:length(solid_sequences)) {
                 per_sequence_ranked_index_file);
             close(per_sequence_ranked_index_file);
 
-            # create the html file with top 50 ranks
+            ## create the html file with top 50 ranks
             per_sequence_ranked_index_file = file(file.path(
                 vars$output_img_dir, "by_length_and_sequence",
                 paste(sequence_length, "_ranked_t50.html", sep="")));
@@ -871,7 +760,7 @@ for(iteration in 1:length(solid_sequences)) {
                 sequence = data_frame[i,]$sequences;
                 mean_area = data_frame[i,]$mean_areas;
 
-                # add an entry to the per-length html
+                ## add an entry to the per-length html
                 per_sequence_ranked_index_lines = c(
                     per_sequence_ranked_index_lines,
                     "        <div class=\"content first\">",
@@ -900,7 +789,7 @@ for(iteration in 1:length(solid_sequences)) {
                 per_sequence_ranked_index_file);
             close(per_sequence_ranked_index_file);
 
-            # create the html file with top 100 ranks
+            ## create the html file with top 100 ranks
             per_sequence_ranked_index_file = file(file.path(
                 vars$output_img_dir, "by_length_and_sequence",
                 paste(sequence_length, "_ranked_t100.html", sep="")));
@@ -914,7 +803,7 @@ for(iteration in 1:length(solid_sequences)) {
                 sequence = data_frame[i,]$sequences;
                 mean_area = data_frame[i,]$mean_areas;
 
-                # add an entry to the per-length html
+                ## add an entry to the per-length html
                 per_sequence_ranked_index_lines = c(
                     per_sequence_ranked_index_lines,
                     "        <div class=\"content first\">",
@@ -945,8 +834,8 @@ for(iteration in 1:length(solid_sequences)) {
         }
 
     } else {
-        # removing unuseful directory
-        #unlink(     # [CMP] unlink won't work
+        ## removing unuseful directory
+        ## unlink(     # [CMP] unlink won't work
         system(paste('rm -rf', file.path(
             vars$output_img_dir, "by_length_and_sequence", sequence_length)));
     }
@@ -956,7 +845,7 @@ for(iteration in 1:length(solid_sequences)) {
     cat(" [DONE]\n");
 }
 
-# completing html file
+## completing html file
 writeLines(
     c(
         per_length_index_lines,
@@ -964,5 +853,10 @@ writeLines(
     per_length_index_file);
 close(per_length_index_file);
 
-# write a file that grants that this plot is complete for this product
+## write a file that grants that this plot is complete for this product
 result = file.create(file.path(vars$output_img_dir, "complete"));
+
+
+
+## unloading dependences
+utils$unloadLibs(loaded_libs);
