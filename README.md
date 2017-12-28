@@ -40,17 +40,17 @@ selecting the follow options:
 
 Then, convert the 'dat' file to an usable 'CSV' file using the follow command:
 ```
-    R --vanilla --slave --file=R/dat2csv_converter.r --args 401.dat 401.csv
+    R --vanilla --slave --file=R/dat2csv_converter.R --args 401.dat 401.csv
 ```
 
 Next, discretize the 'CSV' data using the follow command:
 ```
-    R --vanilla --slave --file=R/sax_converter.r --args 401.csv 401_sax10.csv 10
+    R --vanilla --slave --file=R/sax_converter.R --args 401.csv 401_sax10.csv 10
 ```
 
 And finally, run STSM with the follow command:
 ```
-   ./BUILD/release/stsm -i 401_sax10.csv -o results.json -l stsm.log -s 80 -b 20
+   ./BUILD/release/stsm -i 401_sax10.csv -o results.json -v -l stsm.log -s 80 -b 20
 ```
 
 ## License
