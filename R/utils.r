@@ -20,18 +20,20 @@
 ## You should have received a copy of the GNU Lesser General Public License
 ## along with STSM.  If not, see <http://www.gnu.org/licenses/>.
 
-# defining common functions
+
+
+## defining common functions environment
 utils = new.env(hash=TRUE, parent=emptyenv());
 
 
 
 utils$setVerbose = function() {
-    # defining common starting options
+    ## defining common starting options
     options(download.file.method = "wget");
     options(warn=1);  # warnings printed as they occur
     options(keep.source=TRUE);
     options(error=quote({
-        # from http://stackoverflow.com/a/2000757/846686
+        ## from http://stackoverflow.com/a/2000757/846686
         cat("Environment:\n", file=stderr());
         dump.frames();
         n = length(last.dump);
@@ -55,45 +57,29 @@ utils$loadLibs = function(lib_name_and_vers) {
     dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="2755");
     .libPaths(c(lib));
 
-    # use devtools
-    ; lib_name = "devtools";
-
-    # if(!suppressWarnings(library(
-    #     package=lib_name,
-    #     character.only=TRUE, logical.return=TRUE, quietly=TRUE))) {
-    #     install.packages(
-    #         pkgs=lib_name, lib=lib, repos=repos,
-    #         quiet=FALSE, dependencies=TRUE);
-    #     library(
-    #         lpackage=lib_name,
-    #         character.only=TRUE, quietly=TRUE);
-    # }
-
-    # lib_names = c(lib_name);
     lib_names = c();
 
-    # install specific libs
     for(lib_name_and_ver in lib_name_and_vers) {
         lib_name = unlist(strsplit(lib_name_and_ver, ":"))[1];
         lib_ver = unlist(strsplit(lib_name_and_ver, ":"))[2];
-        lib_names = c(lib_names, lib_name);
 
-        if(!suppressWarnings(library(
-            package=lib_name,
-            character.only=TRUE, logical.return=TRUE, quietly=TRUE))) {
-            #install.versions(
-            #    lib_name, versions=lib_ver, repos=repos, lib=lib,
-            #    quiet=FALSE, dependencies=TRUE);
-            #install_version(
-            #    lib_name, version=lib_ver, repos=repos, lib=lib,
-            #    quiet=FALSE, dependencies=TRUE);
+        ## install lib if needed
+        if(! lib_name %in% rownames(installed.packages())) {
             install.packages(
                 pkgs=lib_name, lib=lib,
                 repos=repos,
                 quiet=FALSE, dependencies=TRUE);
-            library(
+        }
+
+        ## load lib if needed
+        if(! lib_name %in% (.packages())) {
+            success = suppressWarnings(library(
                 package=lib_name,
-                character.only=TRUE, quietly=TRUE);
+                character.only=TRUE, logical.return=TRUE, quietly=TRUE));
+
+            if(success) {
+                lib_names = c(lib_names, lib_name);
+            }
         }
     }
 
@@ -102,7 +88,19 @@ utils$loadLibs = function(lib_name_and_vers) {
 
 
 
-# TO TEST
+utils$unloadLibs = function(lib_names) {
+    for(lib_name in lib_names) {
+        search_item <- paste("package", lib_name, sep = ":");
+
+        while(search_item %in% search()) {
+            suppressWarnings(detach(
+                search_item, unload=TRUE, character.only=TRUE));
+        }
+    }
+}
+
+
+## TO TEST
 utils$loadLibsPath = function(lib_paths) {
     repos = "http://cran.r-project.org";
     options(repos=c(CRAN=repos));
@@ -110,7 +108,7 @@ utils$loadLibsPath = function(lib_paths) {
     dir.create(lib, showWarnings=FALSE, recursive=TRUE, mode="2755");
     .libPaths(c(lib));
 
-    # install specific libs
+    ## install specific libs
     for(lib_path in lib_paths) {
         install.packages(
             pkgs=lib_path, repos=NULL, type="source",
@@ -126,7 +124,7 @@ utils$newDict = function() {
 
 
 
-# TO TEST
+## TO TEST
 utils$dict_to_data_frame = function(dict, col_names) {
     new_data = list();
 
@@ -198,7 +196,7 @@ utils$dev_open_file = function(
     ) {
     ext = strsplit(file_name, "\\.")[[1]][[-1]];
 
-    pointsize = 12 * dpi / 72  # do not change
+    pointsize = 12 * dpi / 72  ## do not change
 
     if(ext == "svg") {
         svg(file_name, bg="transparent", antialias="none",
@@ -234,11 +232,11 @@ utils$bar_plot = function(
     data_frame, x_col, y_col,
     log=FALSE, title=NA, x_title=NA, y_title=NA, caption=NA) {
 
-    # ensure to not modify original data
+    ## ensure to not modify original data
     data_frame = cbind(data_frame);
 
-    # need to be a string to not considerate
-    # this number as a space for the x axis
+    ## need to be a string to not considerate
+    ## this number as a space for the x axis
     data_frame[[x_col]] = as.character(data_frame[[x_col]]);
     bins = as.character(sort(as.numeric(unique(data_frame[[x_col]]))));
 
