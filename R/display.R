@@ -97,12 +97,12 @@ vars$base_filename = utils$remove_extension(basename(vars$input_file_json));
 
 
 ## load original database to know it size
-vars$database = utils$readCSV(vars$csv_database);
+vars$database = utils$readCSV(vars$csv_database, header=FALSE);
 vars$lim_database_x_min = 0;
-vars$lim_database_x_max = nrow(vars$database);
+vars$lim_database_x_max = ncol(vars$database);
 vars$database_x_size = vars$lim_database_x_max - vars$lim_database_x_min;
 vars$lim_database_y_min = 0;
-vars$lim_database_y_max = ncol(vars$database);
+vars$lim_database_y_max = nrow(vars$database);
 vars$database_y_size = vars$lim_database_y_max - vars$lim_database_y_min;
 config$block_area_start_count_from_y =
     vars$lim_database_y_min + (

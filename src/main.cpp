@@ -97,7 +97,7 @@ int main(int _argn, char * _argv[])
                       << input_data_csv << "..." << std::endl;
         }
 
-        loadDatabase(input_data_csv, database);
+        loadDatabase(input_data_csv, database, false, false);
 
         if(parsed.count("v") != 0)
         {

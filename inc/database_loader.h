@@ -27,6 +27,11 @@
 
 #include "Database.h"
 
-void loadDatabase(const std::string & _input_filename, Database & _database);
+void loadDatabase(
+    const std::string & _input_filename,
+    Database & _database,
+    bool _has_header = false,
+    bool _transpose = false
+);
 
 #endif

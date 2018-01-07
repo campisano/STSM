@@ -25,22 +25,55 @@
 #include <rapidcsv.h>
 #include <string>
 
-void loadDatabase(const std::string & _input_filename, Database & _database)
+namespace
 {
-    rapidcsv::Document doc(rapidcsv::Properties(_input_filename, 0, -1));
+void loadNormal(const rapidcsv::Document & _doc, Database & _database)
+{
+    unsigned int i, cols = _doc.GetColumnCount();
 
-    //TODO [CMP] now we should rotate the csv to the expected order
-    // unsigned int i, cols = doc.GetColumnCount();
+    for(i = 0; i < cols; ++i)
+    {
+        _database.push_back(_doc.GetColumn<char>(i));
+    }
+}
 
-    // for(i = 0; i < cols; ++i)
-    // {
-    //     _database.push_back(doc.GetColumn<char>(i));
-    // }
-
-    unsigned int i, rows = doc.GetRowCount();
+void loadTransposed(const rapidcsv::Document & _doc, Database & _database)
+{
+    unsigned int i, rows = _doc.GetRowCount();
 
     for(i = 0; i < rows; ++i)
     {
-        _database.push_back(doc.GetRow<char>(i));
+        _database.push_back(_doc.GetRow<char>(i));
+    }
+}
+}
+
+void loadDatabase(
+    const std::string & _input_filename,
+    Database & _database,
+    bool _has_header,
+    bool _transpose
+)
+{
+    int rows_name_idx;
+    if(_has_header)
+    {
+        rows_name_idx = 0;
+    }
+    else
+    {
+        rows_name_idx = -1;
+    }
+
+    rapidcsv::Document doc(
+        rapidcsv::Properties(_input_filename, -1, rows_name_idx));
+
+    if(_transpose)
+    {
+        loadTransposed(doc, _database);
+    }
+    else
+    {
+        loadNormal(doc, _database);
     }
 }

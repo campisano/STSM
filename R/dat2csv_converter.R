@@ -45,8 +45,7 @@ output = args[2];
 data = utils$readCSV(input, header=FALSE, sep="\t");
 
 cleaned_data = data[,-c(1,2,3)];
-## transposed_data = t(cleaned_data);   # TODO transpose the data
-transposed_data = cleaned_data;
+transposed_data = t(cleaned_data);
 
 ## writing output data
 utils$writeCSV(transposed_data, output, header=FALSE, sep=",");
