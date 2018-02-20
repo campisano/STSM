@@ -44,7 +44,7 @@ MAKEFLAGS +=			-s
 # FORMAT_SRC_DIRS = 	src
 # MAIN_SRC =			src/main.cpp
 # LIB_DIRS =			lib
-# ROOT_BUILD_DIR =		build
+# ROOT_BUILD_DIR =		BUILD
 
 # # CUSTOM libs for different targets
 # RELEASE_LIBS =
