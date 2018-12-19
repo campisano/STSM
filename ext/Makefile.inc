@@ -1,22 +1,24 @@
-# This file is a generic Makefile.
+# Copyright (C) 2017 Riccardo Campisano <riccardo.campisano@gmail.com>
 #
-# This source code is free software: you can redistribute it and/or modify
+# This file is part of GenericMakefile project.
+#
+# This project is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# This source code is distributed in the hope that it will be useful,
+# This project is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with this source code.  If not, see <http://www.gnu.org/licenses/>.
+# along with this project. If not, see <http://www.gnu.org/licenses/>.
 
 
 
 # version of this Makefile
-MAKEFILE_VER =			2.1
+MAKEFILE_VER =			2.2
 
 # make options
 MAKEFLAGS +=			-s
@@ -32,19 +34,19 @@ MAKEFLAGS +=			-s
 # DEFAULT_TARGET =		debug
 # TARGET_EXEC =			stsm
 # TARGET_LIB =			libstsm.so
-# HEADER_EXT =			.h
+# HEADER_EXT =			.hpp
 # SOURCE_EXT =			.cpp
 
 # # CUSTOM paths
 # INC_DIRS =			inc
-# INC_EXT_DIRS = 		ext
-# FORMAT_INC_DIRS = 	        inc
+# INC_EXT_DIRS =		ext
+# FORMAT_INC_DIRS =		inc
 # SRC_DIRS =			src/stsm src/utils
 # TEST_SRC_DIRS =		src/tests
-# FORMAT_SRC_DIRS = 	        src
+# FORMAT_SRC_DIRS =		src
 # MAIN_SRC =			src/main.cpp
 # LIB_DIRS =			lib
-# ROOT_BUILD_DIR =		BUILD
+# ROOT_BUILD_DIR =		bin
 
 # # CUSTOM libs for different targets
 # RELEASE_LIBS =
@@ -166,11 +168,11 @@ DEPS :=				$(OBJS:.o=.d)
 
 ifeq ("$(PROGRAMFILES)$(ProgramFiles)","")
 # linux
-	SEPCHR = 		/
+	SEPCHR =		/
 # common binaries
 	MKDIR =			mkdir -p
-	RM = 			rm -f
-        RMALL = 		rm -rf
+	RM =			rm -f
+	RMALL =			rm -rf
 # colors and terminal details
 # https://wiki.archlinux.org/index.php/Bash/Prompt_customization#Escapes_between_command_input_and_output
 # https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_codes
