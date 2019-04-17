@@ -18,7 +18,7 @@
 
 
 # version of this Makefile
-MAKEFILE_VER :=			2.3
+MAKEFILE_VER :=			2.4
 
 # make options
 MAKEFLAGS +=			-s
@@ -80,13 +80,13 @@ LD_FLAGS :=			$(LIB_FLAGS)
 
 
 # CUSTOM specific flags for different targets
-RELEASE_FLAGS :=		-O3 -s									# optimization and remove all symbol table
+RELEASE_FLAGS :=		-O3 -s						# optimization and remove all symbol table
 RELEASE_LD_FLAGS :=
 STATIC_FLAGS :=			$(RELEASE_FLAGS)
 STATIC_LD_FLAGS :=		-static -static-libgcc -static-libstdc++
-DEBUG_FLAGS :=			-O0 -ggdb -g3 -fno-omit-frame-pointer					# disable optimization and increase debug level to 3, mantain frame pointer for 'prof' tool
+DEBUG_FLAGS :=			-O0 -ggdb -g3 -fno-omit-frame-pointer		# disable optimization and increase debug level to 3, mantain frame pointer for 'prof' tool
 DEBUG_LD_FLAGS :=
-PROFILE_FLAGS :=		-g -pg									# add 'gprof' tool info
+PROFILE_FLAGS :=		-g -pg						# add 'gprof' tool info
 PROFILE_LD_FLAGS :=		-pg
 TEST_FLAGS :=			$(DEBUG_FLAGS)
 TEST_LD_FLAGS :=		$(DEBUG_LD_FLAGS)
@@ -157,7 +157,7 @@ endif
 
 # obtaining list of objs and deps to produce
 OBJS :=				$(SRCS:%=$(BUILD_DIR)/%.o)
-DEPS :=				$(OBJS:.o=.d)
+CXX_DEPS :=			$(OBJS:.o=.d)
 
 
 
@@ -209,35 +209,27 @@ CHECK :=			&& echo $(GREEN)"DONE"$(NORMAL) || (echo $(RED)"==== ERROR ===="$(NOR
 # defining targets
 
 # multiple targets
-$(TARGETS):			| INFO_TRG INFO_CMDS FORMAT $(TARGET)                                   # the targets after a | are executed in order even if parallel build (e.g. -j 10) is used
+$(TARGETS):			| INFO_TRG INFO_CMDS format $(TARGET)		# the targets after a | are executed in order even if parallel build (e.g. -j 10) is used
 
 # include dependencies that CXX will generate
 ifeq (0, $(words $(findstring $(MAKECMDGOALS), $(NODEPS_TARGETS))))
--include $(DEPS)											# include dependencies
+-include $(CXX_DEPS)								# include dependencies
 endif
+
+
+
+.PHONY:				$(TARGETS) clean format
+
+
 
 clean:				INFO_TRG
 	@echo Removing $(ROOT_BUILD_DIR) folder
 	$(if $(ROOT_BUILD_DIR),($(RMALL) $(ROOT_BUILD_DIR)),)
 
-env:
-	echo INC_DIRS $(INC_DIRS)
-	echo INC_EXT_DIRS $(INC_EXT_DIRS)
-	echo FORMAT_INC_DIRS $(FORMAT_INC_DIRS)
-	echo SRC_DIRS $(SRC_DIRS)
-	echo TEST_SRC_DIRS $(TEST_SRC_DIRS)
-	echo FORMAT_SRC_DIRS $(FORMAT_SRC_DIRS)
-	echo MAIN_SRC $(MAIN_SRC)
-	echo LIB_DIRS $(LIB_DIRS)
-	echo ROOT_BUILD_DIR $(ROOT_BUILD_DIR)
-	echo
-	echo INC_FLAGS $(INC_FLAGS)
-	echo LIB_FLAGS $(LIB_FLAGS)
 
-.PHONY:				$(TARGETS) clean env
 
 # code style format target
-FORMAT:
+format:
 	which astyle > /dev/null \
 && astyle --options=none --quiet --style=allman \
 --indent=spaces=4 --lineend=linux --align-pointer=middle \
